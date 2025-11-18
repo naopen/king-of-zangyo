@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "King-of-Zangyo",
+  "version": "1.0.0",
+  "description": "King of Timeの勤怠管理画面に累計残業時間を自動表示するChrome拡張機能",
+  "permissions": ["storage"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "King-of-Zangyo設定"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://s2.ta.kingoftime.jp/admin/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
