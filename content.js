@@ -136,6 +136,37 @@ function injectOvertimeColumn() {
       return;
     }
 
+    // 既存の列の幅を固定（初回のみ）
+    if (!summaryTable.dataset.columnsFixed) {
+      const headerRow = thead.querySelector("tr");
+      if (headerRow) {
+        const headers = headerRow.querySelectorAll("th");
+        headers.forEach((th) => {
+          const computedWidth = window.getComputedStyle(th).width;
+          th.style.width = computedWidth;
+          th.style.minWidth = computedWidth;
+        });
+        console.log(
+          `King-of-Zangyo: ${headers.length}個のヘッダー列の幅を固定しました`
+        );
+      }
+
+      const dataRow = tbody.querySelector("tr");
+      if (dataRow) {
+        const cells = dataRow.querySelectorAll("td");
+        cells.forEach((td) => {
+          const computedWidth = window.getComputedStyle(td).width;
+          td.style.width = computedWidth;
+          td.style.minWidth = computedWidth;
+        });
+        console.log(
+          `King-of-Zangyo: ${cells.length}個のデータセルの幅を固定しました`
+        );
+      }
+
+      summaryTable.dataset.columnsFixed = "true";
+    }
+
     // 既に注入されているかチェック（冪等性の確保）
     const existingHeader = document.getElementById(OVERTIME_HEADER_ID);
     const existingCell = document.getElementById(OVERTIME_CELL_ID);
@@ -160,9 +191,11 @@ function injectOvertimeColumn() {
     if (headerRow) {
       const th = document.createElement("th");
       th.id = OVERTIME_HEADER_ID;
-      th.textContent = "現時点の残業";
+      th.textContent = "現時点の目安残業";
       th.style.textAlign = "center";
       th.style.fontWeight = "bold";
+      th.style.width = "120px";
+      th.style.minWidth = "120px";
       headerRow.appendChild(th);
       console.log("King-of-Zangyo: ヘッダー列を追加しました");
     }
@@ -175,6 +208,8 @@ function injectOvertimeColumn() {
       td.textContent = overtimeText;
       td.style.textAlign = "center";
       td.style.fontWeight = "bold";
+      td.style.width = "120px";
+      td.style.minWidth = "120px";
       td.style.backgroundColor = overtimeMinutes >= 0 ? "#e6ffed" : "#ffe6e6";
       dataRow.appendChild(td);
       console.log("King-of-Zangyo: データセルを追加しました");
