@@ -384,5 +384,47 @@ function formatMinutesToTime(minutes) {
   return isNegative ? `-${formattedTime}` : formattedTime;
 }
 
+/**
+ * 残業時間列の表示/非表示を切り替える
+ * @param {boolean} enabled - 表示する場合はtrue、非表示にする場合はfalse
+ */
+function toggleOvertimeDisplay(enabled) {
+  console.log(`King-of-Zangyo: 表示切り替え - ${enabled ? "オン" : "オフ"}`);
+
+  const header = document.getElementById(OVERTIME_HEADER_ID);
+  const cell = document.getElementById(OVERTIME_CELL_ID);
+
+  if (enabled) {
+    // 列が存在しない場合は新規作成
+    if (!header || !cell) {
+      injectOvertimeColumn();
+    } else {
+      // 既に存在する場合は表示
+      header.style.display = "";
+      cell.style.display = "";
+    }
+  } else {
+    // 非表示
+    if (header) {
+      header.style.display = "none";
+    }
+    if (cell) {
+      cell.style.display = "none";
+    }
+  }
+}
+
+// メッセージリスナーを設定（ポップアップからのメッセージを受信）
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  console.log("King-of-Zangyo: メッセージを受信しました", request);
+
+  if (request.action === "toggleDisplay") {
+    toggleOvertimeDisplay(request.enabled);
+    sendResponse({ success: true });
+  }
+
+  return true; // 非同期レスポンスを許可
+});
+
 // アプリケーションの初期化を実行
 initializeApp();

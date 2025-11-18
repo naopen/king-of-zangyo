@@ -39,6 +39,28 @@ function saveSettings(isEnabled) {
     console.log(
       `King-of-Zangyo: 設定を保存しました (${isEnabled ? "有効" : "無効"})`
     );
+
+    // アクティブなタブにメッセージを送信して、表示を更新
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs[0]) {
+        chrome.tabs.sendMessage(
+          tabs[0].id,
+          {
+            action: "toggleDisplay",
+            enabled: isEnabled,
+          },
+          (response) => {
+            if (chrome.runtime.lastError) {
+              console.log(
+                "King-of-Zangyo: メッセージ送信エラー（ページをリロードしてください）"
+              );
+            } else {
+              console.log("King-of-Zangyo: 表示を更新しました");
+            }
+          }
+        );
+      }
+    });
   });
 }
 
