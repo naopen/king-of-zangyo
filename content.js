@@ -182,7 +182,7 @@ function injectOvertimeColumn() {
       console.log("King-of-Zangyo: 既存の列を更新します");
       existingCell.textContent = overtimeText;
       existingCell.style.backgroundColor =
-        overtimeMinutes >= 0 ? "#e6ffed" : "#ffe6e6";
+        getOvertimeBackgroundColor(overtimeMinutes);
       return;
     }
 
@@ -210,7 +210,7 @@ function injectOvertimeColumn() {
       td.style.fontWeight = "bold";
       td.style.width = "120px";
       td.style.minWidth = "120px";
-      td.style.backgroundColor = overtimeMinutes >= 0 ? "#e6ffed" : "#ffe6e6";
+      td.style.backgroundColor = getOvertimeBackgroundColor(overtimeMinutes);
       dataRow.appendChild(td);
       console.log("King-of-Zangyo: データセルを追加しました");
     }
@@ -417,6 +417,29 @@ function formatMinutesToTime(minutes) {
   const formattedTime = `${hours}:${String(mins).padStart(2, "0")}`;
 
   return isNegative ? `-${formattedTime}` : formattedTime;
+}
+
+/**
+ * 残業時間に応じた背景色を取得する
+ * @param {number} overtimeMinutes - 残業時間（分）
+ * @returns {string} 背景色（16進数カラーコード）
+ */
+function getOvertimeBackgroundColor(overtimeMinutes) {
+  const overtimeHours = overtimeMinutes / 60;
+
+  if (overtimeHours < 30) {
+    // 0~29.9999時間：緑色
+    return "#c8e6c9";
+  } else if (overtimeHours < 40) {
+    // 30~39.9999時間：黄色
+    return "#fff59d";
+  } else if (overtimeHours < 45) {
+    // 40~44.9999時間：赤色
+    return "#ef9a9a";
+  } else {
+    // 45時間以上：クリムゾンレッド
+    return "#d32f2f";
+  }
 }
 
 /**
