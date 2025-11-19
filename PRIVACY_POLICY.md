@@ -14,7 +14,7 @@ KING OF ZANGYOは、ユーザーのプライバシーを尊重します。
 
 ### 使用する権限
 - **storage**: 設定の保存
-- **activeTab**: King of Timeページでの残業時間計算・表示
+- **activeTab**: KING OF TIMEページでの残業時間計算・表示
 
 ---
 
@@ -32,4 +32,4 @@ KING OF ZANGYO respects user privacy.
 
 ### Permissions
 - **storage**: To save settings
-- **activeTab**: To calculate and display overtime on King of Time pages
+- **activeTab**: To calculate and display overtime on KING OF TIME pages

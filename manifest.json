@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "KING OF ZANGYO",
   "version": "1.0.0",
-  "description": "King of Timeの勤怠管理画面に累計残業時間を自動表示するChrome拡張機能",
+  "description": "KING OF TIMEの勤怠管理画面に累計残業時間を自動表示するChrome拡張機能",
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
