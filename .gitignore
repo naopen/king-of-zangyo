@@ -215,8 +215,6 @@ $RECYCLE.BIN/
 # End of https://www.toptal.com/developers/gitignore/api/node,vscode,macos,windows
 
 ### Chrome Extension ###
-# Icons (not required for the extension to work)
-icons/
 
 # Package files
 *.zip
