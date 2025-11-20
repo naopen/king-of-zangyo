@@ -2,13 +2,14 @@
 
 // ストレージキー定数
 const STORAGE_KEY = "kingOfZangyoEnabled";
+const STANDARD_HOURS_KEY = "kingOfZangyoStandardHours";
 
 // DOM要素の一意なID
 const OVERTIME_HEADER_ID = "king-of-zangyo-header";
 const OVERTIME_CELL_ID = "king-of-zangyo-cell";
 
-// 所定労働時間（分）
-const STANDARD_WORK_MINUTES = 450; // 7.5時間
+// 所定労働時間（分）- 設定から読み込まれるまでのデフォルト値
+let STANDARD_WORK_MINUTES = 450; // 7.5時間
 
 /**
  * 現在のページが対象ページかどうかをチェック
@@ -65,7 +66,7 @@ function initializeApp() {
       return;
     }
 
-    chrome.storage.sync.get([STORAGE_KEY], (result) => {
+    chrome.storage.sync.get([STORAGE_KEY, STANDARD_HOURS_KEY], (result) => {
       if (chrome.runtime.lastError) {
         console.error(
           "King-of-Zangyo: ストレージ取得エラー:",
@@ -79,6 +80,13 @@ function initializeApp() {
       // デフォルトは「オン」(true)
       const isEnabled =
         result[STORAGE_KEY] !== undefined ? result[STORAGE_KEY] : true;
+
+      // 所定労働時間を設定（デフォルトは7.5時間）
+      const standardHours =
+        result[STANDARD_HOURS_KEY] !== undefined
+          ? result[STANDARD_HOURS_KEY]
+          : 7.5;
+      STANDARD_WORK_MINUTES = standardHours * 60;
 
       if (isEnabled) {
         injectOvertimeColumn();
@@ -451,6 +459,12 @@ function toggleOvertimeDisplay(enabled) {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "toggleDisplay") {
     toggleOvertimeDisplay(request.enabled);
+    sendResponse({ success: true });
+  } else if (request.action === "updateStandardHours") {
+    // 所定労働時間を更新
+    STANDARD_WORK_MINUTES = request.hours * 60;
+    // 残業時間を再計算して表示を更新
+    injectOvertimeColumn();
     sendResponse({ success: true });
   }
 
