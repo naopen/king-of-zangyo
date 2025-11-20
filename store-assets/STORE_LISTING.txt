@@ -19,7 +19,7 @@ KING OF ZANGYO は、KING OF TIMEの勤怠管理画面に累計残業時間を�
 
 • 自動計算
 タイムカード画面で累計残業時間を自動計算して表示します。
-当日分は所定労働時間（7.5h）を超過後に反映されます。
+当日分は所定労働時間を超過後に反映されます。
 
 • 色分け表示
 残業時間に応じて4段階の色分け表示で一目で状況を把握できます。
@@ -28,8 +28,11 @@ KING OF ZANGYO は、KING OF TIMEの勤怠管理画面に累計残業時間を�
   - 赤: 40～45時間（危険）
   - 濃赤: 45時間以上（超過）
 
+• 所定労働時間のカスタマイズ
+所定労働時間を0.5時間刻みで自由に設定可能です（デフォルト：7.5時間）。
+
 • 簡単設定
-ワンクリックで表示のON/OFF切り替えが可能です。
+拡張機能アイコンから表示のON/OFF切り替えや所定労働時間の変更が可能です。
 
 • プライバシー保護
 すべてのデータはブラウザ内で処理され、外部への送信は一切ありません。
@@ -72,8 +75,11 @@ Four-tier color coding based on overtime hours for quick status checks.
   - Red: 40-45 hours (warning)
   - Dark Red: 45+ hours (exceeded)
 
+• Customizable Standard Work Hours
+Set your standard work hours in 0.5-hour increments (default: 7.5 hours).
+
 • Easy Settings
-Toggle display ON/OFF with one click.
+Toggle display ON/OFF and adjust standard work hours via the extension icon.
 
 • Privacy Protection
 All data is processed within your browser with no external transmission.
@@ -120,7 +126,11 @@ KING OF TIMEの勤怠管理画面で、累計残業時間を自動計算して�
 
 【storage が必要な理由】
 ------------------------------------
-残業時間表示機能のON/OFF設定をブラウザ内に保存するために使用します。ユーザーの設定を保持し、次回アクセス時にも同じ設定を適用するために必要です。個人情報や勤怠データは保存しません。
+以下の設定をブラウザ内に保存するために使用します：
+- 残業時間表示機能のON/OFF設定
+- 所定労働時間の設定値（デフォルト：7.5時間）
+
+ユーザーの設定を保持し、次回アクセス時にも同じ設定を適用するために必要です。個人情報や勤怠データは一切保存しません。
 
 
 【activeTab が必要な理由】
