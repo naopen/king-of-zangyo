@@ -1,8 +1,5 @@
 // King-of-Zangyo: 残業時間自動計算・表示スクリプト
 
-console.log("King-of-Zangyo: スクリプトが読み込まれました");
-console.log("King-of-Zangyo: 現在のURL =", window.location.href);
-
 // ストレージキー定数
 const STORAGE_KEY = "kingOfZangyoEnabled";
 
@@ -26,7 +23,6 @@ function isTargetPage() {
     pageId &&
     pageId.includes("/working/monthly_individual_working_list_custom")
   ) {
-    console.log("King-of-Zangyo: page_idで対象ページと判定しました");
     return true;
   }
 
@@ -43,12 +39,6 @@ function isTargetPage() {
 
   const isDomMatch = hasSummaryTable && hasDailyDataTable;
 
-  console.log("King-of-Zangyo: page_id =", pageId);
-  console.log("King-of-Zangyo: 時間集計テーブル =", hasSummaryTable);
-  console.log("King-of-Zangyo: 日別データテーブル =", hasDailyDataTable);
-  console.log("King-of-Zangyo: タイムカードタイトル =", hasTimecardTitle);
-  console.log("King-of-Zangyo: DOM要素による判定 =", isDomMatch);
-
   return isDomMatch;
 }
 
@@ -57,17 +47,10 @@ function isTargetPage() {
  */
 function initializeApp() {
   try {
-    console.log("King-of-Zangyo: 初期化を開始します");
-
     // 対象ページかチェック
     if (!isTargetPage()) {
-      console.log(
-        "King-of-Zangyo: 対象ページではありません。処理をスキップします。"
-      );
       return;
     }
-
-    console.log("King-of-Zangyo: 対象ページです。処理を続行します。");
 
     // chrome.storage APIが利用可能かチェック
     if (
@@ -96,7 +79,6 @@ function initializeApp() {
       // デフォルトは「オン」(true)
       const isEnabled =
         result[STORAGE_KEY] !== undefined ? result[STORAGE_KEY] : true;
-      console.log("King-of-Zangyo: 機能状態 =", isEnabled ? "オン" : "オフ");
 
       if (isEnabled) {
         injectOvertimeColumn();
@@ -114,8 +96,6 @@ function initializeApp() {
  */
 function injectOvertimeColumn() {
   try {
-    console.log("King-of-Zangyo: 列の注入を開始します");
-
     // 時間集計テーブルを取得（残業時間を表示する場所）
     const summaryTable = document.querySelector(
       "div.htBlock-normalTable table.specific-table_800"
@@ -125,8 +105,6 @@ function injectOvertimeColumn() {
       console.warn("King-of-Zangyo: 時間集計テーブルが見つかりません");
       return;
     }
-
-    console.log("King-of-Zangyo: 時間集計テーブルを発見しました");
 
     const thead = summaryTable.querySelector("thead");
     const tbody = summaryTable.querySelector("tbody");
@@ -146,9 +124,6 @@ function injectOvertimeColumn() {
           th.style.width = computedWidth;
           th.style.minWidth = computedWidth;
         });
-        console.log(
-          `King-of-Zangyo: ${headers.length}個のヘッダー列の幅を固定しました`
-        );
       }
 
       const dataRow = tbody.querySelector("tr");
@@ -159,9 +134,6 @@ function injectOvertimeColumn() {
           td.style.width = computedWidth;
           td.style.minWidth = computedWidth;
         });
-        console.log(
-          `King-of-Zangyo: ${cells.length}個のデータセルの幅を固定しました`
-        );
       }
 
       summaryTable.dataset.columnsFixed = "true";
@@ -175,11 +147,8 @@ function injectOvertimeColumn() {
     const overtimeMinutes = calculateTotalOvertime();
     const overtimeText = formatMinutesToTime(overtimeMinutes);
 
-    console.log(`King-of-Zangyo: 表示テキスト = "${overtimeText}"`);
-
     if (existingHeader && existingCell) {
       // 既に存在する場合は内容を更新するのみ
-      console.log("King-of-Zangyo: 既存の列を更新します");
       existingCell.textContent = overtimeText;
       existingCell.style.backgroundColor =
         getOvertimeBackgroundColor(overtimeMinutes);
@@ -197,7 +166,6 @@ function injectOvertimeColumn() {
       th.style.width = "120px";
       th.style.minWidth = "120px";
       headerRow.appendChild(th);
-      console.log("King-of-Zangyo: ヘッダー列を追加しました");
     }
 
     // データ行に新しいセルを追加
@@ -212,10 +180,7 @@ function injectOvertimeColumn() {
       td.style.minWidth = "120px";
       td.style.backgroundColor = getOvertimeBackgroundColor(overtimeMinutes);
       dataRow.appendChild(td);
-      console.log("King-of-Zangyo: データセルを追加しました");
     }
-
-    console.log("King-of-Zangyo: 列の注入が完了しました");
   } catch (error) {
     console.error("King-of-Zangyo: 列の注入中にエラーが発生しました:", error);
   }
@@ -232,20 +197,17 @@ function calculateTotalOvertime() {
   );
 
   if (!dailyDataTable) {
-    console.log("King-of-Zangyo: 日別データテーブルが見つかりません");
     return 0;
   }
 
   const tbody = dailyDataTable.querySelector("tbody");
   if (!tbody) {
-    console.log("King-of-Zangyo: tbodyが見つかりません");
     return 0;
   }
 
   // 年月情報を取得（ページ上部のh2から）
   const currentYearMonth = getCurrentYearMonth();
   if (!currentYearMonth) {
-    console.log("King-of-Zangyo: 年月情報が取得できません");
     return 0;
   }
 
@@ -255,8 +217,6 @@ function calculateTotalOvertime() {
   // 今日の日付を取得
   const today = new Date();
   today.setHours(0, 0, 0, 0); // 時間をリセット
-
-  console.log(`King-of-Zangyo: ${rows.length}行を処理します`);
 
   rows.forEach((row) => {
     // 日付を取得（2番目のtd - 1番目は申請ボタン）
@@ -287,13 +247,11 @@ function calculateTotalOvertime() {
       const actualWorkText = actualWorkCell?.textContent.trim() || "";
 
       if (!actualWorkText || actualWorkText === "") {
-        console.log(`King-of-Zangyo: 当日 - 実働時間が空のためスキップ`);
         return;
       }
 
       const match = actualWorkText.match(/^(\d+)\.(\d+)$/);
       if (!match) {
-        console.log(`King-of-Zangyo: 当日 - 実働時間の形式が不正のためスキップ`);
         return;
       }
 
@@ -303,11 +261,8 @@ function calculateTotalOvertime() {
 
       // 所定時間未満の場合はスキップ
       if (actualWorkMinutes < STANDARD_WORK_MINUTES) {
-        console.log(`King-of-Zangyo: 当日の実働時間が所定時間未満（${hours}h${minutes}分 = ${actualWorkMinutes}分 < ${STANDARD_WORK_MINUTES}分）のためスキップ`);
         return;
       }
-
-      console.log(`King-of-Zangyo: 当日の実働時間が所定時間以上（${hours}h${minutes}分 = ${actualWorkMinutes}分）のため含める`);
     }
 
     // スケジュール（5番目のtd）を取得
@@ -355,19 +310,10 @@ function calculateTotalOvertime() {
     // 残業時間（分）= 実働時間（分） - 所定労働時間（分）
     const dailyOvertimeMinutes = actualWorkMinutes - STANDARD_WORK_MINUTES;
 
-    console.log(
-      `King-of-Zangyo: ${dateCellText} - 実働${hours}h${minutes}分, 残業${Math.round(
-        dailyOvertimeMinutes
-      )}分`
-    );
-
     // 累計に追加
     totalOvertimeMinutes += dailyOvertimeMinutes;
   });
 
-  console.log(
-    `King-of-Zangyo: 累計残業時間 = ${Math.round(totalOvertimeMinutes)}分`
-  );
   return Math.round(totalOvertimeMinutes);
 }
 
@@ -478,8 +424,6 @@ function getOvertimeBackgroundColor(overtimeMinutes) {
  * @param {boolean} enabled - 表示する場合はtrue、非表示にする場合はfalse
  */
 function toggleOvertimeDisplay(enabled) {
-  console.log(`King-of-Zangyo: 表示切り替え - ${enabled ? "オン" : "オフ"}`);
-
   const header = document.getElementById(OVERTIME_HEADER_ID);
   const cell = document.getElementById(OVERTIME_CELL_ID);
 
@@ -505,8 +449,6 @@ function toggleOvertimeDisplay(enabled) {
 
 // メッセージリスナーを設定（ポップアップからのメッセージを受信）
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  console.log("King-of-Zangyo: メッセージを受信しました", request);
-
   if (request.action === "toggleDisplay") {
     toggleOvertimeDisplay(request.enabled);
     sendResponse({ success: true });
