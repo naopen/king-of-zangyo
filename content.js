@@ -275,8 +275,39 @@ function calculateTotalOvertime() {
       currentYearMonth.year,
       currentYearMonth.month
     );
-    if (!rowDate || rowDate >= today) {
-      return; // 今日以降のデータはスキップ
+    if (!rowDate || rowDate > today) {
+      return; // 明日以降のデータはスキップ
+    }
+
+    // 当日の場合、実働時間が所定時間（7.5h = 450分）以上の場合のみ含める
+    const isToday = rowDate.getTime() === today.getTime();
+    if (isToday) {
+      // 実働時間を先に取得して判定
+      const actualWorkCell = row.querySelector("td.custom12");
+      const actualWorkText = actualWorkCell?.textContent.trim() || "";
+
+      if (!actualWorkText || actualWorkText === "") {
+        console.log(`King-of-Zangyo: 当日 - 実働時間が空のためスキップ`);
+        return;
+      }
+
+      const match = actualWorkText.match(/^(\d+)\.(\d+)$/);
+      if (!match) {
+        console.log(`King-of-Zangyo: 当日 - 実働時間の形式が不正のためスキップ`);
+        return;
+      }
+
+      const hours = parseInt(match[1], 10);
+      const minutes = parseInt(match[2], 10);
+      const actualWorkMinutes = hours * 60 + minutes;
+
+      // 所定時間未満の場合はスキップ
+      if (actualWorkMinutes < STANDARD_WORK_MINUTES) {
+        console.log(`King-of-Zangyo: 当日の実働時間が所定時間未満（${hours}h${minutes}分 = ${actualWorkMinutes}分 < ${STANDARD_WORK_MINUTES}分）のためスキップ`);
+        return;
+      }
+
+      console.log(`King-of-Zangyo: 当日の実働時間が所定時間以上（${hours}h${minutes}分 = ${actualWorkMinutes}分）のため含める`);
     }
 
     // スケジュール（5番目のtd）を取得
