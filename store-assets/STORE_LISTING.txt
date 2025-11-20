@@ -1,0 +1,109 @@
+Chrome Web Store 掲載情報
+====================================
+
+■ 短い説明（日本語・132文字以内）
+------------------------------------
+KING OF TIMEの勤怠管理画面に累計残業時間を自動表示。色分け表示で残業時間を一目で把握できます。
+
+
+■ 短い説明（英語・132文字以内）
+------------------------------------
+Automatically displays cumulative overtime hours on KING OF TIME attendance pages with color-coded indicators for quick insights.
+
+
+■ 詳細な説明（日本語）
+------------------------------------
+KING OF ZANGYO は、KING OF TIMEの勤怠管理画面に累計残業時間を自動的に表示するChrome拡張機能です。
+
+主な機能
+
+• 自動計算
+タイムカード画面で累計残業時間を自動計算して表示します。
+
+• 色分け表示
+残業時間に応じて4段階の色分け表示で一目で状況を把握できます。
+  - 緑: 0～30時間（安全範囲）
+  - 黄: 30～40時間（注意）
+  - 赤: 40～45時間（危険）
+  - 濃赤: 45時間以上（超過）
+
+• 簡単設定
+ワンクリックで表示のON/OFF切り替えが可能です。
+
+• プライバシー保護
+すべてのデータはブラウザ内で処理され、外部への送信は一切ありません。
+
+使い方
+
+1. 拡張機能をインストール
+2. KING OF TIMEのタイムカード画面を開く
+3. 「現時点の目安残業」列が自動的に表示されます
+4. 表示を無効にしたい場合は、拡張機能アイコンから設定を変更
+
+対象ページ
+
+KING OF TIME (https://s2.ta.kingoftime.jp/admin/*) の勤怠管理画面でのみ動作します。
+
+プライバシーについて
+
+• 設定情報のみをブラウザ内に保存
+• 個人情報や勤怠データは一切保存しません
+• 外部サーバーへのデータ送信なし
+
+免責事項
+
+本拡張機能は非公式ツールであり、KING OF TIME公式とは関係ありません。
+
+
+■ 詳細な説明（英語）
+------------------------------------
+KING OF ZANGYO is a Chrome extension that automatically displays cumulative overtime hours on the KING OF TIME attendance management screen.
+
+Key Features
+
+• Automatic Calculation
+Automatically calculates and displays cumulative overtime on timecard pages.
+
+• Color-Coded Display
+Four-tier color coding based on overtime hours for quick status checks.
+  - Green: 0-30 hours (safe range)
+  - Yellow: 30-40 hours (caution)
+  - Red: 40-45 hours (warning)
+  - Dark Red: 45+ hours (exceeded)
+
+• Easy Settings
+Toggle display ON/OFF with one click.
+
+• Privacy Protection
+All data is processed within your browser with no external transmission.
+
+How to Use
+
+1. Install the extension
+2. Open KING OF TIME timecard page
+3. "Current Estimated Overtime" column appears automatically
+4. To disable, change settings via the extension icon
+
+Target Pages
+
+Works only on KING OF TIME (https://s2.ta.kingoftime.jp/admin/*) attendance management pages.
+
+Privacy
+
+• Only stores settings data in your browser
+• No personal information or attendance data is stored
+• No data transmission to external servers
+
+Disclaimer
+
+This is an unofficial tool and is not affiliated with KING OF TIME.
+
+
+■ カテゴリー
+------------------------------------
+Productivity（生産性ツール）
+
+
+■ 推奨タグ
+------------------------------------
+勤怠管理, 残業時間, KING OF TIME, 時間管理, productivity, time tracking, overtime, work hours
