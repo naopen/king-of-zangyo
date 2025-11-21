@@ -42,7 +42,7 @@ Chrome Web Store で「KING OF ZANGYO」を検索してインストールして�
 ### 開発版
 
 ```bash
-git clone https://github.com/[your-username]/King-of-Zangyo.git
+git clone https://github.com/[your-username]/king-of-zangyo.git
 ```
 
 1. `chrome://extensions/` を開く
