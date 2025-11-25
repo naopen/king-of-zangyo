@@ -16,6 +16,17 @@ let STANDARD_WORK_MINUTES = 450; // 7.5時間
  * @returns {boolean} 対象ページの場合はtrue
  */
 function isTargetPage() {
+  // セッション切れページやエラーページを除外
+  const hasErrorDialog = document.querySelector(".htBlock-dialog") !== null;
+  const hasSessionError =
+    document.body.textContent.includes("セッションが無効です") ||
+    document.body.textContent.includes("セッションが切れました");
+
+  if (hasErrorDialog || hasSessionError) {
+    // セッション切れやエラーページの場合は対象外
+    return false;
+  }
+
   const searchParams = new URLSearchParams(window.location.search);
   const pageId = searchParams.get("page_id");
 
@@ -110,7 +121,7 @@ function injectOvertimeColumn() {
     );
 
     if (!summaryTable) {
-      console.warn("King-of-Zangyo: 時間集計テーブルが見つかりません");
+      console.log("King-of-Zangyo: 時間集計テーブルが見つかりません");
       return;
     }
 
@@ -118,7 +129,7 @@ function injectOvertimeColumn() {
     const tbody = summaryTable.querySelector("tbody");
 
     if (!thead || !tbody) {
-      console.warn("King-of-Zangyo: thead または tbody が見つかりません");
+      console.log("King-of-Zangyo: thead または tbody が見つかりません");
       return;
     }
 
