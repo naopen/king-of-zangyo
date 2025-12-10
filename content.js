@@ -182,6 +182,7 @@ function injectOvertimeColumn() {
       th.textContent = "現時点の目安残業";
       th.style.textAlign = "center";
       th.style.fontWeight = "bold";
+      th.style.fontSize = "13px";
       th.style.width = "120px";
       th.style.minWidth = "120px";
       headerRow.appendChild(th);
@@ -195,6 +196,7 @@ function injectOvertimeColumn() {
       td.textContent = overtimeText;
       td.style.textAlign = "center";
       td.style.fontWeight = "bold";
+      td.style.fontSize = "14px";
       td.style.width = "120px";
       td.style.minWidth = "120px";
       td.style.backgroundColor = getOvertimeBackgroundColor(overtimeMinutes);
