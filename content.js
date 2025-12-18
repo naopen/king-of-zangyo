@@ -301,8 +301,13 @@ function calculateTotalOvertime() {
     );
     const workdayTypeCellText = workdayTypeCell?.textContent.trim() || "";
 
-    // 「平日」でない場合はスキップ
-    if (workdayTypeCellText !== "平日") {
+    // 平日かどうかを判定
+    const isWeekday = workdayTypeCellText === "平日";
+    // 休日かどうかを判定（法定休日 = 日曜日、法定外休日 = 土曜日・祝日）
+    const isHoliday = workdayTypeCellText === "法定休日" || workdayTypeCellText === "法定外休日";
+
+    // 平日でも休日でもない場合はスキップ（念のため）
+    if (!isWeekday && !isHoliday) {
       return;
     }
 
@@ -328,8 +333,11 @@ function calculateTotalOvertime() {
     // 実働時間を分に変換（60進法: 8.48 = 8時間48分）
     const actualWorkMinutes = hours * 60 + minutes;
 
-    // 残業時間（分）= 実働時間（分） - 所定労働時間（分）
-    const dailyOvertimeMinutes = actualWorkMinutes - STANDARD_WORK_MINUTES;
+    // 残業時間を計算
+    // 平日：実働時間 - 所定労働時間（450分 = 7.5時間）
+    // 休日（土日祝）：実働時間 - 0分 = 実働時間（全て残業扱い）
+    const standardMinutes = isWeekday ? STANDARD_WORK_MINUTES : 0;
+    const dailyOvertimeMinutes = actualWorkMinutes - standardMinutes;
 
     // 累計に追加
     totalOvertimeMinutes += dailyOvertimeMinutes;
