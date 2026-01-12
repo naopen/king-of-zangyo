@@ -540,7 +540,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 /**
  * 年別データセクションをページに注入する
- * 「月別データ」セクションの直前に配置
+ * 「月別データ」セクション全体の右側に配置
  */
 function injectAnnualDataSection() {
   try {
@@ -565,9 +565,61 @@ function injectAnnualDataSection() {
       return;
     }
 
+    // 月別データのh4の親要素を取得
+    const parentElement = monthlyDataHeading.parentElement;
+
+    if (!parentElement) {
+      console.log("King-of-Zangyo: 月別データセクションの親要素が見つかりません");
+      return;
+    }
+
+    // 「月別データ」と「日別データ」の両方を収集
+    // 「月別データ」見出しから、「日別データ」とその後続要素を含めて収集
+    const elementsToWrap = [];
+    let currentElement = monthlyDataHeading;
+    let h4Count = 0; // h4の出現回数をカウント
+
+    while (currentElement) {
+      // h4要素をカウント
+      if (currentElement.tagName === "H4") {
+        h4Count++;
+        // 3つ目のh4が出現したら終了（月別データ、日別データの次）
+        if (h4Count > 2) {
+          break;
+        }
+      }
+
+      elementsToWrap.push(currentElement);
+      currentElement = currentElement.nextElementSibling;
+    }
+
+    // 横並びレイアウト用のフレックスコンテナを作成
+    const flexContainer = document.createElement("div");
+    flexContainer.style.display = "flex";
+    flexContainer.style.gap = "0";
+    flexContainer.style.alignItems = "flex-start";
+
+    // 左側：月別データと日別データ用のコンテナ
+    const leftContainer = document.createElement("div");
+    leftContainer.style.flex = "0 1 auto";
+    leftContainer.style.minWidth = "0";
+
+    // 月別データのh4の位置にフレックスコンテナを挿入（要素を移動する前に）
+    parentElement.insertBefore(flexContainer, monthlyDataHeading);
+
+    // 左側コンテナをフレックスコンテナに追加
+    flexContainer.appendChild(leftContainer);
+
+    // 収集した要素を左側コンテナに移動
+    elementsToWrap.forEach((element) => {
+      leftContainer.appendChild(element);
+    });
+
     // 年別データセクションを作成
     const sectionContainer = document.createElement("div");
     sectionContainer.id = ANNUAL_SECTION_ID;
+    sectionContainer.style.flex = "0 0 auto";
+    sectionContainer.style.marginLeft = "-850px";
 
     // セクション見出し
     const sectionTitle = document.createElement("h4");
@@ -579,11 +631,11 @@ function injectAnnualDataSection() {
     tableCaption.className = "htBlock-box_caption";
     tableCaption.textContent = "年間集計";
 
-    // テーブルとボタンを横並びにするコンテナ
+    // テーブルとボタンを縦並びにするコンテナ
     const tableAndButtonContainer = document.createElement("div");
     tableAndButtonContainer.style.display = "flex";
-    tableAndButtonContainer.style.alignItems = "flex-start";
-    tableAndButtonContainer.style.gap = "20px";
+    tableAndButtonContainer.style.flexDirection = "column";
+    tableAndButtonContainer.style.gap = "10px";
 
     // テーブルコンテナ
     const tableContainer = document.createElement("div");
@@ -661,10 +713,10 @@ function injectAnnualDataSection() {
     updateButton.type = "button";
     updateButton.className = "htBlock-button htBlock-buttonNormal";
     updateButton.textContent = "最新データで更新";
-    // updateButton.style.marginTop = "30px"; // テーブルヘッダーの高さ分下げる
+    updateButton.style.alignSelf = "flex-start";
     updateButton.addEventListener("click", handleAnnualUpdateButtonClick);
 
-    // テーブルとボタンを横並びコンテナに追加
+    // テーブルとボタンを縦並びコンテナに追加
     tableAndButtonContainer.appendChild(tableContainer);
     tableAndButtonContainer.appendChild(updateButton);
 
@@ -673,11 +725,8 @@ function injectAnnualDataSection() {
     sectionContainer.appendChild(tableCaption);
     sectionContainer.appendChild(tableAndButtonContainer);
 
-    // 「月別データ」の直前に挿入
-    monthlyDataHeading.parentNode.insertBefore(
-      sectionContainer,
-      monthlyDataHeading
-    );
+    // フレックスコンテナの右側に年別データセクションを配置
+    flexContainer.appendChild(sectionContainer);
 
     // 保存されているデータを読み込んで表示
     loadAndDisplayAnnualData();
