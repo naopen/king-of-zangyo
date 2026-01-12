@@ -700,6 +700,8 @@ function injectAnnualDataSection() {
     const lastUpdatedCell = document.createElement("td");
     lastUpdatedCell.id = "annual-last-updated";
     lastUpdatedCell.style.textAlign = "center";
+    lastUpdatedCell.style.fontWeight = "bold";
+    lastUpdatedCell.style.fontSize = "14px";
     lastUpdatedCell.textContent = "未取得";
 
     // セルを行に追加
@@ -771,10 +773,9 @@ function updateAnnualDataDisplay(annualData) {
   if (!annualData) {
     caption.textContent = "年間集計";
     hoursCell.textContent = "未取得";
-    hoursCell.style.backgroundColor = "#f5f5f5";
-    hoursCell.style.color = "#666";
+    hoursCell.style.backgroundColor = "#f5f5f5"; // 初期値に戻す
+    hoursCell.style.color = "#666"; // 初期値に戻す
     updatedCell.textContent = "未取得";
-    updatedCell.style.fontSize = "14px";
     return;
   }
 
@@ -790,14 +791,13 @@ function updateAnnualDataDisplay(annualData) {
   const totalMinutes = annualData.totalMinutes || 0;
   hoursCell.textContent = formatMinutesToTime(totalMinutes);
 
-  // 背景色を設定（時間単位で判定）
+  // 背景色と文字色を設定（時間単位で判定）
   const totalHours = totalMinutes / 60;
   hoursCell.style.backgroundColor =
     getAnnualOvertimeBackgroundColor(totalHours);
 
   // 最終更新を表示
   updatedCell.textContent = annualData.lastUpdated || "--";
-  updatedCell.style.fontSize = "14px";
 }
 
 /**
