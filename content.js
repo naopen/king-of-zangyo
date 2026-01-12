@@ -700,7 +700,7 @@ function injectAnnualDataSection() {
     const lastUpdatedCell = document.createElement("td");
     lastUpdatedCell.id = "annual-last-updated";
     lastUpdatedCell.style.textAlign = "center";
-    lastUpdatedCell.textContent = "--";
+    lastUpdatedCell.textContent = "未取得";
 
     // セルを行に追加
     dataRow.appendChild(annualHoursCell);
@@ -773,7 +773,7 @@ function updateAnnualDataDisplay(annualData) {
     hoursCell.textContent = "未取得";
     hoursCell.style.backgroundColor = "#f5f5f5";
     hoursCell.style.color = "#666";
-    updatedCell.textContent = "--";
+    updatedCell.textContent = "未取得";
     updatedCell.style.fontSize = "14px";
     return;
   }
