@@ -826,7 +826,7 @@ async function handleAnnualUpdateButtonClick() {
     // 確認ダイアログを表示
     const confirmed = await showConfirmDialog(
       "年間残業時間の更新",
-      "12ヶ月分のデータを順次読み込みます。\n処理には数分かかる場合があります。\nよろしいですか？"
+      "12ヶ月分のデータを順次読み込みます。\n処理には10秒〜20秒かかる場合があります。\nよろしいですか？"
     );
 
     if (!confirmed) {
@@ -1601,14 +1601,14 @@ function injectDialogStyles() {
       transform: translateY(1px);
     }
 
-    /* プライマリボタン（King of Time公式の青色） */
+    /* プライマリボタン（King of Time公式の緑色） */
     .kot-zangyo-btn-primary {
-      background-color: #4a90e2;
+      background-color: #1d9e48;
       color: #fff;
     }
 
     .kot-zangyo-btn-primary:hover {
-      background-color: #357abd;
+      background-color: #008736;
     }
 
     /* キャンセルボタン（グレー） */
@@ -1636,7 +1636,7 @@ function injectDialogStyles() {
     /* プログレスバー */
     .progress-bar {
       height: 100%;
-      background-color: #4a90e2;
+      background-color: #1d9e48;
       border-radius: 12px;
       transition: width 0.3s ease;
       display: flex;
