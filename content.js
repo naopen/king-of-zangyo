@@ -569,7 +569,9 @@ function injectAnnualDataSection() {
     const parentElement = monthlyDataHeading.parentElement;
 
     if (!parentElement) {
-      console.log("King-of-Zangyo: 月別データセクションの親要素が見つかりません");
+      console.log(
+        "King-of-Zangyo: 月別データセクションの親要素が見つかりません"
+      );
       return;
     }
 
@@ -777,7 +779,7 @@ function updateAnnualDataDisplay(annualData) {
     hoursCell.style.backgroundColor = "#f5f5f5";
     hoursCell.style.color = "#666";
     updatedCell.textContent = "--";
-    updatedCell.style.fontSize = "12px";
+    updatedCell.style.fontSize = "14px";
     remainingCell.textContent = "--";
     remainingCell.style.color = "#666";
     remainingCell.style.fontWeight = "normal";
@@ -803,7 +805,7 @@ function updateAnnualDataDisplay(annualData) {
 
   // 最終更新を表示
   updatedCell.textContent = annualData.lastUpdated || "--";
-  updatedCell.style.fontSize = "12px";
+  updatedCell.style.fontSize = "14px";
 
   // 残り時間を計算・表示（HH:MM形式）
   const remainingMinutes = 360 * 60 - totalMinutes;
@@ -812,7 +814,9 @@ function updateAnnualDataDisplay(annualData) {
     remainingCell.style.color = "#2e7d32";
     remainingCell.style.fontWeight = "normal";
   } else {
-    remainingCell.textContent = `超過: ${formatMinutesToTime(Math.abs(remainingMinutes))}`;
+    remainingCell.textContent = `超過: ${formatMinutesToTime(
+      Math.abs(remainingMinutes)
+    )}`;
     remainingCell.style.color = "#c62828";
     remainingCell.style.fontWeight = "bold";
   }
