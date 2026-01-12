@@ -629,6 +629,7 @@ function injectAnnualDataSection() {
     // 年間集計テーブルの見出し
     const tableCaption = document.createElement("h5");
     tableCaption.className = "htBlock-box_caption";
+    tableCaption.id = "annual-table-caption";
     tableCaption.textContent = "年間集計";
 
     // テーブルとボタンを縦並びにするコンテナ
@@ -651,7 +652,6 @@ function injectAnnualDataSection() {
 
     const headers = [
       { text: "年間残業時間", width: "120px" },
-      { text: "年度範囲", width: "150px" },
       { text: "最終更新", width: "150px" },
       { text: "360時間まで残り", width: "130px" },
     ];
@@ -679,12 +679,6 @@ function injectAnnualDataSection() {
     annualHoursCell.style.fontWeight = "bold";
     annualHoursCell.textContent = "未取得";
 
-    // 年度範囲セル
-    const yearRangeCell = document.createElement("td");
-    yearRangeCell.id = "annual-year-range";
-    yearRangeCell.style.textAlign = "center";
-    yearRangeCell.textContent = "--";
-
     // 最終更新セル
     const lastUpdatedCell = document.createElement("td");
     lastUpdatedCell.id = "annual-last-updated";
@@ -699,7 +693,6 @@ function injectAnnualDataSection() {
 
     // セルを行に追加
     dataRow.appendChild(annualHoursCell);
-    dataRow.appendChild(yearRangeCell);
     dataRow.appendChild(lastUpdatedCell);
     dataRow.appendChild(remainingCell);
 
@@ -769,26 +762,34 @@ function loadAndDisplayAnnualData() {
  */
 function updateAnnualDataDisplay(annualData) {
   const hoursCell = document.getElementById("annual-overtime-hours");
-  const rangeCell = document.getElementById("annual-year-range");
   const updatedCell = document.getElementById("annual-last-updated");
   const remainingCell = document.getElementById("annual-remaining-hours");
+  const caption = document.getElementById("annual-table-caption");
 
-  if (!hoursCell || !rangeCell || !updatedCell || !remainingCell) {
+  if (!hoursCell || !updatedCell || !remainingCell || !caption) {
     return;
   }
 
   // データがない場合は未取得表示
   if (!annualData) {
+    caption.textContent = "年間集計";
     hoursCell.textContent = "未取得";
     hoursCell.style.backgroundColor = "#f5f5f5";
     hoursCell.style.color = "#666";
-    rangeCell.textContent = "--";
     updatedCell.textContent = "--";
     updatedCell.style.fontSize = "12px";
     remainingCell.textContent = "--";
     remainingCell.style.color = "#666";
     remainingCell.style.fontWeight = "normal";
     return;
+  }
+
+  // 年度範囲をタイトルに表示（2025/04 〜 2026/03 形式）
+  if (annualData.yearRange) {
+    const yearRangeFormatted = annualData.yearRange.replace("-", " 〜 ");
+    caption.textContent = `年間集計 (${yearRangeFormatted})`;
+  } else {
+    caption.textContent = "年間集計";
   }
 
   // 年間残業時間を表示（HH:MM形式）
@@ -799,9 +800,6 @@ function updateAnnualDataDisplay(annualData) {
   const totalHours = totalMinutes / 60;
   hoursCell.style.backgroundColor =
     getAnnualOvertimeBackgroundColor(totalHours);
-
-  // 年度範囲を表示
-  rangeCell.textContent = annualData.yearRange || "--";
 
   // 最終更新を表示
   updatedCell.textContent = annualData.lastUpdated || "--";
