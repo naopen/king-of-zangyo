@@ -3,6 +3,8 @@
 // ストレージキー定数
 const STORAGE_KEY = "kingOfZangyoEnabled";
 const STANDARD_HOURS_KEY = "kingOfZangyoStandardHours";
+const FISCAL_YEAR_START_KEY = "kingOfZangyoFiscalYearStartMonth";
+const ANNUAL_DATA_KEY = "kingOfZangyoAnnualData";
 
 // ページ読み込み時に現在の設定を読み込む
 document.addEventListener("DOMContentLoaded", () => {
@@ -14,35 +16,52 @@ document.addEventListener("DOMContentLoaded", () => {
  * 保存されている設定を読み込んでUIに反映する
  */
 function loadSettings() {
-  chrome.storage.sync.get([STORAGE_KEY, STANDARD_HOURS_KEY], (result) => {
-    // 残業時間表示のON/OFF設定（デフォルトは「オン」）
-    const isEnabled =
-      result[STORAGE_KEY] !== undefined ? result[STORAGE_KEY] : true;
-    const toggleSwitch = document.getElementById("toggle-switch");
+  chrome.storage.sync.get(
+    [STORAGE_KEY, STANDARD_HOURS_KEY, FISCAL_YEAR_START_KEY],
+    (result) => {
+      // 残業時間表示のON/OFF設定（デフォルトは「オン」）
+      const isEnabled =
+        result[STORAGE_KEY] !== undefined ? result[STORAGE_KEY] : true;
+      const toggleSwitch = document.getElementById("toggle-switch");
 
-    if (toggleSwitch) {
-      toggleSwitch.checked = isEnabled;
-    }
+      if (toggleSwitch) {
+        toggleSwitch.checked = isEnabled;
+      }
 
-    // 所定労働時間の設定（デフォルトは7.5時間）
-    const standardHours =
-      result[STANDARD_HOURS_KEY] !== undefined
-        ? result[STANDARD_HOURS_KEY]
-        : 7.5;
-    const standardHoursInput = document.getElementById("standard-hours");
+      // 所定労働時間の設定（デフォルトは7.5時間）
+      const standardHours =
+        result[STANDARD_HOURS_KEY] !== undefined
+          ? result[STANDARD_HOURS_KEY]
+          : 7.5;
+      const standardHoursInput = document.getElementById("standard-hours");
 
-    if (standardHoursInput) {
-      standardHoursInput.value = standardHours;
-    }
+      if (standardHoursInput) {
+        standardHoursInput.value = standardHours;
+      }
 
-    // デフォルト値が設定されていない場合は保存
-    if (result[STORAGE_KEY] === undefined) {
-      saveSettings(true);
+      // 年度開始月の設定（デフォルトは4月）
+      const fiscalYearStart =
+        result[FISCAL_YEAR_START_KEY] !== undefined
+          ? result[FISCAL_YEAR_START_KEY]
+          : 4;
+      const fiscalYearStartSelect = document.getElementById("fiscal-year-start");
+
+      if (fiscalYearStartSelect) {
+        fiscalYearStartSelect.value = fiscalYearStart.toString();
+      }
+
+      // デフォルト値が設定されていない場合は保存
+      if (result[STORAGE_KEY] === undefined) {
+        saveSettings(true);
+      }
+      if (result[STANDARD_HOURS_KEY] === undefined) {
+        saveStandardHours(7.5);
+      }
+      if (result[FISCAL_YEAR_START_KEY] === undefined) {
+        saveFiscalYearStart(4);
+      }
     }
-    if (result[STANDARD_HOURS_KEY] === undefined) {
-      saveStandardHours(7.5);
-    }
-  });
+  );
 }
 
 /**
@@ -112,6 +131,43 @@ function saveStandardHours(hours) {
 }
 
 /**
+ * 年度開始月をストレージに保存する
+ * @param {number} month - 年度開始月（1-12）
+ */
+function saveFiscalYearStart(month) {
+  chrome.storage.sync.set({ [FISCAL_YEAR_START_KEY]: month }, () => {
+    console.log(`King-of-Zangyo: 年度開始月を保存しました (${month}月)`);
+
+    // 既存の年間データをクリア
+    chrome.storage.sync.remove([ANNUAL_DATA_KEY], () => {
+      console.log("King-of-Zangyo: 年間データをクリアしました");
+    });
+
+    // アクティブなタブにメッセージを送信して、年度開始月を更新
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs[0]) {
+        chrome.tabs.sendMessage(
+          tabs[0].id,
+          {
+            action: "updateFiscalYearStart",
+            month: month,
+          },
+          (response) => {
+            if (chrome.runtime.lastError) {
+              console.log(
+                "King-of-Zangyo: メッセージ送信エラー（ページをリロードしてください）"
+              );
+            } else {
+              console.log("King-of-Zangyo: 年度開始月を更新しました");
+            }
+          }
+        );
+      }
+    });
+  });
+}
+
+/**
  * イベントリスナーをセットアップする
  */
 function setupEventListeners() {
@@ -143,6 +199,24 @@ function setupEventListeners() {
       }
 
       saveStandardHours(hours);
+    });
+  }
+
+  const fiscalYearStartSelect = document.getElementById("fiscal-year-start");
+
+  if (fiscalYearStartSelect) {
+    // 年度開始月が変更されたときに保存
+    fiscalYearStartSelect.addEventListener("change", (event) => {
+      let month = parseInt(event.target.value);
+
+      // バリデーション
+      if (isNaN(month) || month < 1 || month > 12) {
+        // 無効な値の場合はデフォルトの4月に戻す
+        month = 4;
+        event.target.value = month;
+      }
+
+      saveFiscalYearStart(month);
     });
   }
 }
