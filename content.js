@@ -35,10 +35,10 @@ function isTargetPage() {
       console.error("King-of-Zangyo: 処理状態のクリアに失敗しました", err);
     });
 
-    // セッション切れの場合はアラート表示
-    if (hasSessionError) {
-      alert("セッションが切れました。再ログインして、もう一度お試しください。");
-    }
+    // // セッション切れの場合はアラート表示
+    // if (hasSessionError) {
+    //   alert("セッションが切れました。再ログインして、もう一度お試しください。");
+    // }
 
     return false;
   }
@@ -579,6 +579,12 @@ function injectAnnualDataSection() {
     tableCaption.className = "htBlock-box_caption";
     tableCaption.textContent = "年間集計";
 
+    // テーブルとボタンを横並びにするコンテナ
+    const tableAndButtonContainer = document.createElement("div");
+    tableAndButtonContainer.style.display = "flex";
+    tableAndButtonContainer.style.alignItems = "flex-start";
+    tableAndButtonContainer.style.gap = "20px";
+
     // テーブルコンテナ
     const tableContainer = document.createElement("div");
     tableContainer.className = "htBlock-normalTable specific-table";
@@ -596,7 +602,6 @@ function injectAnnualDataSection() {
       { text: "年度範囲", width: "150px" },
       { text: "最終更新", width: "150px" },
       { text: "360時間まで残り", width: "130px" },
-      { text: "操作", width: "150px" },
     ];
 
     headers.forEach((header) => {
@@ -640,34 +645,33 @@ function injectAnnualDataSection() {
     remainingCell.style.textAlign = "center";
     remainingCell.textContent = "--";
 
-    // 操作セル（更新ボタン）
-    const actionCell = document.createElement("td");
-    actionCell.style.textAlign = "center";
-
-    const updateButton = document.createElement("button");
-    updateButton.type = "button";
-    updateButton.className = "htBlock-button htBlock-buttonNormal";
-    updateButton.textContent = "最新データで更新";
-    updateButton.addEventListener("click", handleAnnualUpdateButtonClick);
-
-    actionCell.appendChild(updateButton);
-
     // セルを行に追加
     dataRow.appendChild(annualHoursCell);
     dataRow.appendChild(yearRangeCell);
     dataRow.appendChild(lastUpdatedCell);
     dataRow.appendChild(remainingCell);
-    dataRow.appendChild(actionCell);
 
     tbody.appendChild(dataRow);
     table.appendChild(tbody);
 
     tableContainer.appendChild(table);
 
+    // 更新ボタン
+    const updateButton = document.createElement("button");
+    updateButton.type = "button";
+    updateButton.className = "htBlock-button htBlock-buttonNormal";
+    updateButton.textContent = "最新データで更新";
+    // updateButton.style.marginTop = "30px"; // テーブルヘッダーの高さ分下げる
+    updateButton.addEventListener("click", handleAnnualUpdateButtonClick);
+
+    // テーブルとボタンを横並びコンテナに追加
+    tableAndButtonContainer.appendChild(tableContainer);
+    tableAndButtonContainer.appendChild(updateButton);
+
     // セクションを構築
     sectionContainer.appendChild(sectionTitle);
     sectionContainer.appendChild(tableCaption);
-    sectionContainer.appendChild(tableContainer);
+    sectionContainer.appendChild(tableAndButtonContainer);
 
     // 「月別データ」の直前に挿入
     monthlyDataHeading.parentNode.insertBefore(
