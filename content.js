@@ -791,11 +791,12 @@ function updateAnnualDataDisplay(annualData) {
     return;
   }
 
-  // 年間残業時間を表示
-  const totalHours = annualData.totalHours || 0;
-  hoursCell.textContent = `${totalHours.toFixed(1)}時間`;
+  // 年間残業時間を表示（HH:MM形式）
+  const totalMinutes = annualData.totalMinutes || 0;
+  hoursCell.textContent = formatMinutesToTime(totalMinutes);
 
-  // 背景色を設定
+  // 背景色を設定（時間単位で判定）
+  const totalHours = totalMinutes / 60;
   hoursCell.style.backgroundColor =
     getAnnualOvertimeBackgroundColor(totalHours);
 
@@ -806,14 +807,14 @@ function updateAnnualDataDisplay(annualData) {
   updatedCell.textContent = annualData.lastUpdated || "--";
   updatedCell.style.fontSize = "12px";
 
-  // 残り時間を計算・表示
-  const remaining = 360 - totalHours;
-  if (remaining > 0) {
-    remainingCell.textContent = `${remaining.toFixed(1)}時間`;
+  // 残り時間を計算・表示（HH:MM形式）
+  const remainingMinutes = 360 * 60 - totalMinutes;
+  if (remainingMinutes > 0) {
+    remainingCell.textContent = formatMinutesToTime(remainingMinutes);
     remainingCell.style.color = "#2e7d32";
     remainingCell.style.fontWeight = "normal";
   } else {
-    remainingCell.textContent = `超過: ${Math.abs(remaining).toFixed(1)}時間`;
+    remainingCell.textContent = `超過: ${formatMinutesToTime(Math.abs(remainingMinutes))}`;
     remainingCell.style.color = "#c62828";
     remainingCell.style.fontWeight = "bold";
   }
@@ -1510,20 +1511,21 @@ function showResultDialog(annualData) {
     const body = document.createElement("div");
     body.className = "kot-zangyo-dialog-body";
 
-    const totalHours = annualData.totalHours || 0;
-    const remaining = 360 - totalHours;
+    const totalMinutes = annualData.totalMinutes || 0;
+    const totalHours = totalMinutes / 60;
+    const remainingMinutes = 360 * 60 - totalMinutes;
 
-    // 結果メッセージを作成
-    let message = `年間残業時間: ${totalHours.toFixed(1)}時間\n`;
+    // 結果メッセージを作成（HH:MM形式）
+    let message = `年間残業時間: ${formatMinutesToTime(totalMinutes)}\n`;
     message += `年度範囲: ${annualData.yearRange}\n`;
     message += `最終更新: ${annualData.lastUpdated}\n\n`;
 
-    if (remaining > 0) {
-      message += `360時間まで残り: ${remaining.toFixed(1)}時間`;
+    if (remainingMinutes > 0) {
+      message += `360時間まで残り: ${formatMinutesToTime(remainingMinutes)}`;
     } else {
-      message += `⚠️ 警告: 年間360時間を超過しています！\n超過時間: ${Math.abs(
-        remaining
-      ).toFixed(1)}時間`;
+      message += `⚠️ 警告: 年間360時間を超過しています！\n超過時間: ${formatMinutesToTime(
+        Math.abs(remainingMinutes)
+      )}`;
     }
 
     body.style.whiteSpace = "pre-line";
