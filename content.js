@@ -623,22 +623,38 @@ function injectAnnualDataSection() {
     sectionContainer.style.flex = "0 0 auto";
     sectionContainer.style.marginLeft = "-850px";
 
+    // 更新ボタン
+    const updateButton = document.createElement("button");
+    updateButton.type = "button";
+    updateButton.className = "htBlock-buttonPrimary htBlock-buttonM";
+    updateButton.style.position = "relative";
+    updateButton.style.top = "-1px";
+    const buttonSpan = document.createElement("span");
+    buttonSpan.textContent = "最新データで更新";
+    updateButton.appendChild(buttonSpan);
+    updateButton.addEventListener("click", handleAnnualUpdateButtonClick);
+
+    // セクション見出しとボタンを横並びにするコンテナ
+    const titleContainer = document.createElement("div");
+    titleContainer.style.display = "flex";
+    titleContainer.style.alignItems = "baseline";
+    titleContainer.style.gap = "12px";
+
     // セクション見出し
     const sectionTitle = document.createElement("h4");
     sectionTitle.className = "htBlock-box_subTitle";
     sectionTitle.textContent = "年別データ";
+
+    // タイトルコンテナに見出しとボタンを追加
+    titleContainer.appendChild(sectionTitle);
+    titleContainer.appendChild(updateButton);
 
     // 年間集計テーブルの見出し
     const tableCaption = document.createElement("h5");
     tableCaption.className = "htBlock-box_caption";
     tableCaption.id = "annual-table-caption";
     tableCaption.textContent = "年間集計";
-
-    // テーブルとボタンを縦並びにするコンテナ
-    const tableAndButtonContainer = document.createElement("div");
-    tableAndButtonContainer.style.display = "flex";
-    tableAndButtonContainer.style.flexDirection = "column";
-    tableAndButtonContainer.style.gap = "10px";
+    tableCaption.style.marginTop = "8px";
 
     // テーブルコンテナ
     const tableContainer = document.createElement("div");
@@ -655,7 +671,6 @@ function injectAnnualDataSection() {
     const headers = [
       { text: "年間残業時間", width: "120px" },
       { text: "最終更新", width: "150px" },
-      { text: "360時間まで残り", width: "130px" },
     ];
 
     headers.forEach((header) => {
@@ -687,38 +702,19 @@ function injectAnnualDataSection() {
     lastUpdatedCell.style.textAlign = "center";
     lastUpdatedCell.textContent = "--";
 
-    // 残り時間セル
-    const remainingCell = document.createElement("td");
-    remainingCell.id = "annual-remaining-hours";
-    remainingCell.style.textAlign = "center";
-    remainingCell.textContent = "--";
-
     // セルを行に追加
     dataRow.appendChild(annualHoursCell);
     dataRow.appendChild(lastUpdatedCell);
-    dataRow.appendChild(remainingCell);
 
     tbody.appendChild(dataRow);
     table.appendChild(tbody);
 
     tableContainer.appendChild(table);
 
-    // 更新ボタン
-    const updateButton = document.createElement("button");
-    updateButton.type = "button";
-    updateButton.className = "htBlock-button htBlock-buttonNormal";
-    updateButton.textContent = "最新データで更新";
-    updateButton.style.alignSelf = "flex-start";
-    updateButton.addEventListener("click", handleAnnualUpdateButtonClick);
-
-    // テーブルとボタンを縦並びコンテナに追加
-    tableAndButtonContainer.appendChild(tableContainer);
-    tableAndButtonContainer.appendChild(updateButton);
-
     // セクションを構築
-    sectionContainer.appendChild(sectionTitle);
+    sectionContainer.appendChild(titleContainer);
     sectionContainer.appendChild(tableCaption);
-    sectionContainer.appendChild(tableAndButtonContainer);
+    sectionContainer.appendChild(tableContainer);
 
     // フレックスコンテナの右側に年別データセクションを配置
     flexContainer.appendChild(sectionContainer);
@@ -765,10 +761,9 @@ function loadAndDisplayAnnualData() {
 function updateAnnualDataDisplay(annualData) {
   const hoursCell = document.getElementById("annual-overtime-hours");
   const updatedCell = document.getElementById("annual-last-updated");
-  const remainingCell = document.getElementById("annual-remaining-hours");
   const caption = document.getElementById("annual-table-caption");
 
-  if (!hoursCell || !updatedCell || !remainingCell || !caption) {
+  if (!hoursCell || !updatedCell || !caption) {
     return;
   }
 
@@ -780,9 +775,6 @@ function updateAnnualDataDisplay(annualData) {
     hoursCell.style.color = "#666";
     updatedCell.textContent = "--";
     updatedCell.style.fontSize = "14px";
-    remainingCell.textContent = "--";
-    remainingCell.style.color = "#666";
-    remainingCell.style.fontWeight = "normal";
     return;
   }
 
@@ -806,20 +798,6 @@ function updateAnnualDataDisplay(annualData) {
   // 最終更新を表示
   updatedCell.textContent = annualData.lastUpdated || "--";
   updatedCell.style.fontSize = "14px";
-
-  // 残り時間を計算・表示（HH:MM形式）
-  const remainingMinutes = 360 * 60 - totalMinutes;
-  if (remainingMinutes > 0) {
-    remainingCell.textContent = formatMinutesToTime(remainingMinutes);
-    remainingCell.style.color = "#2e7d32";
-    remainingCell.style.fontWeight = "normal";
-  } else {
-    remainingCell.textContent = `超過: ${formatMinutesToTime(
-      Math.abs(remainingMinutes)
-    )}`;
-    remainingCell.style.color = "#c62828";
-    remainingCell.style.fontWeight = "bold";
-  }
 }
 
 /**
@@ -1515,20 +1493,11 @@ function showResultDialog(annualData) {
 
     const totalMinutes = annualData.totalMinutes || 0;
     const totalHours = totalMinutes / 60;
-    const remainingMinutes = 360 * 60 - totalMinutes;
 
     // 結果メッセージを作成（HH:MM形式）
     let message = `年間残業時間: ${formatMinutesToTime(totalMinutes)}\n`;
     message += `年度範囲: ${annualData.yearRange}\n`;
-    message += `最終更新: ${annualData.lastUpdated}\n\n`;
-
-    if (remainingMinutes > 0) {
-      message += `360時間まで残り: ${formatMinutesToTime(remainingMinutes)}`;
-    } else {
-      message += `⚠️ 警告: 年間360時間を超過しています！\n超過時間: ${formatMinutesToTime(
-        Math.abs(remainingMinutes)
-      )}`;
-    }
+    message += `最終更新: ${annualData.lastUpdated}`;
 
     body.style.whiteSpace = "pre-line";
     body.textContent = message;
