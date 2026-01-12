@@ -663,6 +663,8 @@ function injectAnnualDataSection() {
     // テーブル作成
     const table = document.createElement("table");
     table.className = "specific-table_800";
+    table.style.tableLayout = "fixed";
+    table.style.width = "270px";
 
     // テーブルヘッダー
     const thead = document.createElement("thead");
@@ -694,14 +696,19 @@ function injectAnnualDataSection() {
     annualHoursCell.id = "annual-overtime-hours";
     annualHoursCell.style.textAlign = "center";
     annualHoursCell.style.fontWeight = "bold";
+    annualHoursCell.style.fontSize = "14px";
+    annualHoursCell.style.width = "120px";
+    annualHoursCell.style.minWidth = "120px";
     annualHoursCell.textContent = "未取得";
 
     // 最終更新セル
     const lastUpdatedCell = document.createElement("td");
     lastUpdatedCell.id = "annual-last-updated";
     lastUpdatedCell.style.textAlign = "center";
-    lastUpdatedCell.style.fontWeight = "bold";
+    // lastUpdatedCell.style.fontWeight = "bold";
     lastUpdatedCell.style.fontSize = "14px";
+    lastUpdatedCell.style.width = "120px";
+    lastUpdatedCell.style.minWidth = "120px";
     lastUpdatedCell.textContent = "未取得";
 
     // セルを行に追加
