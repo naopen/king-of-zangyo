@@ -4,7 +4,9 @@
 const STORAGE_KEY = "kingOfZangyoEnabled";
 const STANDARD_HOURS_KEY = "kingOfZangyoStandardHours";
 const FISCAL_YEAR_START_KEY = "kingOfZangyoFiscalYearStartMonth";
-const ANNUAL_DATA_KEY = "kingOfZangyoAnnualData";
+const ANNUAL_DATA_KEY = "kingOfZangyoAnnualData"; // 旧キー（互換性のため残す）
+const ANNUAL_DATA_KEY_PREFIX = "kingOfZangyoAnnualData_"; // 年度別キーの接頭辞
+const ANNUAL_DATA_YEARS_KEY = "kingOfZangyoAnnualDataYears"; // 保存済み年度リスト
 
 // ページ読み込み時に現在の設定を読み込む
 document.addEventListener("DOMContentLoaded", () => {
@@ -134,36 +136,49 @@ function saveStandardHours(hours) {
  * 年度開始月をストレージに保存する
  * @param {number} month - 年度開始月（1-12）
  */
-function saveFiscalYearStart(month) {
-  chrome.storage.sync.set({ [FISCAL_YEAR_START_KEY]: month }, () => {
-    console.log(`King-of-Zangyo: 年度開始月を保存しました (${month}月)`);
+async function saveFiscalYearStart(month) {
+  // 全年度データを削除
+  const result = await chrome.storage.sync.get([ANNUAL_DATA_YEARS_KEY]);
+  const years = result[ANNUAL_DATA_YEARS_KEY] || [];
 
-    // 既存の年間データをクリア
-    chrome.storage.sync.remove([ANNUAL_DATA_KEY], () => {
-      console.log("King-of-Zangyo: 年間データをクリアしました");
-    });
+  // 各年度のデータを削除
+  for (const year of years) {
+    const key = `${ANNUAL_DATA_KEY_PREFIX}${year}`;
+    await chrome.storage.sync.remove([key]);
+    console.log(`King-of-Zangyo: ${year}年度のデータを削除しました`);
+  }
 
-    // アクティブなタブにメッセージを送信して、年度開始月を更新
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      if (tabs[0]) {
-        chrome.tabs.sendMessage(
-          tabs[0].id,
-          {
-            action: "updateFiscalYearStart",
-            month: month,
-          },
-          (response) => {
-            if (chrome.runtime.lastError) {
-              console.log(
-                "King-of-Zangyo: メッセージ送信エラー（ページをリロードしてください）"
-              );
-            } else {
-              console.log("King-of-Zangyo: 年度開始月を更新しました");
-            }
+  // 年度リストを削除
+  await chrome.storage.sync.remove([ANNUAL_DATA_YEARS_KEY]);
+  console.log("King-of-Zangyo: 年度リストを削除しました");
+
+  // 旧キーも削除（互換性のため）
+  await chrome.storage.sync.remove([ANNUAL_DATA_KEY]);
+
+  // 年度開始月を保存
+  await chrome.storage.sync.set({ [FISCAL_YEAR_START_KEY]: month });
+  console.log(`King-of-Zangyo: 年度開始月を保存しました (${month}月)`);
+
+  // アクティブなタブにメッセージを送信して、年度開始月を更新
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    if (tabs[0]) {
+      chrome.tabs.sendMessage(
+        tabs[0].id,
+        {
+          action: "updateFiscalYearStart",
+          month: month,
+        },
+        (response) => {
+          if (chrome.runtime.lastError) {
+            console.log(
+              "King-of-Zangyo: メッセージ送信エラー（ページをリロードしてください）"
+            );
+          } else {
+            console.log("King-of-Zangyo: 年度開始月を更新しました");
           }
-        );
-      }
-    });
+        }
+      );
+    }
   });
 }
 
@@ -205,8 +220,11 @@ function setupEventListeners() {
   const fiscalYearStartSelect = document.getElementById("fiscal-year-start");
 
   if (fiscalYearStartSelect) {
+    // 変更前の値を保持
+    let previousFiscalYearStart = fiscalYearStartSelect.value;
+
     // 年度開始月が変更されたときに保存
-    fiscalYearStartSelect.addEventListener("change", (event) => {
+    fiscalYearStartSelect.addEventListener("change", async (event) => {
       let month = parseInt(event.target.value);
 
       // バリデーション
@@ -216,7 +234,24 @@ function setupEventListeners() {
         event.target.value = month;
       }
 
-      saveFiscalYearStart(month);
+      // 確認ダイアログを表示
+      const confirmed = confirm(
+        "年度開始月を変更すると、保存されている全ての年度データが削除されます。\n" +
+          "（年度サイクル変更により、データの整合性を保つため）\n" +
+          "よろしいですか？"
+      );
+
+      if (!confirmed) {
+        // キャンセルされた場合、前の値に戻す
+        fiscalYearStartSelect.value = previousFiscalYearStart;
+        return;
+      }
+
+      // データを削除して年度開始月を保存
+      await saveFiscalYearStart(month);
+
+      // 保存成功後、現在の値を保持
+      previousFiscalYearStart = month;
     });
   }
 }

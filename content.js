@@ -4,8 +4,10 @@
 const STORAGE_KEY = "kingOfZangyoEnabled";
 const STANDARD_HOURS_KEY = "kingOfZangyoStandardHours";
 const FISCAL_YEAR_START_KEY = "kingOfZangyoFiscalYearStartMonth";
-const ANNUAL_DATA_KEY = "kingOfZangyoAnnualData";
+const ANNUAL_DATA_KEY_PREFIX = "kingOfZangyoAnnualData_"; // 年度別キーの接頭辞
+const ANNUAL_DATA_YEARS_KEY = "kingOfZangyoAnnualDataYears"; // 保存済み年度リスト
 const PROCESSING_STATE_KEY = "kingOfZangyoProcessingState";
+// 注: 旧キー "kingOfZangyoAnnualData" は手動削除（移行処理なし）
 
 // DOM要素の一意なID
 const OVERTIME_HEADER_ID = "king-of-zangyo-header";
@@ -73,7 +75,7 @@ function isTargetPage() {
 /**
  * アプリケーションの初期化
  */
-function initializeApp() {
+async function initializeApp() {
   try {
     // 対象ページかチェック
     if (!isTargetPage()) {
@@ -98,7 +100,7 @@ function initializeApp() {
 
     chrome.storage.sync.get(
       [STORAGE_KEY, STANDARD_HOURS_KEY, FISCAL_YEAR_START_KEY],
-      (result) => {
+      async (result) => {
         if (chrome.runtime.lastError) {
           console.error(
             "King-of-Zangyo: ストレージ取得エラー:",
@@ -106,7 +108,7 @@ function initializeApp() {
           );
           // エラーの場合はデフォルトでオンにする
           injectOvertimeColumn();
-          injectAnnualDataSection();
+          await injectAnnualDataSection();
           injectDialogStyles();
           return;
         }
@@ -134,7 +136,7 @@ function initializeApp() {
         }
 
         // 年別データセクションを注入（常に表示）
-        injectAnnualDataSection();
+        await injectAnnualDataSection();
 
         // ダイアログスタイルを注入
         injectDialogStyles();
@@ -530,8 +532,28 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     // 年度開始月を更新
     FISCAL_YEAR_START_MONTH = request.month;
     console.log(`King-of-Zangyo: 年度開始月を${request.month}月に更新しました`);
-    // 年別データセクションの表示をリセット（データクリア済み）
-    updateAnnualDataDisplay(null);
+
+    // 現在年度を再計算
+    const currentFiscalYear = determineFiscalYear(
+      new Date().getFullYear(),
+      new Date().getMonth() + 1,
+      FISCAL_YEAR_START_MONTH
+    );
+
+    // 表示をリセット（全データ削除済みのため）
+    updateAnnualDataDisplay(null, currentFiscalYear);
+
+    // ドロップダウンをリセット（現在年度のみ表示）
+    const fiscalYearSelect = document.getElementById("annual-fiscal-year-select");
+    if (fiscalYearSelect) {
+      fiscalYearSelect.innerHTML = "";
+      const option = document.createElement("option");
+      option.value = currentFiscalYear;
+      option.textContent = `${currentFiscalYear}年度`;
+      option.selected = true;
+      fiscalYearSelect.appendChild(option);
+    }
+
     sendResponse({ success: true });
   }
 
@@ -542,7 +564,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
  * 年別データセクションをページに注入する
  * 「月別データ」セクション全体の右側に配置
  */
-function injectAnnualDataSection() {
+async function injectAnnualDataSection() {
   try {
     // 既にセクションが注入されている場合はスキップ
     if (document.getElementById(ANNUAL_SECTION_ID)) {
@@ -623,6 +645,40 @@ function injectAnnualDataSection() {
     sectionContainer.style.flex = "0 0 auto";
     sectionContainer.style.marginLeft = "-850px";
 
+    // ★年度選択ドロップダウンを作成
+    const currentFiscalYear = determineFiscalYear(
+      new Date().getFullYear(),
+      new Date().getMonth() + 1,
+      FISCAL_YEAR_START_MONTH
+    );
+
+    // 保存済み年度リストを取得
+    const savedYears = await getSavedFiscalYears();
+
+    // 現在年度と保存済み年度を結合（重複削除、降順）
+    const allYears = [...new Set([currentFiscalYear, ...savedYears])].sort(
+      (a, b) => b - a
+    );
+
+    const fiscalYearSelect = document.createElement("select");
+    fiscalYearSelect.id = "annual-fiscal-year-select";
+    fiscalYearSelect.className = "htBlock-selectmenu"; // 既存UIに準拠
+    fiscalYearSelect.style.marginRight = "8px";
+
+    // 年度オプションを生成
+    allYears.forEach((year) => {
+      const option = document.createElement("option");
+      option.value = year;
+      option.textContent = `${year}年度`;
+      if (year === currentFiscalYear) {
+        option.selected = true;
+      }
+      fiscalYearSelect.appendChild(option);
+    });
+
+    // 変更イベントリスナー
+    fiscalYearSelect.addEventListener("change", handleFiscalYearChange);
+
     // 更新ボタン
     const updateButton = document.createElement("button");
     updateButton.type = "button";
@@ -645,8 +701,9 @@ function injectAnnualDataSection() {
     sectionTitle.className = "htBlock-box_subTitle";
     sectionTitle.textContent = "年別データ";
 
-    // タイトルコンテナに見出しとボタンを追加
+    // タイトルコンテナに見出し、ドロップダウン、ボタンを追加
     titleContainer.appendChild(sectionTitle);
+    titleContainer.appendChild(fiscalYearSelect);
     titleContainer.appendChild(updateButton);
 
     // 年間集計テーブルの見出し
@@ -741,33 +798,55 @@ function injectAnnualDataSection() {
 }
 
 /**
- * 保存された年間データを読み込んで表示を更新する
+ * 年度選択ドロップダウン変更時のハンドラ
+ * @param {Event} event - 変更イベント
  */
-function loadAndDisplayAnnualData() {
-  chrome.storage.sync.get([ANNUAL_DATA_KEY], (result) => {
-    if (chrome.runtime.lastError) {
-      console.error(
-        "King-of-Zangyo: 年間データ読み込みエラー:",
-        chrome.runtime.lastError
-      );
-      return;
-    }
+async function handleFiscalYearChange(event) {
+  const selectedYear = parseInt(event.target.value, 10);
+  console.log(`King-of-Zangyo: 年度を${selectedYear}に変更しました`);
 
-    const annualData = result[ANNUAL_DATA_KEY];
+  try {
+    // 選択された年度のデータを読み込んで表示
+    const annualData = await loadAnnualData(selectedYear);
+    updateAnnualDataDisplay(annualData, selectedYear);
+  } catch (error) {
+    console.error("King-of-Zangyo: 年度データ読み込みエラー:", error);
+  }
+}
+
+/**
+ * 保存された年間データを読み込んで表示を更新する（初期表示用）
+ */
+async function loadAndDisplayAnnualData() {
+  try {
+    // 現在年度を判定
+    const currentFiscalYear = determineFiscalYear(
+      new Date().getFullYear(),
+      new Date().getMonth() + 1,
+      FISCAL_YEAR_START_MONTH
+    );
+
+    // 現在年度のデータを読み込み
+    const annualData = await loadAnnualData(currentFiscalYear);
+
     if (!annualData) {
-      console.log("King-of-Zangyo: 保存された年間データがありません");
-      return;
+      console.log(
+        `King-of-Zangyo: ${currentFiscalYear}年度の保存データがありません`
+      );
     }
 
-    updateAnnualDataDisplay(annualData);
-  });
+    updateAnnualDataDisplay(annualData, currentFiscalYear);
+  } catch (error) {
+    console.error("King-of-Zangyo: 年間データ読み込みエラー:", error);
+  }
 }
 
 /**
  * 年別データセクションの表示を更新する
  * @param {Object|null} annualData - 年間データオブジェクト（nullの場合は未取得表示）
+ * @param {number} fiscalYear - 年度
  */
-function updateAnnualDataDisplay(annualData) {
+function updateAnnualDataDisplay(annualData, fiscalYear) {
   const hoursCell = document.getElementById("annual-overtime-hours");
   const updatedCell = document.getElementById("annual-last-updated");
   const caption = document.getElementById("annual-table-caption");
@@ -778,7 +857,7 @@ function updateAnnualDataDisplay(annualData) {
 
   // データがない場合は未取得表示
   if (!annualData) {
-    caption.textContent = "年間集計";
+    caption.textContent = `年間集計 (${fiscalYear}年度)`;
     hoursCell.textContent = "未取得";
     hoursCell.style.backgroundColor = "#f5f5f5"; // 初期値に戻す
     hoursCell.style.color = "#666"; // 初期値に戻す
@@ -791,7 +870,7 @@ function updateAnnualDataDisplay(annualData) {
     const yearRangeFormatted = annualData.yearRange.replace("-", " 〜 ");
     caption.textContent = `年間集計 (${yearRangeFormatted})`;
   } else {
-    caption.textContent = "年間集計";
+    caption.textContent = `年間集計 (${fiscalYear}年度)`;
   }
 
   // 年間残業時間を表示（HH:MM形式）
@@ -846,24 +925,34 @@ async function handleAnnualUpdateButtonClick() {
       return;
     }
 
-    // 確認ダイアログを表示
-    const confirmed = await showConfirmDialog(
-      "年間残業時間の更新",
-      "12ヶ月分のデータを順次読み込みます。\n処理には10秒〜20秒かかる場合があります。\nよろしいですか？"
+    // ★選択された年度を取得
+    const fiscalYearSelect = document.getElementById(
+      "annual-fiscal-year-select"
     );
+    const selectedFiscalYear = fiscalYearSelect
+      ? parseInt(fiscalYearSelect.value, 10)
+      : null;
 
-    if (!confirmed) {
-      console.log("King-of-Zangyo: 年間残業時間の更新がキャンセルされました");
+    if (!selectedFiscalYear) {
+      alert("年度が選択されていません。");
       return;
     }
 
-    // 年間残業時間を取得開始
-    await startFetchAnnualOvertime();
-  } catch (error) {
-    console.error(
-      "King-of-Zangyo: 年間残業時間の更新中にエラーが発生しました",
-      error
+    // 確認ダイアログ（選択年度を表示）
+    const confirmed = await showConfirmDialog(
+      `${selectedFiscalYear}年度のデータ更新`,
+      `${selectedFiscalYear}年度の残業時間データを取得します。\n処理には10秒〜20秒かかる場合があります。\nよろしいですか？`
     );
+
+    if (!confirmed) {
+      console.log("King-of-Zangyo: 更新がキャンセルされました");
+      return;
+    }
+
+    // ★年間残業時間を取得開始（年度を引数に渡す）
+    await startFetchAnnualOvertime(selectedFiscalYear);
+  } catch (error) {
+    console.error("King-of-Zangyo: 更新中にエラーが発生しました", error);
     await clearProcessingState();
     alert(
       `エラーが発生しました: ${error.message}\nページをリロードしてもう一度お試しください。`
@@ -956,34 +1045,74 @@ async function navigateToMonth(year, month) {
 }
 
 /**
- * 年度の12ヶ月を計算する
+ * 指定された年月から年度を判定する
+ * @param {number} year - 年
+ * @param {number} month - 月（1-12）
  * @param {number} fiscalYearStartMonth - 年度開始月（1-12）
- * @returns {Array<{year: number, month: number}>} 年度の12ヶ月（現在月から遡る）
+ * @returns {number} 年度（年度開始年）
+ *
+ * 例: 2025年1月、年度開始4月 → 2024年度
+ *     2025年4月、年度開始4月 → 2025年度
  */
-function calculateFiscalYearMonths(fiscalYearStartMonth) {
+function determineFiscalYear(year, month, fiscalYearStartMonth) {
+  if (month >= fiscalYearStartMonth) {
+    return year; // 年度開始月以降なら、その年が年度
+  } else {
+    return year - 1; // 年度開始月より前なら、前年が年度
+  }
+}
+
+/**
+ * 年度の月リストを計算する（現在月までのみ）
+ * @param {number} fiscalYearStartMonth - 年度開始月（1-12）
+ * @param {number|null} targetFiscalYear - 対象年度（nullなら現在年度）
+ * @returns {Array<{year: number, month: number}>} 年度の月リスト（現在月まで）
+ */
+function calculateFiscalYearMonths(
+  fiscalYearStartMonth,
+  targetFiscalYear = null
+) {
   const now = new Date();
   const currentYear = now.getFullYear();
-  const currentMonth = now.getMonth() + 1; // 0-11 → 1-12
+  const currentMonth = now.getMonth() + 1; // 1-12
 
-  // 現在の年度を判定
+  // 対象年度の判定
   let fiscalYear;
-  if (currentMonth >= fiscalYearStartMonth) {
-    // 現在月が年度開始月以降の場合、今年が年度開始年
-    fiscalYear = currentYear;
+  if (targetFiscalYear === null) {
+    // 現在年度を自動判定
+    fiscalYear = determineFiscalYear(
+      currentYear,
+      currentMonth,
+      fiscalYearStartMonth
+    );
   } else {
-    // 現在月が年度開始月より前の場合、去年が年度開始年
-    fiscalYear = currentYear - 1;
+    // 指定された年度を使用
+    fiscalYear = targetFiscalYear;
   }
 
   // 年度の12ヶ月を生成
   const months = [];
   for (let i = 0; i < 12; i++) {
     const month = fiscalYearStartMonth + i;
+    let targetYear, targetMonth;
+
     if (month <= 12) {
-      months.push({ year: fiscalYear, month: month });
+      targetYear = fiscalYear;
+      targetMonth = month;
     } else {
-      months.push({ year: fiscalYear + 1, month: month - 12 });
+      targetYear = fiscalYear + 1;
+      targetMonth = month - 12;
     }
+
+    // ★重要: 未来の月を除外
+    const targetDate = new Date(targetYear, targetMonth - 1, 1);
+    const currentDate = new Date(currentYear, currentMonth - 1, 1);
+
+    if (targetDate > currentDate) {
+      break; // 未来の月なのでループ終了
+    }
+
+    months.push({ year: targetYear, month: targetMonth });
   }
 
   return months;
@@ -1004,17 +1133,47 @@ function formatDateTime(date) {
 }
 
 /**
- * 年間データをchrome.storage.syncに保存する
- * @param {Object} annualData - 年間データ
- * @returns {Promise<void>}
+ * 保存済みの年度リストを取得する
+ * @returns {Promise<Array<number>>} 年度の配列（降順）
  */
-function saveAnnualData(annualData) {
+function getSavedFiscalYears() {
   return new Promise((resolve, reject) => {
-    chrome.storage.sync.set({ [ANNUAL_DATA_KEY]: annualData }, () => {
+    chrome.storage.sync.get([ANNUAL_DATA_YEARS_KEY], (result) => {
       if (chrome.runtime.lastError) {
         reject(chrome.runtime.lastError);
       } else {
-        console.log("King-of-Zangyo: 年間データを保存しました", annualData);
+        const years = result[ANNUAL_DATA_YEARS_KEY] || [];
+        resolve(years.sort((a, b) => b - a)); // 降順
+      }
+    });
+  });
+}
+
+/**
+ * 年度リストに年度を追加する（重複なし）
+ * @param {number} fiscalYear - 追加する年度
+ * @returns {Promise<void>}
+ */
+async function addFiscalYearToList(fiscalYear) {
+  const years = await getSavedFiscalYears();
+  if (!years.includes(fiscalYear)) {
+    years.push(fiscalYear);
+    years.sort((a, b) => b - a); // 降順
+    await saveFiscalYearsList(years);
+  }
+}
+
+/**
+ * 年度リストを保存する
+ * @param {Array<number>} years - 年度の配列
+ * @returns {Promise<void>}
+ */
+function saveFiscalYearsList(years) {
+  return new Promise((resolve, reject) => {
+    chrome.storage.sync.set({ [ANNUAL_DATA_YEARS_KEY]: years }, () => {
+      if (chrome.runtime.lastError) {
+        reject(chrome.runtime.lastError);
+      } else {
         resolve();
       }
     });
@@ -1022,25 +1181,92 @@ function saveAnnualData(annualData) {
 }
 
 /**
- * 年間データをchrome.storage.syncから読み込む
- * @param {Function} callback - コールバック関数
+ * 年間データをchrome.storage.syncに保存する
+ * @param {Object} annualData - 年間データ
+ * @param {number} fiscalYear - 年度（年度開始年）
+ * @returns {Promise<void>}
  */
-function loadAnnualData(callback) {
-  chrome.storage.sync.get([ANNUAL_DATA_KEY], (result) => {
-    const annualData = result[ANNUAL_DATA_KEY] || null;
-    console.log("King-of-Zangyo: 年間データを読み込みました", annualData);
-    callback(annualData);
+async function saveAnnualData(annualData, fiscalYear) {
+  const key = `${ANNUAL_DATA_KEY_PREFIX}${fiscalYear}`;
+
+  // データに年度を追加
+  const dataToSave = {
+    ...annualData,
+    fiscalYear: fiscalYear,
+  };
+
+  return new Promise((resolve, reject) => {
+    chrome.storage.sync.set({ [key]: dataToSave }, async () => {
+      if (chrome.runtime.lastError) {
+        reject(chrome.runtime.lastError);
+      } else {
+        console.log(
+          `King-of-Zangyo: ${fiscalYear}年度のデータを保存しました`,
+          dataToSave
+        );
+
+        // 年度リストに追加
+        try {
+          await addFiscalYearToList(fiscalYear);
+          resolve();
+        } catch (error) {
+          reject(error);
+        }
+      }
+    });
   });
 }
 
 /**
- * 保存済みの年間データを読み込んで表示する
+ * 指定年度の年間データをchrome.storage.syncから読み込む
+ * @param {number} fiscalYear - 年度（年度開始年）
+ * @returns {Promise<Object|null>} 年間データまたはnull
  */
-function loadAndDisplayAnnualData() {
-  loadAnnualData((annualData) => {
-    if (annualData) {
-      updateAnnualDataDisplay(annualData);
-    }
+function loadAnnualData(fiscalYear) {
+  const key = `${ANNUAL_DATA_KEY_PREFIX}${fiscalYear}`;
+
+  return new Promise((resolve, reject) => {
+    chrome.storage.sync.get([key], (result) => {
+      if (chrome.runtime.lastError) {
+        reject(chrome.runtime.lastError);
+      } else {
+        const annualData = result[key] || null;
+        console.log(
+          `King-of-Zangyo: ${fiscalYear}年度のデータを読み込みました`,
+          annualData
+        );
+        resolve(annualData);
+      }
+    });
+  });
+}
+
+/**
+ * 指定年度のデータを削除する
+ * @param {number} fiscalYear - 年度
+ * @returns {Promise<void>}
+ */
+async function deleteAnnualData(fiscalYear) {
+  const key = `${ANNUAL_DATA_KEY_PREFIX}${fiscalYear}`;
+
+  return new Promise(async (resolve, reject) => {
+    chrome.storage.sync.remove([key], async () => {
+      if (chrome.runtime.lastError) {
+        reject(chrome.runtime.lastError);
+      } else {
+        console.log(`King-of-Zangyo: ${fiscalYear}年度のデータを削除しました`);
+
+        // 年度リストから削除
+        try {
+          const years = await getSavedFiscalYears();
+          const updatedYears = years.filter((y) => y !== fiscalYear);
+          await saveFiscalYearsList(updatedYears);
+          resolve();
+        } catch (error) {
+          reject(error);
+        }
+      }
+    });
   });
 }
 
@@ -1138,7 +1364,7 @@ async function checkAndResumeProcessing() {
  * 年間残業時間の取得を開始する
  * @returns {Promise<void>}
  */
-async function startFetchAnnualOvertime() {
+async function startFetchAnnualOvertime(targetFiscalYear) {
   try {
     // 現在のページ情報を保存
     const currentYearInput = document.querySelector('input[name="year"]');
@@ -1150,10 +1376,20 @@ async function startFetchAnnualOvertime() {
       ? parseInt(currentMonthInput.value)
       : null;
 
-    // 年度の12ヶ月を計算
-    const fiscalYearMonths = calculateFiscalYearMonths(FISCAL_YEAR_START_MONTH);
+    // 指定年度の月リストを計算（未来の月は除外される）
+    const fiscalYearMonths = calculateFiscalYearMonths(
+      FISCAL_YEAR_START_MONTH,
+      targetFiscalYear
+    );
+
+    // 未来の月のみの場合（データがない）
+    if (fiscalYearMonths.length === 0) {
+      alert(`${targetFiscalYear}年度のデータは未来のため取得できません。`);
+      return;
+    }
 
     console.log("King-of-Zangyo: 年間残業時間の取得を開始します", {
+      targetFiscalYear: targetFiscalYear,
       fiscalYearStart: FISCAL_YEAR_START_MONTH,
       totalMonths: fiscalYearMonths.length,
       originalPage: `${originalYear}年${originalMonth}月`,
@@ -1170,14 +1406,15 @@ async function startFetchAnnualOvertime() {
       originalYear: originalYear,
       originalMonth: originalMonth,
       fiscalYearStart: FISCAL_YEAR_START_MONTH,
+      targetFiscalYear: targetFiscalYear, // ★年度を保存
       lastUpdatedAt: Date.now(),
     };
 
     // chrome.storage.localに保存
     await saveProcessingState(initialState);
 
-    // 進捗ダイアログを作成・表示
-    const progressDialog = createProgressDialog();
+    // 進捗ダイアログを作成・表示（年度情報を渡す）
+    const progressDialog = createProgressDialog(targetFiscalYear);
     document.body.appendChild(progressDialog);
     progressDialog.showModal();
     updateProgress(0, fiscalYearMonths.length, progressDialog);
@@ -1224,8 +1461,8 @@ async function resumeFetchAnnualOvertime() {
       }ヶ月目: ${currentMonth.year}年${currentMonth.month}月）`
     );
 
-    // 進捗ダイアログを再表示
-    const progressDialog = createProgressDialog();
+    // 進捗ダイアログを再表示（年度情報を渡す）
+    const progressDialog = createProgressDialog(state.targetFiscalYear);
     document.body.appendChild(progressDialog);
     progressDialog.showModal();
     updateProgress(
@@ -1317,12 +1554,15 @@ async function completeFetchAnnualOvertime(state, progressDialog) {
       progressDialog.remove();
     }
 
+    // 年度を取得
+    const targetFiscalYear = state.targetFiscalYear;
+
     // 年間データを作成
     const totalHours = state.totalMinutes / 60;
     const lastUpdated = formatDateTime(new Date());
 
     const firstMonth = state.fiscalYearMonths[0];
-    const lastMonth = state.fiscalYearMonths[11];
+    const lastMonth = state.fiscalYearMonths[state.fiscalYearMonths.length - 1]; // ★最後の月（12ヶ月とは限らない）
     const yearRange = `${firstMonth.year}/${String(firstMonth.month).padStart(
       2,
       "0"
@@ -1337,17 +1577,42 @@ async function completeFetchAnnualOvertime(state, progressDialog) {
       monthlyData: state.monthlyData,
     };
 
-    // chrome.storage.syncに保存
-    await saveAnnualData(annualData);
+    // 指定年度のデータとして保存
+    await saveAnnualData(annualData, targetFiscalYear);
 
     // 処理状態をクリア
     await clearProcessingState();
 
-    // 年別データセクションの表示を更新
-    updateAnnualDataDisplay(annualData);
+    // ★年度選択ドロップダウンを更新（新しく保存した年度を追加）
+    const fiscalYearSelect = document.getElementById("annual-fiscal-year-select");
+    if (fiscalYearSelect) {
+      const savedYears = await getSavedFiscalYears();
+      const currentFiscalYear = determineFiscalYear(
+        new Date().getFullYear(),
+        new Date().getMonth() + 1,
+        FISCAL_YEAR_START_MONTH
+      );
+      const allYears = [...new Set([currentFiscalYear, ...savedYears])].sort(
+        (a, b) => b - a
+      );
 
-    // 結果ダイアログを表示
-    await showResultDialog(annualData);
+      fiscalYearSelect.innerHTML = "";
+      allYears.forEach((year) => {
+        const option = document.createElement("option");
+        option.value = year;
+        option.textContent = `${year}年度`;
+        if (year === targetFiscalYear) {
+          option.selected = true; // ★更新した年度を選択
+        }
+        fiscalYearSelect.appendChild(option);
+      });
+    }
+
+    // 年別データセクションの表示を更新（年度を指定）
+    updateAnnualDataDisplay(annualData, targetFiscalYear);
+
+    // 結果ダイアログを表示（年度を指定）
+    await showResultDialog(annualData, targetFiscalYear);
 
     // 元のページに戻る
     if (state.originalYear && state.originalMonth) {
@@ -1420,14 +1685,14 @@ function showConfirmDialog(title, message) {
  * 進捗ダイアログを作成する
  * @returns {HTMLDialogElement} 作成された進捗ダイアログ要素
  */
-function createProgressDialog() {
+function createProgressDialog(fiscalYear) {
   const dialog = document.createElement("dialog");
   dialog.className = "kot-zangyo-dialog";
   dialog.id = "kot-zangyo-progress-dialog";
 
   const header = document.createElement("div");
   header.className = "kot-zangyo-dialog-header";
-  header.textContent = "年間残業時間を取得中...";
+  header.textContent = `${fiscalYear}年度 年間残業時間を取得中...`;
 
   const body = document.createElement("div");
   body.className = "kot-zangyo-dialog-body";
@@ -1486,14 +1751,14 @@ function updateProgress(currentMonth, totalMonths, progressDialog) {
  * @param {Object} annualData - 年間データ
  * @returns {Promise<void>}
  */
-function showResultDialog(annualData) {
+function showResultDialog(annualData, fiscalYear) {
   return new Promise((resolve) => {
     const dialog = document.createElement("dialog");
     dialog.className = "kot-zangyo-dialog";
 
     const header = document.createElement("div");
     header.className = "kot-zangyo-dialog-header";
-    header.textContent = "年間残業時間の取得完了";
+    header.textContent = `${fiscalYear}年度 年間残業時間の取得完了`;
 
     const body = document.createElement("div");
     body.className = "kot-zangyo-dialog-body";
