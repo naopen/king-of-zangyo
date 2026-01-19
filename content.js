@@ -544,7 +544,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     updateAnnualDataDisplay(null, currentFiscalYear);
 
     // ドロップダウンをリセット（現在年度のみ表示）
-    const fiscalYearSelect = document.getElementById("annual-fiscal-year-select");
+    const fiscalYearSelect = document.getElementById(
+      "annual-fiscal-year-select"
+    );
     if (fiscalYearSelect) {
       fiscalYearSelect.innerHTML = "";
       const option = document.createElement("option");
@@ -663,7 +665,6 @@ async function injectAnnualDataSection() {
     const fiscalYearSelect = document.createElement("select");
     fiscalYearSelect.id = "annual-fiscal-year-select";
     fiscalYearSelect.className = "htBlock-selectmenu"; // 既存UIに準拠
-    fiscalYearSelect.style.marginRight = "8px";
 
     // 年度オプションを生成
     allYears.forEach((year) => {
@@ -684,7 +685,7 @@ async function injectAnnualDataSection() {
     updateButton.type = "button";
     updateButton.className = "htBlock-buttonPrimary htBlock-buttonM";
     updateButton.style.position = "relative";
-    updateButton.style.top = "-1px";
+    // updateButton.style.top = "-1px";
     const buttonSpan = document.createElement("span");
     buttonSpan.textContent = "最新データで更新";
     updateButton.appendChild(buttonSpan);
@@ -694,12 +695,13 @@ async function injectAnnualDataSection() {
     const titleContainer = document.createElement("div");
     titleContainer.style.display = "flex";
     titleContainer.style.alignItems = "baseline";
-    titleContainer.style.gap = "12px";
+    titleContainer.style.gap = "4px";
 
     // セクション見出し
     const sectionTitle = document.createElement("h4");
     sectionTitle.className = "htBlock-box_subTitle";
     sectionTitle.textContent = "年別データ";
+    sectionTitle.style.marginRight = "8px"; // 見出しの右側に自動マージンを追加
 
     // タイトルコンテナに見出し、ドロップダウン、ボタンを追加
     titleContainer.appendChild(sectionTitle);
@@ -1565,8 +1567,10 @@ async function completeFetchAnnualOvertime(state, progressDialog) {
 
     // 年度の最終月を計算（開始月の11ヶ月後）
     const endMonthIndex = state.fiscalYearStart + 11;
-    const fiscalYearEndMonth = endMonthIndex > 12 ? endMonthIndex - 12 : endMonthIndex;
-    const fiscalYearEndYear = endMonthIndex > 12 ? targetFiscalYear + 1 : targetFiscalYear;
+    const fiscalYearEndMonth =
+      endMonthIndex > 12 ? endMonthIndex - 12 : endMonthIndex;
+    const fiscalYearEndYear =
+      endMonthIndex > 12 ? targetFiscalYear + 1 : targetFiscalYear;
 
     const yearRange = `${firstMonth.year}/${String(firstMonth.month).padStart(
       2,
@@ -1589,7 +1593,9 @@ async function completeFetchAnnualOvertime(state, progressDialog) {
     await clearProcessingState();
 
     // ★年度選択ドロップダウンを更新（新しく保存した年度を追加）
-    const fiscalYearSelect = document.getElementById("annual-fiscal-year-select");
+    const fiscalYearSelect = document.getElementById(
+      "annual-fiscal-year-select"
+    );
     if (fiscalYearSelect) {
       const savedYears = await getSavedFiscalYears();
       const currentFiscalYear = determineFiscalYear(
