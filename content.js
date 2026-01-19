@@ -624,6 +624,9 @@ async function injectAnnualDataSection() {
     flexContainer.style.display = "flex";
     flexContainer.style.gap = "0";
     flexContainer.style.alignItems = "flex-start";
+    flexContainer.style.minWidth = "1200px";
+    flexContainer.style.position = "relative";
+    flexContainer.style.overflow = "visible";
 
     // 左側：月別データと日別データ用のコンテナ
     const leftContainer = document.createElement("div");
@@ -644,8 +647,9 @@ async function injectAnnualDataSection() {
     // 年別データセクションを作成
     const sectionContainer = document.createElement("div");
     sectionContainer.id = ANNUAL_SECTION_ID;
-    sectionContainer.style.flex = "0 0 auto";
-    sectionContainer.style.marginLeft = "-850px";
+    sectionContainer.style.position = "absolute";
+    sectionContainer.style.left = "975px";
+    sectionContainer.style.top = "0";
 
     // ★年度選択ドロップダウンを作成
     const currentFiscalYear = determineFiscalYear(
