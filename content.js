@@ -947,7 +947,7 @@ async function handleAnnualUpdateButtonClick() {
     // 確認ダイアログ（選択年度を表示）
     const confirmed = await showConfirmDialog(
       `データ更新`,
-      `${selectedFiscalYear}年度の残業時間データを取得します。\n処理には10秒〜20秒かかる場合があります。\nよろしいですか？`
+      `${selectedFiscalYear}年度の年間残業時間データを取得します。\n処理には10秒〜20秒かかる場合があります。\nよろしいですか？`
     );
 
     if (!confirmed) {
@@ -1423,7 +1423,6 @@ async function startFetchAnnualOvertime(targetFiscalYear) {
     const progressDialog = createProgressDialog(targetFiscalYear);
     document.body.appendChild(progressDialog);
     progressDialog.showModal();
-    updateProgress(0, fiscalYearMonths.length, progressDialog);
 
     // 最初の月へ遷移
     const firstMonth = fiscalYearMonths[0];
@@ -1554,7 +1553,16 @@ async function completeFetchAnnualOvertime(state, progressDialog) {
       monthsProcessed: Object.keys(state.monthlyData).length,
     });
 
-    // 進捗ダイアログを閉じる
+    // プログレスバーを100%に更新
+    updateProgress(
+      state.fiscalYearMonths.length,
+      state.fiscalYearMonths.length,
+      progressDialog
+    );
+
+    // 100%表示を1秒間見せてから進捗ダイアログを閉じる
+    await sleep(1000);
+
     if (progressDialog) {
       progressDialog.close();
       progressDialog.remove();
@@ -1707,7 +1715,7 @@ function createProgressDialog(fiscalYear) {
 
   const header = document.createElement("div");
   header.className = "kot-zangyo-dialog-header";
-  header.textContent = `取得中...`;
+  header.textContent = `取得中`;
 
   const body = document.createElement("div");
   body.className = "kot-zangyo-dialog-body";
@@ -1726,7 +1734,7 @@ function createProgressDialog(fiscalYear) {
   const progressText = document.createElement("div");
   progressText.className = "progress-text";
   progressText.id = "kot-zangyo-progress-text";
-  progressText.textContent = "処理を開始しています...";
+  progressText.textContent = "処理を開始しています…";
 
   body.appendChild(progressBarContainer);
   body.appendChild(progressText);
@@ -1757,7 +1765,7 @@ function updateProgress(currentMonth, totalMonths, progressDialog) {
   }
 
   if (progressText) {
-    progressText.textContent = `${currentMonth}/${totalMonths}ヶ月取得中...`;
+    progressText.textContent = `${currentMonth}/${totalMonths}ヶ月取得中…`;
   }
 }
 
@@ -1790,7 +1798,9 @@ function showResultDialog(annualData, fiscalYear) {
     body.appendChild(introText);
 
     const resultText = document.createElement("div");
-    resultText.textContent = `年間残業時間 (${yearRangeFormatted}): \n${formatMinutesToTime(totalMinutes)}`;
+    resultText.textContent = `年間残業時間 (${yearRangeFormatted}): \n${formatMinutesToTime(
+      totalMinutes
+    )}`;
     resultText.style.fontWeight = "bold";
     body.appendChild(resultText);
 
@@ -1925,9 +1935,9 @@ function injectDialogStyles() {
     /* プログレスバーコンテナ */
     .progress-bar-container {
       width: 100%;
-      height: 24px;
+      height: 36px;
       background-color: #f0f0f0;
-      border-radius: 12px;
+      border-radius: 16px;
       overflow: hidden;
       margin-top: 16px;
       margin-bottom: 8px;
@@ -1938,13 +1948,12 @@ function injectDialogStyles() {
     .progress-bar {
       height: 100%;
       background-color: #1d9e48;
-      border-radius: 12px;
-      transition: width 0.3s ease;
+      border-radius: 16px;
       display: flex;
       align-items: center;
       justify-content: center;
       color: #fff;
-      font-size: 12px;
+      font-size: 20px;
       font-weight: bold;
     }
 
@@ -1953,7 +1962,7 @@ function injectDialogStyles() {
       margin-top: 8px;
       text-align: center;
       color: #666;
-      font-size: 13px;
+      font-size: 16px;
     }
   `;
 
