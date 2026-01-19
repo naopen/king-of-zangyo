@@ -1857,6 +1857,7 @@ function injectDialogStyles() {
       padding: 0;
       max-width: 600px;
       width: 90%;
+      outline: none;
     }
 
     .kot-zangyo-dialog::backdrop {
