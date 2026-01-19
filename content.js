@@ -1782,12 +1782,19 @@ function showResultDialog(annualData, fiscalYear) {
     const totalHours = totalMinutes / 60;
 
     // 結果メッセージを作成（HH:MM形式）
-    let message = `正常に取得が完了しました。\n\n`;
-    message += `年間残業時間 (${fiscalYear}年度):`;
-    message += ` ${formatMinutesToTime(totalMinutes)}`;
+    const yearRangeFormatted = annualData.yearRange
+      ? annualData.yearRange.replace("-", " 〜 ")
+      : `${fiscalYear}年度`;
+
+    const introText = document.createTextNode(`正常に取得が完了しました。\n\n`);
+    body.appendChild(introText);
+
+    const resultText = document.createElement("div");
+    resultText.textContent = `年間残業時間 (${yearRangeFormatted}): \n${formatMinutesToTime(totalMinutes)}`;
+    resultText.style.fontWeight = "bold";
+    body.appendChild(resultText);
 
     body.style.whiteSpace = "pre-line";
-    body.textContent = message;
 
     // 背景色を設定
     body.style.backgroundColor = getAnnualOvertimeBackgroundColor(totalHours);
