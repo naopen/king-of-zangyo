@@ -946,7 +946,7 @@ async function handleAnnualUpdateButtonClick() {
 
     // 確認ダイアログ（選択年度を表示）
     const confirmed = await showConfirmDialog(
-      `${selectedFiscalYear}年度のデータ更新`,
+      `データ更新`,
       `${selectedFiscalYear}年度の残業時間データを取得します。\n処理には10秒〜20秒かかる場合があります。\nよろしいですか？`
     );
 
@@ -1707,7 +1707,7 @@ function createProgressDialog(fiscalYear) {
 
   const header = document.createElement("div");
   header.className = "kot-zangyo-dialog-header";
-  header.textContent = `${fiscalYear}年度 年間残業時間を取得中...`;
+  header.textContent = `取得中...`;
 
   const body = document.createElement("div");
   body.className = "kot-zangyo-dialog-body";
@@ -1726,7 +1726,7 @@ function createProgressDialog(fiscalYear) {
   const progressText = document.createElement("div");
   progressText.className = "progress-text";
   progressText.id = "kot-zangyo-progress-text";
-  progressText.textContent = "0/12ヶ月取得中...";
+  progressText.textContent = "処理を開始しています...";
 
   body.appendChild(progressBarContainer);
   body.appendChild(progressText);
@@ -1773,7 +1773,7 @@ function showResultDialog(annualData, fiscalYear) {
 
     const header = document.createElement("div");
     header.className = "kot-zangyo-dialog-header";
-    header.textContent = `${fiscalYear}年度 年間残業時間の取得完了`;
+    header.textContent = `完了`;
 
     const body = document.createElement("div");
     body.className = "kot-zangyo-dialog-body";
@@ -1782,9 +1782,9 @@ function showResultDialog(annualData, fiscalYear) {
     const totalHours = totalMinutes / 60;
 
     // 結果メッセージを作成（HH:MM形式）
-    let message = `年間残業時間: ${formatMinutesToTime(totalMinutes)}\n`;
-    message += `年度範囲: ${annualData.yearRange}\n`;
-    message += `最終更新: ${annualData.lastUpdated}`;
+    let message = `正常に取得が完了しました。\n\n`;
+    message += `年間残業時間 (${fiscalYear}年度):`;
+    message += ` ${formatMinutesToTime(totalMinutes)}`;
 
     body.style.whiteSpace = "pre-line";
     body.textContent = message;
@@ -1836,7 +1836,7 @@ function injectDialogStyles() {
       border-radius: 4px;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-      font-size: 14px;
+      font-size: 16px;
       padding: 0;
       max-width: 600px;
       width: 90%;
@@ -1851,7 +1851,7 @@ function injectDialogStyles() {
       background-color: #f5f5f5;
       border-bottom: 1px solid #e0e0e0;
       padding: 16px 20px;
-      font-size: 16px;
+      font-size: 18px;
       font-weight: bold;
       color: #333;
     }
@@ -1880,7 +1880,7 @@ function injectDialogStyles() {
       border: none;
       border-radius: 4px;
       padding: 8px 16px;
-      font-size: 14px;
+      font-size: 16px;
       font-weight: 500;
       cursor: pointer;
       transition: background-color 0.2s, box-shadow 0.2s;
