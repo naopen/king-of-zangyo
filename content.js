@@ -1562,11 +1562,16 @@ async function completeFetchAnnualOvertime(state, progressDialog) {
     const lastUpdated = formatDateTime(new Date());
 
     const firstMonth = state.fiscalYearMonths[0];
-    const lastMonth = state.fiscalYearMonths[state.fiscalYearMonths.length - 1]; // ★最後の月（12ヶ月とは限らない）
+
+    // 年度の最終月を計算（開始月の11ヶ月後）
+    const endMonthIndex = state.fiscalYearStart + 11;
+    const fiscalYearEndMonth = endMonthIndex > 12 ? endMonthIndex - 12 : endMonthIndex;
+    const fiscalYearEndYear = endMonthIndex > 12 ? targetFiscalYear + 1 : targetFiscalYear;
+
     const yearRange = `${firstMonth.year}/${String(firstMonth.month).padStart(
       2,
       "0"
-    )}-${lastMonth.year}/${String(lastMonth.month).padStart(2, "0")}`;
+    )}-${fiscalYearEndYear}/${String(fiscalYearEndMonth).padStart(2, "0")}`;
 
     const annualData = {
       totalHours: totalHours,
