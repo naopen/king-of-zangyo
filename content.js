@@ -130,15 +130,21 @@ async function initializeApp() {
             : 4;
         FISCAL_YEAR_START_MONTH = fiscalYearStart;
 
-        if (isEnabled) {
-          injectOvertimeColumn();
-        }
-
-        // 年別データセクションを注入（常に表示）
+        // 年別データセクションを注入（データ読み込みのため常に実行）
         await injectAnnualDataSection();
 
         // ダイアログスタイルを注入
         injectDialogStyles();
+
+        if (isEnabled) {
+          injectOvertimeColumn();
+        } else {
+          // 非表示設定の場合、年別データセクションを非表示にする
+          const annualSection = document.getElementById(ANNUAL_SECTION_ID);
+          if (annualSection) {
+            annualSection.style.display = "none";
+          }
+        }
       },
     );
   } catch (error) {
@@ -495,6 +501,7 @@ function getOvertimeBackgroundColor(overtimeMinutes) {
 function toggleOvertimeDisplay(enabled) {
   const header = document.getElementById(OVERTIME_HEADER_ID);
   const cell = document.getElementById(OVERTIME_CELL_ID);
+  const annualSection = document.getElementById(ANNUAL_SECTION_ID);
 
   if (enabled) {
     // 列が存在しない場合は新規作成
@@ -505,6 +512,10 @@ function toggleOvertimeDisplay(enabled) {
       header.style.display = "";
       cell.style.display = "";
     }
+    // 年別データセクションを表示
+    if (annualSection) {
+      annualSection.style.display = "";
+    }
   } else {
     // 非表示
     if (header) {
@@ -512,6 +523,10 @@ function toggleOvertimeDisplay(enabled) {
     }
     if (cell) {
       cell.style.display = "none";
+    }
+    // 年別データセクションを非表示
+    if (annualSection) {
+      annualSection.style.display = "none";
     }
   }
 }
