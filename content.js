@@ -830,12 +830,6 @@ async function loadAndDisplayAnnualData() {
     // 現在年度のデータを読み込み
     const annualData = await loadAnnualData(currentFiscalYear);
 
-    if (!annualData) {
-      console.log(
-        `King-of-Zangyo: ${currentFiscalYear}年度の保存データがありません`,
-      );
-    }
-
     updateAnnualDataDisplay(annualData, currentFiscalYear);
   } catch (error) {
     console.error("King-of-Zangyo: 年間データ読み込みエラー:", error);
