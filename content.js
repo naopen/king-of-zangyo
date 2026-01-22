@@ -869,6 +869,7 @@ function updateAnnualDataDisplay(annualData, fiscalYear) {
   if (!annualData) {
     caption.textContent = `年間集計 (${fiscalYear}年度)`;
     hoursCell.textContent = "未取得";
+    hoursCell.style.backgroundColor = "#F9F9F9"; // 初期値に戻す
     updatedCell.textContent = "未取得";
     return;
   }
