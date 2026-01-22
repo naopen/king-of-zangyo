@@ -7,7 +7,6 @@ const FISCAL_YEAR_START_KEY = "kingOfZangyoFiscalYearStartMonth";
 const ANNUAL_DATA_KEY_PREFIX = "kingOfZangyoAnnualData_"; // 年度別キーの接頭辞
 const ANNUAL_DATA_YEARS_KEY = "kingOfZangyoAnnualDataYears"; // 保存済み年度リスト
 const PROCESSING_STATE_KEY = "kingOfZangyoProcessingState";
-// 注: 旧キー "kingOfZangyoAnnualData" は手動削除（移行処理なし）
 
 // DOM要素の一意なID
 const OVERTIME_HEADER_ID = "king-of-zangyo-header";

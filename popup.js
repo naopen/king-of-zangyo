@@ -4,7 +4,6 @@
 const STORAGE_KEY = "kingOfZangyoEnabled";
 const STANDARD_HOURS_KEY = "kingOfZangyoStandardHours";
 const FISCAL_YEAR_START_KEY = "kingOfZangyoFiscalYearStartMonth";
-const ANNUAL_DATA_KEY = "kingOfZangyoAnnualData"; // 旧キー（互換性のため残す）
 const ANNUAL_DATA_KEY_PREFIX = "kingOfZangyoAnnualData_"; // 年度別キーの接頭辞
 const ANNUAL_DATA_YEARS_KEY = "kingOfZangyoAnnualDataYears"; // 保存済み年度リスト
 
@@ -151,9 +150,6 @@ async function saveFiscalYearStart(month) {
   // 年度リストを削除
   await chrome.storage.sync.remove([ANNUAL_DATA_YEARS_KEY]);
   console.log("King-of-Zangyo: 年度リストを削除しました");
-
-  // 旧キーも削除（互換性のため）
-  await chrome.storage.sync.remove([ANNUAL_DATA_KEY]);
 
   // 年度開始月を保存
   await chrome.storage.sync.set({ [FISCAL_YEAR_START_KEY]: month });
