@@ -21,6 +21,10 @@ KING OF ZANGYO は、KING OF TIMEの勤怠管理画面に累計残業時間を�
 タイムカード画面で累計残業時間を自動計算して表示します。
 当日分は所定労働時間を超過後に反映されます。
 
+• 年間残業時間の集計
+年度別に年間残業時間の合計を集計・表示します。
+年度選択で過去の年度データも確認可能です。
+
 • 色分け表示
 残業時間に応じて4段階の色分け表示で一目で状況を把握できます。
   - 緑: 0～30時間（安全範囲）
@@ -31,8 +35,11 @@ KING OF ZANGYO は、KING OF TIMEの勤怠管理画面に累計残業時間を�
 • 所定労働時間のカスタマイズ
 所定労働時間を0.5時間刻みで自由に設定可能です（デフォルト：7.5時間）。
 
+• 年度開始月の設定
+会社の年度に合わせて年度開始月を設定可能です（デフォルト：4月）。
+
 • 簡単設定
-拡張機能アイコンから表示のON/OFF切り替えや所定労働時間の変更が可能です。
+拡張機能アイコンから表示のON/OFF切り替えや各種設定の変更が可能です。
 
 • プライバシー保護
 すべてのデータはブラウザ内で処理され、外部への送信は一切ありません。
@@ -51,7 +58,7 @@ KING OF TIME (https://s2.ta.kingoftime.jp/admin/*) の勤怠管理画面での�
 【プライバシーについて】
 
 • 設定情報のみをブラウザ内に保存
-• 個人情報や勤怠データは一切保存しません
+• 個人情報や勤怠詳細データは一切保存しません
 • 外部サーバーへのデータ送信なし
 
 【免責事項】
@@ -68,6 +75,10 @@ Key Features
 • Automatic Calculation
 Automatically calculates and displays cumulative overtime on timecard pages.
 
+• Annual Overtime Summary
+Aggregates and displays total annual overtime by fiscal year.
+View past fiscal year data using the year selector.
+
 • Color-Coded Display
 Four-tier color coding based on overtime hours for quick status checks.
   - Green: 0-30 hours (safe range)
@@ -78,8 +89,11 @@ Four-tier color coding based on overtime hours for quick status checks.
 • Customizable Standard Work Hours
 Set your standard work hours in 0.5-hour increments (default: 7.5 hours).
 
+• Fiscal Year Start Month
+Configure the fiscal year start month to match your company's fiscal calendar (default: April).
+
 • Easy Settings
-Toggle display ON/OFF and adjust standard work hours via the extension icon.
+Toggle display ON/OFF and adjust settings via the extension icon.
 
 • Privacy Protection
 All data is processed within your browser with no external transmission.
@@ -126,11 +140,13 @@ KING OF TIMEの勤怠管理画面で、累計残業時間を自動計算して�
 
 【storage が必要な理由】
 ------------------------------------
-以下の設定をブラウザ内に保存するために使用します：
+以下の設定・データをブラウザ内に保存するために使用します：
 - 残業時間表示機能のON/OFF設定
 - 所定労働時間の設定値（デフォルト：7.5時間）
+- 年度開始月の設定値（デフォルト：4月）
+- 年間残業時間の合計値のみ（日別・月別の詳細データは保存しません）
 
-ユーザーの設定を保持し、次回アクセス時にも同じ設定を適用するために必要です。個人情報や勤怠データは一切保存しません。
+ユーザーの設定を保持し、次回アクセス時にも同じ設定を適用するために必要です。個人情報や勤怠詳細データは一切保存しません。
 
 
 【activeTab が必要な理由】
