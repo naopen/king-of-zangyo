@@ -17,7 +17,7 @@ KING OF ZANGYO は、KING OF TIMEの勤怠管理画面に累計残業時間を�
 
 【主なバージョン履歴】
 
-v1.4.0: 年間残業時間を集計・表示できるようになりました
+v2.0.0: 年間残業時間を集計・表示できるようになりました
 v1.3.0: 平日/休日に対応した残業時間の計算ができるようになりました
 v1.2.0: 所定労働時間をカスタマイズできるようになりました
 v1.1.0: 残業時間に応じた色分け表示ができるようになりました
@@ -79,7 +79,7 @@ KING OF ZANGYO is a Chrome extension that automatically displays cumulative over
 
 Key Version History
 
-v1.4.0: You can now view and track annual overtime totals by fiscal year
+v2.0.0: You can now view and track annual overtime totals by fiscal year
 v1.3.0: Overtime calculation now supports weekdays and holidays
 v1.2.0: You can now customize your standard work hours
 v1.1.0: Color-coded display based on overtime hours is now available
