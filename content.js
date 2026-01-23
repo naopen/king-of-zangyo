@@ -915,13 +915,17 @@ function updateAnnualDataDisplay(annualData, fiscalYear) {
  */
 function getAnnualOvertimeBackgroundColor(hours) {
   if (hours < 300) {
-    return "#c8e6c9"; // 緑
+    // 0~299.9999時間：緑色
+    return "#c8e6c9";
   } else if (hours < 330) {
-    return "#fff59d"; // 黄
+    // 300~329.9999時間：黄色
+    return "#fff59d";
   } else if (hours < 360) {
-    return "#ffcc80"; // 橙
+    // 330~359.9999時間：赤色
+    return "#ef9a9a";
   } else {
-    return "#ef9a9a"; // 赤
+    // 360時間以上：クリムゾンレッド
+    return "#d32f2f";
   }
 }
 
