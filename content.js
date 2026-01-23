@@ -223,7 +223,9 @@ function injectOvertimeColumn() {
     if (headerRow) {
       const th = document.createElement("th");
       th.id = OVERTIME_HEADER_ID;
-      th.textContent = "現時点の目安残業";
+      th.appendChild(document.createTextNode("現時点の目安残業"));
+      th.appendChild(document.createElement("br"));
+      th.appendChild(document.createTextNode("(日曜を除く)"));
       th.style.textAlign = "center";
       th.style.fontWeight = "bold";
       th.style.fontSize = "13px";
@@ -345,15 +347,19 @@ function calculateTotalOvertime() {
     );
     const workdayTypeCellText = workdayTypeCell?.textContent.trim() || "";
 
+    // 法定休日（日曜日）は時間外労働の上限にカウントしない
+    const isLegalHoliday = workdayTypeCellText === "法定休日";
+    if (isLegalHoliday) {
+      return; // この日はスキップ
+    }
+
     // 平日かどうかを判定
     const isWeekday = workdayTypeCellText === "平日";
-    // 休日かどうかを判定（法定休日 = 日曜日、法定外休日 = 土曜日・祝日）
-    const isHoliday =
-      workdayTypeCellText === "法定休日" ||
-      workdayTypeCellText === "法定外休日";
+    // 法定外休日かどうかを判定（土曜日・祝日）
+    const isNonLegalHoliday = workdayTypeCellText === "法定外休日";
 
-    // 平日でも休日でもない場合はスキップ（念のため）
-    if (!isWeekday && !isHoliday) {
+    // 平日でも法定外休日でもない場合はスキップ
+    if (!isWeekday && !isNonLegalHoliday) {
       return;
     }
 
@@ -747,13 +753,20 @@ async function injectAnnualDataSection() {
     const headerRow = document.createElement("tr");
 
     const headers = [
-      { text: "年間残業時間", width: "120px" },
-      { text: "最終更新", width: "150px" },
+      { textLines: ["年間残業時間", "(日曜を除く)"], width: "120px" },
+      { textLines: ["最終更新"], width: "150px" },
     ];
 
     headers.forEach((header) => {
       const th = document.createElement("th");
-      th.innerHTML = `<p>${header.text}</p>`;
+      const p = document.createElement("p");
+      header.textLines.forEach((line, index) => {
+        if (index > 0) {
+          p.appendChild(document.createElement("br"));
+        }
+        p.appendChild(document.createTextNode(line));
+      });
+      th.appendChild(p);
       th.style.textAlign = "center";
       th.style.width = header.width;
       th.style.minWidth = header.width;
