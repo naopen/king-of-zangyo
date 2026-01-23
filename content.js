@@ -918,7 +918,7 @@ function getAnnualOvertimeBackgroundColor(hours) {
     return "#c8e6c9"; // 緑
   } else if (hours < 330) {
     return "#fff59d"; // 黄
-  } else if (hours < 350) {
+  } else if (hours < 360) {
     return "#ffcc80"; // 橙
   } else {
     return "#ef9a9a"; // 赤
