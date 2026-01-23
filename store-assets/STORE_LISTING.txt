@@ -13,14 +13,14 @@ Automatically displays cumulative overtime hours on KING OF TIME attendance page
 
 ■ 詳細な説明（日本語）
 ------------------------------------
-KING OF ZANGYO は、KING OF TIMEの勤怠管理画面に累計残業時間を自動的に表示するChrome拡張機能です。
+// KING OF ZANGYO は、KING OF TIMEの勤怠管理画面に累計残業時間を自動的に表示するChrome拡張機能です。
 
 【主なバージョン履歴】
 
+v2.1.0: 法定休日を計算から除外しました
 v2.0.0: 年間残業時間を集計・表示できるようになりました
 v1.3.0: 平日/休日に対応した残業時間の計算ができるようになりました
 v1.2.0: 所定労働時間をカスタマイズできるようになりました
-v1.1.0: 残業時間に応じた色分け表示ができるようになりました
 
 【主な機能】
 
@@ -34,10 +34,18 @@ v1.1.0: 残業時間に応じた色分け表示ができるようになりまし
 
 • 色分け表示
 残業時間に応じて4段階の色分け表示で一目で状況を把握できます。
+
+月間残業時間:
   - 緑: 0～30時間（安全範囲）
   - 黄: 30～40時間（注意）
   - 赤: 40～45時間（危険）
   - 濃赤: 45時間以上（超過）
+
+年間残業時間:
+  - 緑: 0～300時間（安全範囲）
+  - 黄: 300～330時間（注意）
+  - 赤: 330～360時間（危険）
+  - 濃赤: 360時間以上（超過）
 
 • 所定労働時間のカスタマイズ
 所定労働時間を0.5時間刻みで自由に設定可能です（デフォルト：7.5時間）。
@@ -75,14 +83,14 @@ KING OF TIME (https://s2.ta.kingoftime.jp/admin/*) の勤怠管理画面での�
 
 ■ 詳細な説明（英語）
 ------------------------------------
-KING OF ZANGYO is a Chrome extension that automatically displays cumulative overtime hours on the KING OF TIME attendance management screen.
+// KING OF ZANGYO is a Chrome extension that automatically displays cumulative overtime hours on the KING OF TIME attendance management screen.
 
 Key Version History
 
+v2.1.0: Excluded legal holidays from overtime calculations
 v2.0.0: You can now view and track annual overtime totals by fiscal year
 v1.3.0: Overtime calculation now supports weekdays and holidays
 v1.2.0: You can now customize your standard work hours
-v1.1.0: Color-coded display based on overtime hours is now available
 
 Key Features
 
@@ -94,11 +102,19 @@ Aggregates and displays total annual overtime by fiscal year.
 View past fiscal year data using the year selector.
 
 • Color-Coded Display
-Four-tier color coding based on overtime hours for quick status checks.
+Color coding based on overtime hours for quick status checks.
+
+Four-tier color:
   - Green: 0-30 hours (safe range)
   - Yellow: 30-40 hours (caution)
   - Red: 40-45 hours (warning)
   - Dark Red: 45+ hours (exceeded)
+
+Annual Overtime:
+  - Green: 0-300 hours (safe range)
+  - Yellow: 300-330 hours (caution)
+  - Red: 330-360 hours (warning)
+  - Dark Red: 360+ hours (exceeded)
 
 • Customizable Standard Work Hours
 Set your standard work hours in 0.5-hour increments (default: 7.5 hours).
