@@ -567,7 +567,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       "annual-fiscal-year-select",
     );
     if (fiscalYearSelect) {
-      fiscalYearSelect.innerHTML = "";
+      fiscalYearSelect.replaceChildren();
       const option = document.createElement("option");
       option.value = currentFiscalYear;
       option.textContent = `${currentFiscalYear}年度`;
@@ -1587,7 +1587,7 @@ async function completeFetchAnnualOvertime(state, progressDialog) {
         (a, b) => b - a,
       );
 
-      fiscalYearSelect.innerHTML = "";
+      fiscalYearSelect.replaceChildren();
       allYears.forEach((year) => {
         const option = document.createElement("option");
         option.value = year;
