@@ -399,6 +399,54 @@ function calculateTotalOvertime() {
 }
 
 /**
+ * 月別データテーブルから「①平日時間外＋法定外休勤務」の残業時間を取得する
+ * 前月以前のデータ取得に使用する（公式値を使用）
+ * @returns {number} 残業時間（分）
+ */
+function getMonthlyOvertimeFromSummary() {
+  // table.specific-table_800 の tbody td.custom2 から値を取得
+  const summaryTable = document.querySelector("table.specific-table_800");
+  if (!summaryTable) {
+    console.warn(
+      "King-of-Zangyo: 月別データテーブル（table.specific-table_800）が見つかりません",
+    );
+    return 0;
+  }
+
+  const overtimeCell = summaryTable.querySelector("tbody td.custom2");
+  if (!overtimeCell) {
+    console.warn(
+      "King-of-Zangyo: 残業時間セル（td.custom2）が見つかりません",
+    );
+    return 0;
+  }
+
+  const overtimeText = overtimeCell.textContent.trim();
+  if (!overtimeText || overtimeText === "") {
+    return 0;
+  }
+
+  // 値の形式: "37.23" = 37時間23分 → 分に変換
+  const match = overtimeText.match(/^(\d+)\.(\d+)$/);
+  if (!match) {
+    console.warn(
+      `King-of-Zangyo: 残業時間のパースに失敗しました: "${overtimeText}"`,
+    );
+    return 0;
+  }
+
+  const hours = parseInt(match[1], 10);
+  const minutes = parseInt(match[2], 10);
+  const totalMinutes = hours * 60 + minutes;
+
+  console.log(
+    `King-of-Zangyo: 月別データから残業時間を取得: ${overtimeText} → ${totalMinutes}分`,
+  );
+
+  return totalMinutes;
+}
+
+/**
  * 現在の年月を取得する
  * @returns {{year: number, month: number}|null} 年月オブジェクト
  */
@@ -1465,7 +1513,21 @@ async function resumeFetchAnnualOvertime() {
     );
 
     // 現在の月のデータを取得
-    const overtimeMinutes = calculateTotalOvertime();
+    // 当月は日別データから計算、前月以前は月別データテーブルの公式値を使用
+    const now = new Date();
+    const isCurrentMonth =
+      currentMonth.year === now.getFullYear() &&
+      currentMonth.month === now.getMonth() + 1;
+
+    const overtimeMinutes = isCurrentMonth
+      ? calculateTotalOvertime()
+      : getMonthlyOvertimeFromSummary();
+
+    console.log(
+      `King-of-Zangyo: ${currentMonth.year}/${currentMonth.month} - ` +
+        `${isCurrentMonth ? "当月（日別データから計算）" : "前月以前（月別データから取得）"}: ` +
+        `${overtimeMinutes}分`,
+    );
 
     // データを更新
     const monthKey = `${currentMonth.year}-${String(
