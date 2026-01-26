@@ -795,7 +795,7 @@ async function injectAnnualDataSection() {
     const headerRow = document.createElement("tr");
 
     const headers = [
-      { textLines: ["現時点の目安年間残業", "(日曜を除く)"], width: "120px" },
+      { textLines: ["目安年間残業", "(日曜を除く)"], width: "120px" },
       { textLines: ["最終更新"], width: "150px" },
     ];
 
