@@ -439,10 +439,6 @@ function getMonthlyOvertimeFromSummary() {
   const minutes = parseInt(match[2], 10);
   const totalMinutes = hours * 60 + minutes;
 
-  console.log(
-    `King-of-Zangyo: 月別データから残業時間を取得: ${overtimeText} → ${totalMinutes}分`,
-  );
-
   return totalMinutes;
 }
 
@@ -1522,12 +1518,6 @@ async function resumeFetchAnnualOvertime() {
     const overtimeMinutes = isCurrentMonth
       ? calculateTotalOvertime()
       : getMonthlyOvertimeFromSummary();
-
-    console.log(
-      `King-of-Zangyo: ${currentMonth.year}/${currentMonth.month} - ` +
-        `${isCurrentMonth ? "当月（日別データから計算）" : "前月以前（月別データから取得）"}: ` +
-        `${overtimeMinutes}分`,
-    );
 
     // データを更新
     const monthKey = `${currentMonth.year}-${String(
