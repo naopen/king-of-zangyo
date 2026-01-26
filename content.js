@@ -415,9 +415,7 @@ function getMonthlyOvertimeFromSummary() {
 
   const overtimeCell = summaryTable.querySelector("tbody td.custom2");
   if (!overtimeCell) {
-    console.warn(
-      "King-of-Zangyo: 残業時間セル（td.custom2）が見つかりません",
-    );
+    console.warn("King-of-Zangyo: 残業時間セル（td.custom2）が見つかりません");
     return 0;
   }
 
@@ -797,7 +795,7 @@ async function injectAnnualDataSection() {
     const headerRow = document.createElement("tr");
 
     const headers = [
-      { textLines: ["年間残業時間", "(日曜を除く)"], width: "120px" },
+      { textLines: ["現時点の目安年間残業", "(日曜を除く)"], width: "120px" },
       { textLines: ["最終更新"], width: "150px" },
     ];
 
