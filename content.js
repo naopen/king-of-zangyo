@@ -254,6 +254,42 @@ function injectOvertimeColumn() {
 }
 
 /**
+ * スケジュールテキストから半日休暇の期待勤務時間（分）を取得する
+ * @param {string} scheduleText - スケジュール欄のテキスト
+ * @returns {{isHalfDayLeave: boolean, isAM: boolean, isPM: boolean, expectedMinutes: number}}
+ */
+function getHalfDayLeaveInfo(scheduleText) {
+  const isAM = scheduleText.includes("AM有休");
+  const isPM = scheduleText.includes("PM有休");
+  const isHalfDayLeave = isAM || isPM;
+
+  if (!isHalfDayLeave) {
+    return { isHalfDayLeave: false, isAM: false, isPM: false, expectedMinutes: 0 };
+  }
+
+  // パターンを完全一致で判定
+  let pattern = 2; // デフォルトはパターン２
+  if (scheduleText.includes("フレックス（８始業１２休憩）")) {
+    pattern = 1;
+  } else if (scheduleText.includes("フレックス（９始業１２休憩）")) {
+    pattern = 2;
+  } else if (scheduleText.includes("フレックス（１０始業１３休憩）")) {
+    pattern = 3;
+  }
+
+  // パターンと休暇種別に基づいて期待勤務時間を決定
+  let expectedMinutes;
+  if (pattern === 1) {
+    expectedMinutes = isAM ? 210 : 240; // AM有休→3.5h, PM有休→4h
+  } else {
+    // パターン２、３は同じ
+    expectedMinutes = isAM ? 270 : 180; // AM有休→4.5h, PM有休→3h
+  }
+
+  return { isHalfDayLeave, isAM, isPM, expectedMinutes };
+}
+
+/**
  * 累計残業時間を計算する
  * @returns {number} 累計残業時間（分）
  */
@@ -336,8 +372,12 @@ function calculateTotalOvertime() {
     const scheduleCell = row.querySelector("td.schedule, td:nth-child(5)");
     const scheduleCellText = scheduleCell?.textContent.trim() || "";
 
-    // 「有休」が含まれている場合はスキップ
-    if (scheduleCellText.includes("有休")) {
+    // 半日休暇情報を取得
+    const halfDayInfo = getHalfDayLeaveInfo(scheduleCellText);
+
+    // 全日有休の場合のみスキップ（半日休暇は含めない）
+    const isFullDayLeave = scheduleCellText.includes("有休") && !halfDayInfo.isHalfDayLeave;
+    if (isFullDayLeave) {
       return;
     }
 
@@ -386,9 +426,20 @@ function calculateTotalOvertime() {
     const actualWorkMinutes = hours * 60 + minutes;
 
     // 残業時間を計算
-    // 平日：実働時間 - 所定労働時間（450分 = 7.5時間）
+    // 平日（全日勤務）：実働時間 - 所定労働時間（450分 = 7.5時間）
+    // 平日（半日休暇）：実働時間 - パターン別の期待勤務時間
     // 休日（土日祝）：実働時間 - 0分 = 実働時間（全て残業扱い）
-    const standardMinutes = isWeekday ? STANDARD_WORK_MINUTES : 0;
+    let standardMinutes;
+    if (!isWeekday) {
+      // 法定外休日（土曜・祝日）の場合
+      standardMinutes = 0;
+    } else if (halfDayInfo.isHalfDayLeave) {
+      // 半日休暇の場合：パターン別の期待勤務時間を基準にする
+      standardMinutes = halfDayInfo.expectedMinutes;
+    } else {
+      // 通常の平日勤務
+      standardMinutes = STANDARD_WORK_MINUTES;
+    }
     const dailyOvertimeMinutes = actualWorkMinutes - standardMinutes;
 
     // 累計に追加
