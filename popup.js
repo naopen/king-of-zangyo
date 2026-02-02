@@ -45,23 +45,30 @@ function loadSettings() {
         result[FISCAL_YEAR_START_KEY] !== undefined
           ? result[FISCAL_YEAR_START_KEY]
           : 4;
-      const fiscalYearStartSelect = document.getElementById("fiscal-year-start");
+      const fiscalYearStartSelect =
+        document.getElementById("fiscal-year-start");
 
       if (fiscalYearStartSelect) {
         fiscalYearStartSelect.value = fiscalYearStart.toString();
       }
 
-      // デフォルト値が設定されていない場合は保存
+      // デフォルト値が設定されていない場合は保存（初期化時のみ）
+      // 各保存関数を使わず直接設定値のみを保存することで、
+      // 年度データの削除や不要なタブへのメッセージ送信を回避する
+      const defaults = {};
       if (result[STORAGE_KEY] === undefined) {
-        saveSettings(true);
+        defaults[STORAGE_KEY] = true;
       }
       if (result[STANDARD_HOURS_KEY] === undefined) {
-        saveStandardHours(7.5);
+        defaults[STANDARD_HOURS_KEY] = 7.5;
       }
       if (result[FISCAL_YEAR_START_KEY] === undefined) {
-        saveFiscalYearStart(4);
+        defaults[FISCAL_YEAR_START_KEY] = 4;
       }
-    }
+      if (Object.keys(defaults).length > 0) {
+        chrome.storage.sync.set(defaults);
+      }
+    },
   );
 }
 
@@ -72,7 +79,7 @@ function loadSettings() {
 function saveSettings(isEnabled) {
   chrome.storage.sync.set({ [STORAGE_KEY]: isEnabled }, () => {
     console.log(
-      `King-of-Zangyo: 設定を保存しました (${isEnabled ? "有効" : "無効"})`
+      `King-of-Zangyo: 設定を保存しました (${isEnabled ? "有効" : "無効"})`,
     );
 
     // アクティブなタブにメッセージを送信して、表示を更新
@@ -87,12 +94,12 @@ function saveSettings(isEnabled) {
           (response) => {
             if (chrome.runtime.lastError) {
               console.log(
-                "King-of-Zangyo: メッセージ送信エラー（ページをリロードしてください）"
+                "King-of-Zangyo: メッセージ送信エラー（ページをリロードしてください）",
               );
             } else {
               console.log("King-of-Zangyo: 表示を更新しました");
             }
-          }
+          },
         );
       }
     });
@@ -119,12 +126,12 @@ function saveStandardHours(hours) {
           (response) => {
             if (chrome.runtime.lastError) {
               console.log(
-                "King-of-Zangyo: メッセージ送信エラー（ページをリロードしてください）"
+                "King-of-Zangyo: メッセージ送信エラー（ページをリロードしてください）",
               );
             } else {
               console.log("King-of-Zangyo: 所定労働時間を更新しました");
             }
-          }
+          },
         );
       }
     });
@@ -167,12 +174,12 @@ async function saveFiscalYearStart(month) {
         (response) => {
           if (chrome.runtime.lastError) {
             console.log(
-              "King-of-Zangyo: メッセージ送信エラー（ページをリロードしてください）"
+              "King-of-Zangyo: メッセージ送信エラー（ページをリロードしてください）",
             );
           } else {
             console.log("King-of-Zangyo: 年度開始月を更新しました");
           }
-        }
+        },
       );
     }
   });
@@ -234,7 +241,7 @@ function setupEventListeners() {
       const confirmed = confirm(
         "年度開始月を変更すると、保存されている全ての年度データが削除されます。\n" +
           "（年度サイクル変更により、データの整合性を保つため）\n" +
-          "よろしいですか？"
+          "よろしいですか？",
       );
 
       if (!confirmed) {
