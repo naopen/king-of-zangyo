@@ -17,11 +17,11 @@ Automatically displays cumulative overtime hours on KING OF TIME attendance page
 
 【主なバージョン履歴】
 
+v2.2.1: 残業時間表示を「法定休日を除く」に改善、設定の安定性も向上しました
 v2.2.0: 半日休暇（AM有休・PM有休）の残業時間を計算できるようになりました
 v2.1.1: 「①平日時間外＋法定外休勤務」セルからも残業時間を取得できるようになりました
 v2.1.0: 法定休日を計算から除外しました
 v2.0.0: 年間残業時間を集計・表示できるようになりました
-v1.3.0: 平日/休日に対応した残業時間の計算ができるようになりました
 
 【主な機能】
 
@@ -88,6 +88,7 @@ KING OF TIME (https://s2.ta.kingoftime.jp/admin/*) の勤怠管理画面での�
 
 Key Version History
 
+v2.2.1: Changed overtime label to "excluding legal holidays", improved settings stability
 v2.2.0: Added overtime calculation for half-day leave (AM/PM leave)
 v2.1.1: Added support for retrieving overtime from "①Weekday Overtime + Legal Holiday Work"
 v2.1.0: Excluded legal holidays from overtime calculations
