@@ -225,7 +225,7 @@ function injectOvertimeColumn() {
       th.id = OVERTIME_HEADER_ID;
       th.appendChild(document.createTextNode("現時点の目安残業"));
       th.appendChild(document.createElement("br"));
-      th.appendChild(document.createTextNode("(日曜を除く)"));
+      th.appendChild(document.createTextNode("(法定休日を除く)"));
       th.style.textAlign = "center";
       th.style.fontWeight = "bold";
       th.style.fontSize = "13px";
@@ -264,7 +264,12 @@ function getHalfDayLeaveInfo(scheduleText) {
   const isHalfDayLeave = isAM || isPM;
 
   if (!isHalfDayLeave) {
-    return { isHalfDayLeave: false, isAM: false, isPM: false, expectedMinutes: 0 };
+    return {
+      isHalfDayLeave: false,
+      isAM: false,
+      isPM: false,
+      expectedMinutes: 0,
+    };
   }
 
   // パターンを完全一致で判定
@@ -376,7 +381,8 @@ function calculateTotalOvertime() {
     const halfDayInfo = getHalfDayLeaveInfo(scheduleCellText);
 
     // 全日有休の場合のみスキップ（半日休暇は含めない）
-    const isFullDayLeave = scheduleCellText.includes("有休") && !halfDayInfo.isHalfDayLeave;
+    const isFullDayLeave =
+      scheduleCellText.includes("有休") && !halfDayInfo.isHalfDayLeave;
     if (isFullDayLeave) {
       return;
     }
@@ -387,7 +393,7 @@ function calculateTotalOvertime() {
     );
     const workdayTypeCellText = workdayTypeCell?.textContent.trim() || "";
 
-    // 法定休日（日曜日）は時間外労働の上限にカウントしない
+    // 法定休日（多くは日曜日）は時間外労働の上限にカウントしない
     const isLegalHoliday = workdayTypeCellText === "法定休日";
     if (isLegalHoliday) {
       return; // この日はスキップ
@@ -846,7 +852,7 @@ async function injectAnnualDataSection() {
     const headerRow = document.createElement("tr");
 
     const headers = [
-      { textLines: ["目安年間残業", "(日曜を除く)"], width: "120px" },
+      { textLines: ["目安年間残業", "(法定休日を除く)"], width: "130px" },
       { textLines: ["最終更新"], width: "150px" },
     ];
 
