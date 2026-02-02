@@ -254,6 +254,17 @@ function injectOvertimeColumn() {
 }
 
 /**
+ * 時間文字列を分に変換する
+ * @param {string} timeStr - "HH.MM"または"HH:MM"形式の時間文字列
+ * @returns {number} 分、パース失敗時は0
+ */
+function parseHHMMToMinutes(timeStr) {
+  const match = timeStr.match(/(\d{1,2})[:.](\d{2})/);
+  if (!match) return 0;
+  return parseInt(match[1], 10) * 60 + parseInt(match[2], 10);
+}
+
+/**
  * スケジュールテキストから半日休暇の期待勤務時間（分）を取得する
  * @param {string} scheduleText - スケジュール欄のテキスト
  * @returns {{isHalfDayLeave: boolean, isAM: boolean, isPM: boolean, expectedMinutes: number}}
@@ -292,6 +303,42 @@ function getHalfDayLeaveInfo(scheduleText) {
   }
 
   return { isHalfDayLeave, isAM, isPM, expectedMinutes };
+}
+
+/**
+ * スケジュールテキストから時間休かどうかを判定する
+ * @param {string} scheduleText - スケジュール欄のテキスト
+ * @returns {boolean}
+ */
+function isHourlyLeave(scheduleText) {
+  return scheduleText.includes("時間休");
+}
+
+/**
+ * 行から時間休の時間数（分）を計算する
+ * @param {HTMLElement} row - テーブル行要素
+ * @returns {number} 時間休の時間数（分）
+ */
+function calculateHourlyLeaveMinutes(row) {
+  // 出勤・退勤セルを取得（各セルに1つの時刻が入っている）
+  const timeRecordCells = row.querySelectorAll("td.start_end_timerecord");
+  if (timeRecordCells.length < 2) return 0;
+
+  // 出勤・退勤時刻を取得
+  const startMinutes = parseHHMMToMinutes(timeRecordCells[0].textContent);
+  const endMinutes = parseHHMMToMinutes(timeRecordCells[1].textContent);
+  if (startMinutes === 0 || endMinutes === 0) return 0;
+
+  // 休憩・実働を取得
+  const breakText = row.querySelector("td.custom11")?.textContent.trim() || "";
+  const actualText = row.querySelector("td.custom12")?.textContent.trim() || "";
+
+  const breakMinutes = parseHHMMToMinutes(breakText);
+  const actualMinutes = parseHHMMToMinutes(actualText);
+
+  // 時間休 = (退勤 - 出勤) - 休憩 - 実働
+  const hourlyLeave = endMinutes - startMinutes - breakMinutes - actualMinutes;
+  return Math.max(0, hourlyLeave);
 }
 
 /**
@@ -358,14 +405,10 @@ function calculateTotalOvertime() {
         return;
       }
 
-      const match = actualWorkText.match(/^(\d+)\.(\d+)$/);
-      if (!match) {
+      const actualWorkMinutes = parseHHMMToMinutes(actualWorkText);
+      if (actualWorkMinutes === 0) {
         return;
       }
-
-      const hours = parseInt(match[1], 10);
-      const minutes = parseInt(match[2], 10);
-      const actualWorkMinutes = hours * 60 + minutes;
 
       // 所定時間未満の場合はスキップ
       if (actualWorkMinutes < STANDARD_WORK_MINUTES) {
@@ -379,6 +422,12 @@ function calculateTotalOvertime() {
 
     // 半日休暇情報を取得
     const halfDayInfo = getHalfDayLeaveInfo(scheduleCellText);
+
+    // 時間休の場合、時間数を計算
+    let hourlyLeaveMinutes = 0;
+    if (isHourlyLeave(scheduleCellText)) {
+      hourlyLeaveMinutes = calculateHourlyLeaveMinutes(row);
+    }
 
     // 全日有休の場合のみスキップ（半日休暇は含めない）
     const isFullDayLeave =
@@ -417,19 +466,14 @@ function calculateTotalOvertime() {
       return; // 実働時間が空の場合はスキップ
     }
 
-    // 実働時間を60進法からパース（例: "8.48" → 8時間48分 = 528分）
-    const match = actualWorkText.match(/^(\d+)\.(\d+)$/);
-
-    if (!match) {
-      // マッチしない場合はスキップ
-      return;
+    // 実働時間を分に変換
+    const actualWorkMinutes = parseHHMMToMinutes(actualWorkText);
+    if (actualWorkMinutes === 0) {
+      return; // パース失敗時はスキップ
     }
 
-    const hours = parseInt(match[1], 10);
-    const minutes = parseInt(match[2], 10);
-
-    // 実働時間を分に変換（60進法: 8.48 = 8時間48分）
-    const actualWorkMinutes = hours * 60 + minutes;
+    // 時間休を加算して調整
+    const adjustedActualWorkMinutes = actualWorkMinutes + hourlyLeaveMinutes;
 
     // 残業時間を計算
     // 平日（全日勤務）：実働時間 - 所定労働時間（450分 = 7.5時間）
@@ -446,7 +490,7 @@ function calculateTotalOvertime() {
       // 通常の平日勤務
       standardMinutes = STANDARD_WORK_MINUTES;
     }
-    const dailyOvertimeMinutes = actualWorkMinutes - standardMinutes;
+    const dailyOvertimeMinutes = adjustedActualWorkMinutes - standardMinutes;
 
     // 累計に追加
     totalOvertimeMinutes += dailyOvertimeMinutes;
@@ -482,17 +526,12 @@ function getMonthlyOvertimeFromSummary() {
   }
 
   // 値の形式: "37.23" = 37時間23分 → 分に変換
-  const match = overtimeText.match(/^(\d+)\.(\d+)$/);
-  if (!match) {
+  const totalMinutes = parseHHMMToMinutes(overtimeText);
+  if (totalMinutes === 0 && overtimeText !== "0.00") {
     console.warn(
       `King-of-Zangyo: 残業時間のパースに失敗しました: "${overtimeText}"`,
     );
-    return 0;
   }
-
-  const hours = parseInt(match[1], 10);
-  const minutes = parseInt(match[2], 10);
-  const totalMinutes = hours * 60 + minutes;
 
   return totalMinutes;
 }
