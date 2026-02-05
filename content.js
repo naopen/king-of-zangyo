@@ -342,10 +342,38 @@ function calculateHourlyLeaveMinutes(row) {
 }
 
 /**
+ * 月内に管理職の勤務があるかどうかを判定
+ * @returns {boolean} 管理職の場合true
+ */
+function isManagerMonth() {
+  const dailyDataTable = document.querySelector(
+    ".htBlock-adjastableTableF_inner > table",
+  );
+  if (!dailyDataTable) {
+    return false;
+  }
+  const tbody = dailyDataTable.querySelector("tbody");
+  if (!tbody) {
+    return false;
+  }
+  const rows = tbody.querySelectorAll("tr");
+  for (const row of rows) {
+    const scheduleCell = row.querySelector("td.schedule");
+    const scheduleCellText = scheduleCell?.textContent.trim() || "";
+    if (scheduleCellText.includes("管理職")) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
  * 累計残業時間を計算する
  * @returns {number} 累計残業時間（分）
  */
 function calculateTotalOvertime() {
+  // 月内に管理職の勤務があるかを事前に判定
+  const isManager = isManagerMonth();
   // 日別データテーブルを取得
   const dailyDataTable = document.querySelector(
     ".htBlock-adjastableTableF_inner > table",
@@ -493,7 +521,12 @@ function calculateTotalOvertime() {
     const dailyOvertimeMinutes = adjustedActualWorkMinutes - standardMinutes;
 
     // 累計に追加
-    totalOvertimeMinutes += dailyOvertimeMinutes;
+    // 管理職の場合はマイナスを0に（所定時間の概念がないため）
+    if (isManager && dailyOvertimeMinutes < 0) {
+      totalOvertimeMinutes += 0;
+    } else {
+      totalOvertimeMinutes += dailyOvertimeMinutes;
+    }
   });
 
   return Math.round(totalOvertimeMinutes);
