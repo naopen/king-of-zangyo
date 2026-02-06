@@ -306,39 +306,57 @@ function getHalfDayLeaveInfo(scheduleText) {
 }
 
 /**
- * スケジュールテキストから時間休かどうかを判定する
- * @param {string} scheduleText - スケジュール欄のテキスト
- * @returns {boolean}
+ * 日数集計の有休セルから月全体の時間休合計（分）を取得する
+ * @returns {number} 時間休の合計時間（分）
  */
-function isHourlyLeave(scheduleText) {
-  return scheduleText.includes("時間休");
-}
+function getHourlyLeaveTotalFromSummary() {
+  // 1. 有休セル（日数集計）から使用日数と時間休Hを取得
+  const labels = document.querySelectorAll(
+    ".specific-daysCount_1 label.holiday_count",
+  );
+  let paidLeaveDays = 0;
+  let paidLeaveHours = 0;
+  for (const label of labels) {
+    if (label.textContent.trim() === "有休") {
+      const valueDiv = label.nextElementSibling;
+      if (!valueDiv) break;
+      const text = valueDiv.textContent.trim();
+      // "2.0 / 0H (残 10.5 / 2H)" → 日数と時間を抽出
+      const daysMatch = text.match(/^([\d.]+)/);
+      if (daysMatch) paidLeaveDays = parseFloat(daysMatch[1]);
+      const hoursMatch = text.match(/\/\s*(\d+)H/);
+      if (hoursMatch) paidLeaveHours = parseInt(hoursMatch[1], 10);
+      break;
+    }
+  }
+  if (paidLeaveDays === 0 && paidLeaveHours === 0) return 0;
 
-/**
- * 行から時間休の時間数（分）を計算する
- * @param {HTMLElement} row - テーブル行要素
- * @returns {number} 時間休の時間数（分）
- */
-function calculateHourlyLeaveMinutes(row) {
-  // 出勤・退勤セルを取得（各セルに1つの時刻が入っている）
-  const timeRecordCells = row.querySelectorAll("td.start_end_timerecord");
-  if (timeRecordCells.length < 2) return 0;
+  // 2. 日別データから全日有休・半日有休の日数をカウント
+  const dailyDataTable = document.querySelector(
+    ".htBlock-adjastableTableF_inner > table",
+  );
+  let fullDayLeaveCount = 0;
+  if (dailyDataTable) {
+    const rows = dailyDataTable.querySelectorAll("tbody tr");
+    rows.forEach((row) => {
+      const scheduleCell = row.querySelector("td.schedule");
+      const scheduleCellText = scheduleCell?.textContent.trim() || "";
+      if (!scheduleCellText.includes("有休")) return;
+      const halfDayInfo = getHalfDayLeaveInfo(scheduleCellText);
+      if (halfDayInfo.isHalfDayLeave) {
+        fullDayLeaveCount += 0.5; // 半日有休は0.5日
+      } else if (!scheduleCellText.includes("時間休")) {
+        fullDayLeaveCount += 1; // 全日有休は1日（時間休を除く）
+      }
+    });
+  }
 
-  // 出勤・退勤時刻を取得
-  const startMinutes = parseHHMMToMinutes(timeRecordCells[0].textContent);
-  const endMinutes = parseHHMMToMinutes(timeRecordCells[1].textContent);
-  if (startMinutes === 0 || endMinutes === 0) return 0;
+  // 3. 時間休の合計を算出
+  const hourlyLeaveDays = Math.max(0, paidLeaveDays - fullDayLeaveCount);
+  // 換算レート: 所定労働時間を1時間単位に切り上げ（労基法施行規則24条の4）
+  const hourlyLeavePerDay = Math.ceil(STANDARD_WORK_MINUTES / 60) * 60;
 
-  // 休憩・実働を取得
-  const breakText = row.querySelector("td.custom11")?.textContent.trim() || "";
-  const actualText = row.querySelector("td.custom12")?.textContent.trim() || "";
-
-  const breakMinutes = parseHHMMToMinutes(breakText);
-  const actualMinutes = parseHHMMToMinutes(actualText);
-
-  // 時間休 = (退勤 - 出勤) - 休憩 - 実働
-  const hourlyLeave = endMinutes - startMinutes - breakMinutes - actualMinutes;
-  return Math.max(0, hourlyLeave);
+  return hourlyLeaveDays * hourlyLeavePerDay + paidLeaveHours * 60;
 }
 
 /**
@@ -451,15 +469,11 @@ function calculateTotalOvertime() {
     // 半日休暇情報を取得
     const halfDayInfo = getHalfDayLeaveInfo(scheduleCellText);
 
-    // 時間休の場合、時間数を計算
-    let hourlyLeaveMinutes = 0;
-    if (isHourlyLeave(scheduleCellText)) {
-      hourlyLeaveMinutes = calculateHourlyLeaveMinutes(row);
-    }
-
-    // 全日有休の場合のみスキップ（半日休暇は含めない）
+    // 全日有休の場合のみスキップ（半日休暇・時間休は含めない）
     const isFullDayLeave =
-      scheduleCellText.includes("有休") && !halfDayInfo.isHalfDayLeave;
+      scheduleCellText.includes("有休") &&
+      !halfDayInfo.isHalfDayLeave &&
+      !scheduleCellText.includes("時間休");
     if (isFullDayLeave) {
       return;
     }
@@ -500,9 +514,6 @@ function calculateTotalOvertime() {
       return; // パース失敗時はスキップ
     }
 
-    // 時間休を加算して調整
-    const adjustedActualWorkMinutes = actualWorkMinutes + hourlyLeaveMinutes;
-
     // 残業時間を計算
     // 平日（全日勤務）：実働時間 - 所定労働時間（450分 = 7.5時間）
     // 平日（半日休暇）：実働時間 - パターン別の期待勤務時間
@@ -518,7 +529,7 @@ function calculateTotalOvertime() {
       // 通常の平日勤務
       standardMinutes = STANDARD_WORK_MINUTES;
     }
-    const dailyOvertimeMinutes = adjustedActualWorkMinutes - standardMinutes;
+    const dailyOvertimeMinutes = actualWorkMinutes - standardMinutes;
 
     // 累計に追加
     // 管理職の場合はマイナスを0に（所定時間の概念がないため）
@@ -528,6 +539,9 @@ function calculateTotalOvertime() {
       totalOvertimeMinutes += dailyOvertimeMinutes;
     }
   });
+
+  // 有休セルから時間休合計を取得し、一括加算
+  totalOvertimeMinutes += getHourlyLeaveTotalFromSummary();
 
   return Math.round(totalOvertimeMinutes);
 }
