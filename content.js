@@ -1088,6 +1088,10 @@ function updateAnnualDataDisplay(annualData, fiscalYear) {
   const totalHours = totalMinutes / 60;
   hoursCell.style.backgroundColor =
     getAnnualOvertimeBackgroundColor(totalHours);
+  const textColor = getAnnualOvertimeTextColor(totalHours);
+  if (textColor) {
+    hoursCell.style.color = textColor;
+  }
 
   // 最終更新を表示
   updatedCell.textContent = annualData.lastUpdated || "--";
@@ -1108,10 +1112,25 @@ function getAnnualOvertimeBackgroundColor(hours) {
   } else if (hours < 360) {
     // 330~359.9999時間：赤色
     return "#ef9a9a";
-  } else {
-    // 360時間以上：クリムゾンレッド
+  } else if (hours < 540) {
+    // 360~539.9999時間：クリムゾンレッド
     return "#d32f2f";
+  } else {
+    // 540時間以上：紫色
+    return "#990099";
   }
+}
+
+/**
+ * 年間残業時間の文字色を取得する
+ * @param {number} hours - 年間残業時間（時間単位）
+ * @returns {string} 文字色（16進数カラーコード）。デフォルトの場合は空文字
+ */
+function getAnnualOvertimeTextColor(hours) {
+  if (hours >= 540) {
+    return "#ffffff";
+  }
+  return "";
 }
 
 /**
@@ -1968,8 +1987,12 @@ function showResultDialog(annualData, fiscalYear) {
 
     body.style.whiteSpace = "pre-line";
 
-    // 背景色を設定
+    // 背景色と文字色を設定
     body.style.backgroundColor = getAnnualOvertimeBackgroundColor(totalHours);
+    const dialogTextColor = getAnnualOvertimeTextColor(totalHours);
+    if (dialogTextColor) {
+      body.style.color = dialogTextColor;
+    }
     body.style.padding = "20px";
     body.style.borderRadius = "4px";
 
