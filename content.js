@@ -215,6 +215,8 @@ function injectOvertimeColumn() {
       existingCell.textContent = overtimeText;
       existingCell.style.backgroundColor =
         getOvertimeBackgroundColor(overtimeMinutes);
+      const textColor = getOvertimeTextColor(overtimeMinutes);
+      existingCell.style.color = textColor || "";
       return;
     }
 
@@ -246,6 +248,10 @@ function injectOvertimeColumn() {
       td.style.width = "120px";
       td.style.minWidth = "120px";
       td.style.backgroundColor = getOvertimeBackgroundColor(overtimeMinutes);
+      const textColor = getOvertimeTextColor(overtimeMinutes);
+      if (textColor) {
+        td.style.color = textColor;
+      }
       dataRow.appendChild(td);
     }
   } catch (error) {
@@ -679,10 +685,26 @@ function getOvertimeBackgroundColor(overtimeMinutes) {
   } else if (overtimeHours < 45) {
     // 40~44.9999時間：赤色
     return "#ef9a9a";
-  } else {
-    // 45時間以上：クリムゾンレッド
+  } else if (overtimeHours < 75) {
+    // 45~74.9999時間：クリムゾンレッド
     return "#d32f2f";
+  } else {
+    // 75時間以上：紫色（特別条項上限）
+    return "#990099";
   }
+}
+
+/**
+ * 月間残業時間に応じた文字色を取得する
+ * @param {number} overtimeMinutes - 残業時間（分）
+ * @returns {string} 文字色（16進数カラーコード）、変更不要の場合は空文字
+ */
+function getOvertimeTextColor(overtimeMinutes) {
+  const overtimeHours = overtimeMinutes / 60;
+  if (overtimeHours >= 75) {
+    return "#ffffff";
+  }
+  return "";
 }
 
 /**
