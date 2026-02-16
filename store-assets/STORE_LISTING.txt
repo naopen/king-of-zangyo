@@ -34,7 +34,7 @@ v2.0.0: 年間残業時間を集計・表示できるようになりました
 年度選択で過去の年度データも確認可能です。
 
 • 色分け表示
-残業時間に応じて4段階の色分け表示で一目で状況を把握できます。
+残業時間に応じて色分け表示で一目で状況を把握できます。
 
 月間残業時間:
   - 緑: 0～30時間（安全範囲）
@@ -46,7 +46,8 @@ v2.0.0: 年間残業時間を集計・表示できるようになりました
   - 緑: 0～300時間（安全範囲）
   - 黄: 300～330時間（注意）
   - 赤: 330～360時間（危険）
-  - 濃赤: 360時間以上（超過）
+  - 濃赤: 360～540時間（超過）
+  - 紫: 540時間以上（特別条項超過）
 
 • 所定労働時間のカスタマイズ
 所定労働時間を0.5時間刻みで自由に設定可能です（デフォルト：7.5時間）。
@@ -121,7 +122,8 @@ Annual Overtime:
   - Green: 0-300 hours (safe range)
   - Yellow: 300-330 hours (caution)
   - Red: 330-360 hours (warning)
-  - Dark Red: 360+ hours (exceeded)
+  - Dark Red: 360-540 hours (exceeded)
+  - Purple: 540+ hours (special clause exceeded)
 
 • Customizable Standard Work Hours
 Set your standard work hours in 0.5-hour increments (default: 7.5 hours).
