@@ -40,7 +40,8 @@ v2.0.0: 年間残業時間を集計・表示できるようになりました
   - 緑: 0～30時間（安全範囲）
   - 黄: 30～40時間（注意）
   - 赤: 40～45時間（危険）
-  - 濃赤: 45時間以上（超過）
+  - 濃赤: 45～75時間（超過）
+  - 紫: 75時間以上（特別条項超過）
 
 年間残業時間:
   - 緑: 0～300時間（安全範囲）
@@ -112,11 +113,12 @@ View past fiscal year data using the year selector.
 • Color-Coded Display
 Color coding based on overtime hours for quick status checks.
 
-Four-tier color:
+Monthly Overtime:
   - Green: 0-30 hours (safe range)
   - Yellow: 30-40 hours (caution)
   - Red: 40-45 hours (warning)
-  - Dark Red: 45+ hours (exceeded)
+  - Dark Red: 45-75 hours (exceeded)
+  - Purple: 75+ hours (special clause exceeded)
 
 Annual Overtime:
   - Green: 0-300 hours (safe range)
