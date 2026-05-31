@@ -12,6 +12,8 @@ const PROCESSING_STATE_KEY = "kingOfZangyoProcessingState";
 const OVERTIME_HEADER_ID = "king-of-zangyo-header";
 const OVERTIME_CELL_ID = "king-of-zangyo-cell";
 const ANNUAL_SECTION_ID = "king-of-zangyo-annual-section";
+const MONTHLY_LEGEND_ID = "king-of-zangyo-monthly-legend";
+const ANNUAL_LEGEND_ID = "king-of-zangyo-annual-legend";
 
 // 所定労働時間（分）- 設定から読み込まれるまでのデフォルト値
 let STANDARD_WORK_MINUTES = 450; // 7.5時間
@@ -217,6 +219,13 @@ function injectOvertimeColumn() {
         getOvertimeBackgroundColor(overtimeMinutes);
       const textColor = getOvertimeTextColor(overtimeMinutes);
       existingCell.style.color = textColor || "";
+      // 月間凡例も更新（テーブル幅を再計算して適用）
+      const existingLegend = document.getElementById(MONTHLY_LEGEND_ID);
+      if (existingLegend) {
+        const updatedLegend = buildLegendElement(MONTHLY_BANDS, getMonthlyBandIndex(overtimeMinutes), MONTHLY_LEGEND_ID);
+        updatedLegend.style.width = summaryTable.offsetWidth + "px";
+        existingLegend.replaceWith(updatedLegend);
+      }
       return;
     }
 
@@ -254,6 +263,15 @@ function injectOvertimeColumn() {
       }
       dataRow.appendChild(td);
     }
+
+    // 月間凡例をテーブルの直後に挿入（テーブル幅に制限して右寄せ）
+    const legendDiv = buildLegendElement(
+      MONTHLY_BANDS,
+      getMonthlyBandIndex(overtimeMinutes),
+      MONTHLY_LEGEND_ID
+    );
+    legendDiv.style.width = summaryTable.offsetWidth + "px";
+    summaryTable.insertAdjacentElement("afterend", legendDiv);
   } catch (error) {
     console.error("King-of-Zangyo: 列の注入中にエラーが発生しました:", error);
   }
@@ -668,6 +686,80 @@ function formatMinutesToTime(minutes) {
   return isNegative ? `-${formattedTime}` : formattedTime;
 }
 
+// 月間・年間それぞれの閾値バンド定義
+const MONTHLY_BANDS = [
+  { color: "#c8e6c9", label: "～30h" },
+  { color: "#fff59d", label: "30～40h" },
+  { color: "#ef9a9a", label: "40～45h" },
+  { color: "#d32f2f", label: "45～75h" },
+  { color: "#990099", label: "75h+" },
+];
+
+const ANNUAL_BANDS = [
+  { color: "#c8e6c9", label: "～300h" },
+  { color: "#fff59d", label: "300～330h" },
+  { color: "#ef9a9a", label: "330～360h" },
+  { color: "#d32f2f", label: "360～540h" },
+  { color: "#990099", label: "540h+" },
+];
+
+function getMonthlyBandIndex(overtimeMinutes) {
+  const h = overtimeMinutes / 60;
+  if (h < 30) return 0;
+  if (h < 40) return 1;
+  if (h < 45) return 2;
+  if (h < 75) return 3;
+  return 4;
+}
+
+function getAnnualBandIndex(hours) {
+  if (hours < 300) return 0;
+  if (hours < 330) return 1;
+  if (hours < 360) return 2;
+  if (hours < 540) return 3;
+  return 4;
+}
+
+/**
+ * 閾値凡例のdiv要素を構築する
+ * currentBandIndex が -1 の場合はすべてのバンドを等価表示（未取得状態）
+ * textAlign: "right"（月間・セルが右端）または "left"（年間・セルが左端）
+ */
+function buildLegendElement(bands, currentBandIndex, legendId, textAlign = "right") {
+  const div = document.createElement("div");
+  div.id = legendId;
+  div.style.textAlign = textAlign;
+  div.style.fontSize = "11px";
+  div.style.color = "#555";
+  div.style.marginTop = "3px";
+  div.style.lineHeight = "1.4";
+
+  bands.forEach(({ color, label }, i) => {
+    const span = document.createElement("span");
+    span.style.marginLeft = "8px";
+    const isCurrent = currentBandIndex >= 0 && i === currentBandIndex;
+    span.style.opacity = currentBandIndex < 0 || isCurrent ? "1" : "0.4";
+    if (isCurrent) {
+      span.style.fontWeight = "bold";
+    }
+
+    const swatch = document.createElement("span");
+    swatch.style.display = "inline-block";
+    swatch.style.width = "9px";
+    swatch.style.height = "9px";
+    swatch.style.backgroundColor = color;
+    swatch.style.border = "1px solid rgba(0,0,0,0.15)";
+    swatch.style.verticalAlign = "middle";
+    swatch.style.marginRight = "2px";
+
+    span.appendChild(swatch);
+    span.appendChild(document.createTextNode(label));
+    div.appendChild(span);
+  });
+
+  return div;
+}
+
 /**
  * 残業時間に応じた背景色を取得する
  * @param {number} overtimeMinutes - 残業時間（分）
@@ -715,6 +807,7 @@ function toggleOvertimeDisplay(enabled) {
   const header = document.getElementById(OVERTIME_HEADER_ID);
   const cell = document.getElementById(OVERTIME_CELL_ID);
   const annualSection = document.getElementById(ANNUAL_SECTION_ID);
+  const monthlyLegend = document.getElementById(MONTHLY_LEGEND_ID);
 
   if (enabled) {
     // 列が存在しない場合は新規作成
@@ -729,6 +822,10 @@ function toggleOvertimeDisplay(enabled) {
     if (annualSection) {
       annualSection.style.display = "";
     }
+    // 月間凡例を表示
+    if (monthlyLegend) {
+      monthlyLegend.style.display = "";
+    }
   } else {
     // 非表示
     if (header) {
@@ -740,6 +837,10 @@ function toggleOvertimeDisplay(enabled) {
     // 年別データセクションを非表示
     if (annualSection) {
       annualSection.style.display = "none";
+    }
+    // 月間凡例を非表示
+    if (monthlyLegend) {
+      monthlyLegend.style.display = "none";
     }
   }
 }
@@ -1016,10 +1117,14 @@ async function injectAnnualDataSection() {
 
     tableContainer.appendChild(table);
 
+    // 年間凡例（初期は現在地未確定なので等価表示、左寄せで目安年間残業セルに揃える）
+    const annualLegendDiv = buildLegendElement(ANNUAL_BANDS, -1, ANNUAL_LEGEND_ID, "left");
+
     // セクションを構築
     sectionContainer.appendChild(titleContainer);
     sectionContainer.appendChild(tableCaption);
     sectionContainer.appendChild(tableContainer);
+    sectionContainer.appendChild(annualLegendDiv);
 
     // フレックスコンテナの右側に年別データセクションを配置
     flexContainer.appendChild(sectionContainer);
@@ -1091,6 +1196,10 @@ function updateAnnualDataDisplay(annualData, fiscalYear) {
     hoursCell.textContent = "未取得";
     hoursCell.style.backgroundColor = "#F9F9F9"; // 初期値に戻す
     updatedCell.textContent = "未取得";
+    const existingAnnualLegend = document.getElementById(ANNUAL_LEGEND_ID);
+    if (existingAnnualLegend) {
+      existingAnnualLegend.replaceWith(buildLegendElement(ANNUAL_BANDS, -1, ANNUAL_LEGEND_ID, "left"));
+    }
     return;
   }
 
@@ -1117,6 +1226,14 @@ function updateAnnualDataDisplay(annualData, fiscalYear) {
 
   // 最終更新を表示
   updatedCell.textContent = annualData.lastUpdated || "--";
+
+  // 年間凡例を更新
+  const existingAnnualLegend = document.getElementById(ANNUAL_LEGEND_ID);
+  if (existingAnnualLegend) {
+    existingAnnualLegend.replaceWith(
+      buildLegendElement(ANNUAL_BANDS, getAnnualBandIndex(totalHours), ANNUAL_LEGEND_ID, "left")
+    );
+  }
 }
 
 /**
