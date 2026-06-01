@@ -743,12 +743,13 @@ function buildLegendElement(bands, currentBandIndex, legendId, textAlign = "righ
     span.style.opacity = currentBandIndex < 0 || isCurrent ? "1" : "0.4";
     if (isCurrent) {
       span.style.fontWeight = "bold";
+      span.style.borderBottom = "1.5px solid rgba(0,0,0,0.4)";
     }
 
     const swatch = document.createElement("span");
     swatch.style.display = "inline-block";
-    swatch.style.width = "9px";
-    swatch.style.height = "9px";
+    swatch.style.width = isCurrent ? "12px" : "9px";
+    swatch.style.height = isCurrent ? "12px" : "9px";
     swatch.style.backgroundColor = color;
     swatch.style.border = "1px solid rgba(0,0,0,0.15)";
     swatch.style.flexShrink = "0";
