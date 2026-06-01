@@ -748,12 +748,15 @@ function buildLegendElement(bands, currentBandIndex, legendId, textAlign = "righ
 
     const swatch = document.createElement("span");
     swatch.style.display = "inline-block";
-    swatch.style.width = isCurrent ? "12px" : "9px";
-    swatch.style.height = isCurrent ? "12px" : "9px";
+    swatch.style.width = "9px";
+    swatch.style.height = "9px";
     swatch.style.backgroundColor = color;
     swatch.style.border = "1px solid rgba(0,0,0,0.15)";
     swatch.style.flexShrink = "0";
     swatch.style.marginRight = "2px";
+    if (isCurrent) {
+      swatch.style.boxShadow = "0 0 0 1.5px rgba(0,0,0,0.35)";
+    }
 
     span.appendChild(swatch);
     span.appendChild(document.createTextNode(label));
