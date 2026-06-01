@@ -736,6 +736,8 @@ function buildLegendElement(bands, currentBandIndex, legendId, textAlign = "righ
 
   bands.forEach(({ color, label }, i) => {
     const span = document.createElement("span");
+    span.style.display = "inline-flex";
+    span.style.alignItems = "center";
     span.style.marginLeft = "8px";
     const isCurrent = currentBandIndex >= 0 && i === currentBandIndex;
     span.style.opacity = currentBandIndex < 0 || isCurrent ? "1" : "0.4";
@@ -749,7 +751,7 @@ function buildLegendElement(bands, currentBandIndex, legendId, textAlign = "righ
     swatch.style.height = "9px";
     swatch.style.backgroundColor = color;
     swatch.style.border = "1px solid rgba(0,0,0,0.15)";
-    swatch.style.verticalAlign = "middle";
+    swatch.style.flexShrink = "0";
     swatch.style.marginRight = "2px";
 
     span.appendChild(swatch);
