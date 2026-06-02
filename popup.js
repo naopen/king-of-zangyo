@@ -4,6 +4,7 @@
 const STORAGE_KEY = "kingOfZangyoEnabled";
 const STANDARD_HOURS_KEY = "kingOfZangyoStandardHours";
 const FISCAL_YEAR_START_KEY = "kingOfZangyoFiscalYearStartMonth";
+const LEGEND_KEY = "kingOfZangyoLegendEnabled";
 const ANNUAL_DATA_KEY_PREFIX = "kingOfZangyoAnnualData_"; // 年度別キーの接頭辞
 const ANNUAL_DATA_YEARS_KEY = "kingOfZangyoAnnualDataYears"; // 保存済み年度リスト
 
@@ -18,7 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
  */
 function loadSettings() {
   chrome.storage.sync.get(
-    [STORAGE_KEY, STANDARD_HOURS_KEY, FISCAL_YEAR_START_KEY],
+    [STORAGE_KEY, STANDARD_HOURS_KEY, FISCAL_YEAR_START_KEY, LEGEND_KEY],
     (result) => {
       // 残業時間表示のON/OFF設定（デフォルトは「オン」）
       const isEnabled =
@@ -27,6 +28,15 @@ function loadSettings() {
 
       if (toggleSwitch) {
         toggleSwitch.checked = isEnabled;
+      }
+
+      // 凡例表示のON/OFF設定（デフォルトは「オン」）
+      const isLegendEnabled =
+        result[LEGEND_KEY] !== undefined ? result[LEGEND_KEY] : true;
+      const legendToggleSwitch = document.getElementById("legend-toggle-switch");
+
+      if (legendToggleSwitch) {
+        legendToggleSwitch.checked = isLegendEnabled;
       }
 
       // 所定労働時間の設定（デフォルトは7.5時間）
@@ -65,6 +75,9 @@ function loadSettings() {
       if (result[FISCAL_YEAR_START_KEY] === undefined) {
         defaults[FISCAL_YEAR_START_KEY] = 4;
       }
+      if (result[LEGEND_KEY] === undefined) {
+        defaults[LEGEND_KEY] = true;
+      }
       if (Object.keys(defaults).length > 0) {
         chrome.storage.sync.set(defaults);
       }
@@ -98,6 +111,30 @@ function saveSettings(isEnabled) {
               );
             } else {
               console.log("King-of-Zangyo: 表示を更新しました");
+            }
+          },
+        );
+      }
+    });
+  });
+}
+
+/**
+ * 凡例表示設定をストレージに保存する
+ * @param {boolean} isEnabled - 凡例の表示/非表示
+ */
+function saveLegendSettings(isEnabled) {
+  chrome.storage.sync.set({ [LEGEND_KEY]: isEnabled }, () => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs[0]) {
+        chrome.tabs.sendMessage(
+          tabs[0].id,
+          { action: "toggleLegendDisplay", enabled: isEnabled },
+          (response) => {
+            if (chrome.runtime.lastError) {
+              console.log(
+                "King-of-Zangyo: メッセージ送信エラー（ページをリロードしてください）",
+              );
             }
           },
         );
@@ -195,6 +232,14 @@ function setupEventListeners() {
     toggleSwitch.addEventListener("change", (event) => {
       const isEnabled = event.target.checked;
       saveSettings(isEnabled);
+    });
+  }
+
+  const legendToggleSwitch = document.getElementById("legend-toggle-switch");
+
+  if (legendToggleSwitch) {
+    legendToggleSwitch.addEventListener("change", (event) => {
+      saveLegendSettings(event.target.checked);
     });
   }
 
