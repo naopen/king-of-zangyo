@@ -22,6 +22,9 @@ let STANDARD_WORK_MINUTES = 450; // 7.5時間
 // 年度開始月（1-12）- 設定から読み込まれるまでのデフォルト値
 let FISCAL_YEAR_START_MONTH = 4; // 4月開始
 
+// 残業時間表示状態 - 設定から読み込まれるまでのデフォルト値
+let overtimeEnabled = true;
+
 // 凡例表示状態 - 設定から読み込まれるまでのデフォルト値
 let legendEnabled = true;
 
@@ -140,14 +143,15 @@ async function initializeApp() {
             : 4;
         FISCAL_YEAR_START_MONTH = fiscalYearStart;
 
+        // グローバル変数を先に設定（以降の全構築処理が参照する）
+        overtimeEnabled = isEnabled;
+        legendEnabled = isLegendEnabled;
+
         // 年別データセクションを注入（データ読み込みのため常に実行）
         await injectAnnualDataSection();
 
         // ダイアログスタイルを注入
         injectDialogStyles();
-
-        // グローバル変数を先に設定（以降の全構築処理が参照する）
-        legendEnabled = isLegendEnabled;
 
         if (isEnabled) {
           injectOvertimeColumn();
@@ -235,7 +239,7 @@ function injectOvertimeColumn() {
       if (existingLegend) {
         const updatedLegend = buildLegendElement(MONTHLY_BANDS, getMonthlyBandIndex(overtimeMinutes), MONTHLY_LEGEND_ID);
         updatedLegend.style.width = summaryTable.offsetWidth + "px";
-        updatedLegend.style.display = legendEnabled ? "" : "none";
+        updatedLegend.style.display = overtimeEnabled && legendEnabled ? "" : "none";
         existingLegend.replaceWith(updatedLegend);
       }
       return;
@@ -283,7 +287,7 @@ function injectOvertimeColumn() {
       MONTHLY_LEGEND_ID
     );
     legendDiv.style.width = summaryTable.offsetWidth + "px";
-    legendDiv.style.display = legendEnabled ? "" : "none";
+    legendDiv.style.display = overtimeEnabled && legendEnabled ? "" : "none";
     summaryTable.insertAdjacentElement("afterend", legendDiv);
   } catch (error) {
     console.error("King-of-Zangyo: 列の注入中にエラーが発生しました:", error);
@@ -823,9 +827,12 @@ function getOvertimeTextColor(overtimeMinutes) {
  * @param {boolean} enabled - 表示する場合はtrue、非表示にする場合はfalse
  */
 function toggleOvertimeDisplay(enabled) {
+  overtimeEnabled = enabled; // グローバル変数を更新
   const header = document.getElementById(OVERTIME_HEADER_ID);
   const cell = document.getElementById(OVERTIME_CELL_ID);
   const annualSection = document.getElementById(ANNUAL_SECTION_ID);
+  const monthlyLegend = document.getElementById(MONTHLY_LEGEND_ID);
+  const annualLegend = document.getElementById(ANNUAL_LEGEND_ID);
 
   if (enabled) {
     // 列が存在しない場合は新規作成
@@ -840,26 +847,16 @@ function toggleOvertimeDisplay(enabled) {
     if (annualSection) {
       annualSection.style.display = "";
     }
-    // 凡例はグローバル変数の設定に従って表示/非表示
-    const monthlyLegend = document.getElementById(MONTHLY_LEGEND_ID);
-    const annualLegend = document.getElementById(ANNUAL_LEGEND_ID);
-    if (monthlyLegend) monthlyLegend.style.display = legendEnabled ? "" : "none";
-    if (annualLegend) annualLegend.style.display = legendEnabled ? "" : "none";
+    // 凡例は overtimeEnabled && legendEnabled の両方が満たされる場合のみ表示
+    const showLegend = legendEnabled;
+    if (monthlyLegend) monthlyLegend.style.display = showLegend ? "" : "none";
+    if (annualLegend) annualLegend.style.display = showLegend ? "" : "none";
   } else {
     // 非表示
-    if (header) {
-      header.style.display = "none";
-    }
-    if (cell) {
-      cell.style.display = "none";
-    }
-    // 年別データセクションを非表示
-    if (annualSection) {
-      annualSection.style.display = "none";
-    }
+    if (header) header.style.display = "none";
+    if (cell) cell.style.display = "none";
+    if (annualSection) annualSection.style.display = "none";
     // 残業時間表示OFFなら凡例も強制非表示（legendEnabledは変えない）
-    const monthlyLegend = document.getElementById(MONTHLY_LEGEND_ID);
-    const annualLegend = document.getElementById(ANNUAL_LEGEND_ID);
     if (monthlyLegend) monthlyLegend.style.display = "none";
     if (annualLegend) annualLegend.style.display = "none";
   }
@@ -873,13 +870,11 @@ function toggleLegendDisplay(enabled) {
   legendEnabled = enabled; // グローバル変数を更新（シングルソースオブトゥルース）
   const monthlyLegend = document.getElementById(MONTHLY_LEGEND_ID);
   const annualLegend = document.getElementById(ANNUAL_LEGEND_ID);
+  // 残業時間表示がOFFの場合は凡例設定に関わらず非表示のまま
+  const show = overtimeEnabled && enabled;
 
-  if (monthlyLegend) {
-    monthlyLegend.style.display = enabled ? "" : "none";
-  }
-  if (annualLegend) {
-    annualLegend.style.display = enabled ? "" : "none";
-  }
+  if (monthlyLegend) monthlyLegend.style.display = show ? "" : "none";
+  if (annualLegend) annualLegend.style.display = show ? "" : "none";
 }
 
 // メッセージリスナーを設定（ポップアップからのメッセージを受信）
@@ -1159,6 +1154,7 @@ async function injectAnnualDataSection() {
 
     // 年間凡例（初期は現在地未確定なので等価表示、左寄せで目安年間残業セルに揃える）
     const annualLegendDiv = buildLegendElement(ANNUAL_BANDS, -1, ANNUAL_LEGEND_ID, "left");
+    annualLegendDiv.style.display = overtimeEnabled && legendEnabled ? "" : "none";
 
     // セクションを構築
     sectionContainer.appendChild(titleContainer);
@@ -1239,7 +1235,7 @@ function updateAnnualDataDisplay(annualData, fiscalYear) {
     const existingAnnualLegend = document.getElementById(ANNUAL_LEGEND_ID);
     if (existingAnnualLegend) {
       const newLegend = buildLegendElement(ANNUAL_BANDS, -1, ANNUAL_LEGEND_ID, "left");
-      newLegend.style.display = legendEnabled ? "" : "none";
+      newLegend.style.display = overtimeEnabled && legendEnabled ? "" : "none";
       existingAnnualLegend.replaceWith(newLegend);
     }
     return;
@@ -1273,7 +1269,7 @@ function updateAnnualDataDisplay(annualData, fiscalYear) {
   const existingAnnualLegend = document.getElementById(ANNUAL_LEGEND_ID);
   if (existingAnnualLegend) {
     const newLegend = buildLegendElement(ANNUAL_BANDS, getAnnualBandIndex(totalHours), ANNUAL_LEGEND_ID, "left");
-    newLegend.style.display = legendEnabled ? "" : "none";
+    newLegend.style.display = overtimeEnabled && legendEnabled ? "" : "none";
     existingAnnualLegend.replaceWith(newLegend);
   }
 }
