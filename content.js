@@ -258,6 +258,7 @@ function injectOvertimeColumn() {
       th.style.fontSize = "13px";
       th.style.width = "120px";
       th.style.minWidth = "120px";
+      if (!overtimeEnabled) th.style.display = "none";
       headerRow.appendChild(th);
     }
 
@@ -277,6 +278,7 @@ function injectOvertimeColumn() {
       if (textColor) {
         td.style.color = textColor;
       }
+      if (!overtimeEnabled) td.style.display = "none";
       dataRow.appendChild(td);
     }
 
@@ -1231,6 +1233,7 @@ function updateAnnualDataDisplay(annualData, fiscalYear) {
     caption.textContent = `年間集計 (${fiscalYear}年度)`;
     hoursCell.textContent = "未取得";
     hoursCell.style.backgroundColor = "#F9F9F9"; // 初期値に戻す
+    hoursCell.style.color = ""; // 文字色をリセット（540h超後の白文字残留を防ぐ）
     updatedCell.textContent = "未取得";
     const existingAnnualLegend = document.getElementById(ANNUAL_LEGEND_ID);
     if (existingAnnualLegend) {
