@@ -30,6 +30,12 @@ function loadSettings() {
         toggleSwitch.checked = isEnabled;
       }
 
+      // 残業時間表示OFFなら凡例設定行を非表示
+      const legendSettingItem = document.getElementById("legend-setting-item");
+      if (legendSettingItem) {
+        legendSettingItem.style.display = isEnabled ? "" : "none";
+      }
+
       // 凡例表示のON/OFF設定（デフォルトは「オン」）
       const isLegendEnabled =
         result[LEGEND_KEY] !== undefined ? result[LEGEND_KEY] : true;
@@ -232,6 +238,10 @@ function setupEventListeners() {
     toggleSwitch.addEventListener("change", (event) => {
       const isEnabled = event.target.checked;
       saveSettings(isEnabled);
+      const legendSettingItem = document.getElementById("legend-setting-item");
+      if (legendSettingItem) {
+        legendSettingItem.style.display = isEnabled ? "" : "none";
+      }
     });
   }
 
