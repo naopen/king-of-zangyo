@@ -91,7 +91,7 @@ async function initializeApp() {
     }
 
     // 処理状態をチェックして自動再開
-    checkAndResumeProcessing();
+    await checkAndResumeProcessing();
 
     // chrome.storage APIが利用可能かチェック
     if (
@@ -302,7 +302,7 @@ function injectOvertimeColumn() {
  * @returns {number} 分、パース失敗時は0
  */
 function parseHHMMToMinutes(timeStr) {
-  const match = timeStr.match(/(\d{1,2})[:.](\d{2})/);
+  const match = timeStr.match(/(\d+)[:.](\d{2})/);
   if (!match) return 0;
   return parseInt(match[1], 10) * 60 + parseInt(match[2], 10);
 }
@@ -483,27 +483,7 @@ function calculateTotalOvertime() {
       return; // 明日以降のデータはスキップ
     }
 
-    // 当日の場合、実働時間が所定時間（7.5h = 450分）以上の場合のみ含める
     const isToday = rowDate.getTime() === today.getTime();
-    if (isToday) {
-      // 実働時間を先に取得して判定
-      const actualWorkCell = row.querySelector("td.custom12");
-      const actualWorkText = actualWorkCell?.textContent.trim() || "";
-
-      if (!actualWorkText || actualWorkText === "") {
-        return;
-      }
-
-      const actualWorkMinutes = parseHHMMToMinutes(actualWorkText);
-      if (actualWorkMinutes === 0) {
-        return;
-      }
-
-      // 所定時間未満の場合はスキップ
-      if (actualWorkMinutes < STANDARD_WORK_MINUTES) {
-        return;
-      }
-    }
 
     // スケジュール（5番目のtd）を取得
     const scheduleCell = row.querySelector("td.schedule, td:nth-child(5)");
@@ -573,6 +553,12 @@ function calculateTotalOvertime() {
       standardMinutes = STANDARD_WORK_MINUTES;
     }
     const dailyOvertimeMinutes = actualWorkMinutes - standardMinutes;
+
+    // 当日かつ所定時間未達（勤務中）の場合はスキップ
+    // 日種別ごとの standardMinutes を基準にするため、休日・半休でも正しく動作する
+    if (isToday && dailyOvertimeMinutes < 0) {
+      return;
+    }
 
     // 累計に追加
     // 管理職の場合はマイナスを0に（所定時間の概念がないため）
@@ -1849,7 +1835,10 @@ async function resumeFetchAnnualOvertime() {
     );
 
     // 現在の月のデータを取得
-    // 当月は日別データから計算、前月以前は月別データテーブルの公式値を使用
+    // 【設計仕様】当月と前月以前で計算方式が異なる:
+    //   当月: calculateTotalOvertime() → 日別データから算出（時間休・半休・管理職補正を含む独自計算）
+    //   前月以前: getMonthlyOvertimeFromSummary() → KoT公式値 td.custom2「①平日時間外＋法定外休勤務」を使用
+    // 年間合計は計算方式の異なる値の合算になるが、これは意図的な設計。
     const now = new Date();
     const isCurrentMonth =
       currentMonth.year === now.getFullYear() &&
