@@ -237,9 +237,14 @@ function injectOvertimeColumn() {
       // 月間凡例も更新（テーブル幅を再計算して適用）
       const existingLegend = document.getElementById(MONTHLY_LEGEND_ID);
       if (existingLegend) {
-        const updatedLegend = buildLegendElement(MONTHLY_BANDS, getMonthlyBandIndex(overtimeMinutes), MONTHLY_LEGEND_ID);
+        const updatedLegend = buildLegendElement(
+          MONTHLY_BANDS,
+          getMonthlyBandIndex(overtimeMinutes),
+          MONTHLY_LEGEND_ID,
+        );
         updatedLegend.style.width = summaryTable.offsetWidth + "px";
-        updatedLegend.style.display = overtimeEnabled && legendEnabled ? "" : "none";
+        updatedLegend.style.display =
+          overtimeEnabled && legendEnabled ? "" : "none";
         existingLegend.replaceWith(updatedLegend);
       }
       return;
@@ -286,7 +291,7 @@ function injectOvertimeColumn() {
     const legendDiv = buildLegendElement(
       MONTHLY_BANDS,
       getMonthlyBandIndex(overtimeMinutes),
-      MONTHLY_LEGEND_ID
+      MONTHLY_LEGEND_ID,
     );
     legendDiv.style.width = summaryTable.offsetWidth + "px";
     legendDiv.style.display = overtimeEnabled && legendEnabled ? "" : "none";
@@ -696,16 +701,16 @@ const MONTHLY_BANDS = [
   { color: "#c8e6c9", label: "～30h" },
   { color: "#fff59d", label: "30～40h" },
   { color: "#ef9a9a", label: "40～45h" },
-  { color: "#d32f2f", label: "45～75h" },
-  { color: "#990099", label: "75h+" },
+  { color: "#d32f2f", label: "45～75h(36協定超過)" },
+  { color: "#990099", label: "75h+(36協定特別条項超過)" },
 ];
 
 const ANNUAL_BANDS = [
   { color: "#c8e6c9", label: "～300h" },
   { color: "#fff59d", label: "300～330h" },
   { color: "#ef9a9a", label: "330～360h" },
-  { color: "#d32f2f", label: "360～540h" },
-  { color: "#990099", label: "540h+" },
+  { color: "#d32f2f", label: "360～540h(協定超過)" },
+  { color: "#990099", label: "540h+(特別条項超過)" },
 ];
 
 function getMonthlyBandIndex(overtimeMinutes) {
@@ -730,7 +735,12 @@ function getAnnualBandIndex(hours) {
  * currentBandIndex が -1 の場合はすべてのバンドを等価表示（未取得状態）
  * textAlign: "right"（月間・セルが右端）または "left"（年間・セルが左端）
  */
-function buildLegendElement(bands, currentBandIndex, legendId, textAlign = "right") {
+function buildLegendElement(
+  bands,
+  currentBandIndex,
+  legendId,
+  textAlign = "right",
+) {
   const div = document.createElement("div");
   div.id = legendId;
   div.style.textAlign = textAlign;
@@ -1141,8 +1151,14 @@ async function injectAnnualDataSection() {
     tableContainer.appendChild(table);
 
     // 年間凡例（初期は現在地未確定なので等価表示、左寄せで目安年間残業セルに揃える）
-    const annualLegendDiv = buildLegendElement(ANNUAL_BANDS, -1, ANNUAL_LEGEND_ID, "left");
-    annualLegendDiv.style.display = overtimeEnabled && legendEnabled ? "" : "none";
+    const annualLegendDiv = buildLegendElement(
+      ANNUAL_BANDS,
+      -1,
+      ANNUAL_LEGEND_ID,
+      "left",
+    );
+    annualLegendDiv.style.display =
+      overtimeEnabled && legendEnabled ? "" : "none";
 
     // セクションを構築
     sectionContainer.appendChild(titleContainer);
@@ -1223,7 +1239,12 @@ function updateAnnualDataDisplay(annualData, fiscalYear) {
     updatedCell.textContent = "未取得";
     const existingAnnualLegend = document.getElementById(ANNUAL_LEGEND_ID);
     if (existingAnnualLegend) {
-      const newLegend = buildLegendElement(ANNUAL_BANDS, -1, ANNUAL_LEGEND_ID, "left");
+      const newLegend = buildLegendElement(
+        ANNUAL_BANDS,
+        -1,
+        ANNUAL_LEGEND_ID,
+        "left",
+      );
       newLegend.style.display = overtimeEnabled && legendEnabled ? "" : "none";
       existingAnnualLegend.replaceWith(newLegend);
     }
@@ -1257,7 +1278,12 @@ function updateAnnualDataDisplay(annualData, fiscalYear) {
   // 年間凡例を更新
   const existingAnnualLegend = document.getElementById(ANNUAL_LEGEND_ID);
   if (existingAnnualLegend) {
-    const newLegend = buildLegendElement(ANNUAL_BANDS, getAnnualBandIndex(totalHours), ANNUAL_LEGEND_ID, "left");
+    const newLegend = buildLegendElement(
+      ANNUAL_BANDS,
+      getAnnualBandIndex(totalHours),
+      ANNUAL_LEGEND_ID,
+      "left",
+    );
     newLegend.style.display = overtimeEnabled && legendEnabled ? "" : "none";
     existingAnnualLegend.replaceWith(newLegend);
   }
