@@ -709,7 +709,7 @@ const ANNUAL_BANDS = [
   { color: "#c8e6c9", label: "～300h" },
   { color: "#fff59d", label: "300～330h" },
   { color: "#ef9a9a", label: "330～360h" },
-  { color: "#d32f2f", label: "360～540h(協定超過)" },
+  { color: "#d32f2f", label: "360～540h(超過)" },
   { color: "#990099", label: "540h+(特別条項超過)" },
 ];
 
