@@ -755,7 +755,7 @@ function buildLegendElement(
     span.style.alignItems = "center";
     span.style.marginLeft = "8px";
     const isCurrent = currentBandIndex >= 0 && i === currentBandIndex;
-    span.style.opacity = currentBandIndex < 0 || isCurrent ? "1" : "0.4";
+    const isUnresolved = currentBandIndex < 0;
     if (isCurrent) {
       span.style.fontWeight = "bold";
       span.style.borderBottom = "1.5px solid rgba(0,0,0,0.4)";
@@ -773,8 +773,12 @@ function buildLegendElement(
       swatch.style.boxShadow = "0 0 0 1.5px rgba(0,0,0,0.35)";
     }
 
+    const labelSpan = document.createElement("span");
+    labelSpan.textContent = label;
+    labelSpan.style.color = isUnresolved || isCurrent ? "#555" : "#999";
+
     span.appendChild(swatch);
-    span.appendChild(document.createTextNode(label));
+    span.appendChild(labelSpan);
     div.appendChild(span);
   });
 
