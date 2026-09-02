@@ -81,6 +81,72 @@ function isTargetPage() {
 }
 
 /**
+ * 設定をchrome.storage.syncから読み込み、グローバル変数に反映する
+ *
+ * 【重要】この関数は checkAndResumeProcessing() より前に await すること。
+ * 再開処理は月ごとにページ遷移するため、設定の反映が後回しになると
+ * 当月の残業計算（calculateTotalOvertime）がデフォルトの所定労働時間で
+ * 行われ、年間合計に誤った値が混ざる。
+ *
+ * @returns {Promise<"ok"|"unavailable"|"error">} 読み込み結果
+ *   - "ok": 設定を反映済み
+ *   - "unavailable": chrome.storage.sync が使えない（デフォルト値のまま）
+ *   - "error": 読み込みに失敗した（デフォルト値のまま）
+ */
+function loadSettings() {
+  return new Promise((resolve) => {
+    if (
+      typeof chrome === "undefined" ||
+      !chrome.storage ||
+      !chrome.storage.sync
+    ) {
+      console.warn(
+        "King-of-Zangyo: chrome.storage.sync が利用できません。デフォルトでオンにします。",
+      );
+      resolve("unavailable");
+      return;
+    }
+
+    chrome.storage.sync.get(
+      [STORAGE_KEY, STANDARD_HOURS_KEY, FISCAL_YEAR_START_KEY, LEGEND_KEY],
+      (result) => {
+        if (chrome.runtime.lastError) {
+          console.error(
+            "King-of-Zangyo: ストレージ取得エラー:",
+            chrome.runtime.lastError,
+          );
+          resolve("error");
+          return;
+        }
+
+        // 残業時間表示（デフォルトは「オン」）
+        overtimeEnabled =
+          result[STORAGE_KEY] !== undefined ? result[STORAGE_KEY] : true;
+
+        // 凡例表示設定（デフォルトは「オン」）
+        legendEnabled =
+          result[LEGEND_KEY] !== undefined ? result[LEGEND_KEY] : true;
+
+        // 所定労働時間を設定（デフォルトは7.5時間）
+        const standardHours =
+          result[STANDARD_HOURS_KEY] !== undefined
+            ? result[STANDARD_HOURS_KEY]
+            : 7.5;
+        STANDARD_WORK_MINUTES = standardHours * 60;
+
+        // 年度開始月を設定（デフォルトは4月）
+        FISCAL_YEAR_START_MONTH =
+          result[FISCAL_YEAR_START_KEY] !== undefined
+            ? result[FISCAL_YEAR_START_KEY]
+            : 4;
+
+        resolve("ok");
+      },
+    );
+  });
+}
+
+/**
  * アプリケーションの初期化
  */
 async function initializeApp() {
@@ -92,84 +158,40 @@ async function initializeApp() {
 
     // ダイアログスタイルを先に注入する
     // 【重要】checkAndResumeProcessing() は月ごとにページ遷移して戻ってこないため、
-    // これより後ろ（storage.sync.get のコールバック内）の注入は再開中の document では実行されない。
+    // これより後ろでの注入は再開中の document では実行されない。
     // 進捗・完了ダイアログが素のまま描画されるのを防ぐため、必ずここで注入する。
     injectDialogStyles();
+
+    // 設定を読み込む（再開処理より前に必ず反映させる）
+    const settingsStatus = await loadSettings();
 
     // 処理状態をチェックして自動再開
     await checkAndResumeProcessing();
 
-    // chrome.storage APIが利用可能かチェック
-    if (
-      typeof chrome === "undefined" ||
-      !chrome.storage ||
-      !chrome.storage.sync
-    ) {
-      console.warn(
-        "King-of-Zangyo: chrome.storage.sync が利用できません。デフォルトでオンにします。",
-      );
+    if (settingsStatus === "unavailable") {
       injectOvertimeColumn();
       return;
     }
 
-    chrome.storage.sync.get(
-      [STORAGE_KEY, STANDARD_HOURS_KEY, FISCAL_YEAR_START_KEY, LEGEND_KEY],
-      async (result) => {
-        if (chrome.runtime.lastError) {
-          console.error(
-            "King-of-Zangyo: ストレージ取得エラー:",
-            chrome.runtime.lastError,
-          );
-          // エラーの場合はデフォルトでオンにする
-          injectOvertimeColumn();
-          await injectAnnualDataSection();
-          injectDialogStyles();
-          return;
-        }
+    if (settingsStatus === "error") {
+      // エラーの場合はデフォルトでオンにする
+      injectOvertimeColumn();
+      await injectAnnualDataSection();
+      return;
+    }
 
-        // デフォルトは「オン」(true)
-        const isEnabled =
-          result[STORAGE_KEY] !== undefined ? result[STORAGE_KEY] : true;
+    // 年別データセクションを注入（データ読み込みのため常に実行）
+    await injectAnnualDataSection();
 
-        // 凡例表示設定（デフォルトは「オン」）
-        const isLegendEnabled =
-          result[LEGEND_KEY] !== undefined ? result[LEGEND_KEY] : true;
-
-        // 所定労働時間を設定（デフォルトは7.5時間）
-        const standardHours =
-          result[STANDARD_HOURS_KEY] !== undefined
-            ? result[STANDARD_HOURS_KEY]
-            : 7.5;
-        STANDARD_WORK_MINUTES = standardHours * 60;
-
-        // 年度開始月を設定（デフォルトは4月）
-        const fiscalYearStart =
-          result[FISCAL_YEAR_START_KEY] !== undefined
-            ? result[FISCAL_YEAR_START_KEY]
-            : 4;
-        FISCAL_YEAR_START_MONTH = fiscalYearStart;
-
-        // グローバル変数を先に設定（以降の全構築処理が参照する）
-        overtimeEnabled = isEnabled;
-        legendEnabled = isLegendEnabled;
-
-        // 年別データセクションを注入（データ読み込みのため常に実行）
-        await injectAnnualDataSection();
-
-        // ダイアログスタイルを注入
-        injectDialogStyles();
-
-        if (isEnabled) {
-          injectOvertimeColumn();
-        } else {
-          // 非表示設定の場合、年別データセクションを非表示にする
-          const annualSection = document.getElementById(ANNUAL_SECTION_ID);
-          if (annualSection) {
-            annualSection.style.display = "none";
-          }
-        }
-      },
-    );
+    if (overtimeEnabled) {
+      injectOvertimeColumn();
+    } else {
+      // 非表示設定の場合、年別データセクションを非表示にする
+      const annualSection = document.getElementById(ANNUAL_SECTION_ID);
+      if (annualSection) {
+        annualSection.style.display = "none";
+      }
+    }
   } catch (error) {
     console.error("King-of-Zangyo: 初期化エラー:", error);
     // エラーが発生してもデフォルトで機能を実行
