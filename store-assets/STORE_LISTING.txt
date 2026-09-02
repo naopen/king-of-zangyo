@@ -95,12 +95,7 @@ v2.4.8: Fixed broken dialog styling during annual overtime data retrieval
 v2.4.4: Added a color-coded threshold legend below the monthly and annual overtime summary tables
 v2.4.1: Overtime is now correctly calculated for all hourly leave patterns
 v2.4.0: Overtime is now correctly calculated when managerial work shifts are present
-v2.3.0: Overtime can now be calculated based on hourly leave
-v2.2.1: Changed overtime label to "excluding legal holidays", improved settings stability
 v2.2.0: Added overtime calculation for half-day leave (AM/PM leave)
-v2.1.0: Excluded legal holidays from overtime calculations
-v1.3.0: Overtime calculation now supports weekdays and holidays
-v1.2.0: You can now customize your standard work hours
 
 Key Features
 
