@@ -90,6 +90,12 @@ async function initializeApp() {
       return;
     }
 
+    // ダイアログスタイルを先に注入する
+    // 【重要】checkAndResumeProcessing() は月ごとにページ遷移して戻ってこないため、
+    // これより後ろ（storage.sync.get のコールバック内）の注入は再開中の document では実行されない。
+    // 進捗・完了ダイアログが素のまま描画されるのを防ぐため、必ずここで注入する。
+    injectDialogStyles();
+
     // 処理状態をチェックして自動再開
     await checkAndResumeProcessing();
 
