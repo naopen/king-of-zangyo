@@ -120,7 +120,7 @@
 | `README.md` | 修正 | 年間の色分けの表を、式と例で書き直す |
 | `store-assets/STORE_LISTING.txt` | 修正 | 日本語版（47〜52行）と英語版（121〜125行）の年間の閾値を書き直す。バージョン履歴にも1行足す |
 
-`test/` は別リポジトリ（`king-of-zangyo-testdata`）のサブモジュールなので、単体テストは置かない。ただし `test/` の確認用HTML4つは `<script src="../content.js">` だけを読み込んでいるので、このままだと `content.js` が `KingOfZangyoAnnualPace` を見つけられずに止まる。4つに `<script src="../annual-pace.js">` を1行ずつ足すか（サブモジュール側のコミットが要る）、壊れたままにするかは、Naokiが決める。
+`test/` は別リポジトリ（`king-of-zangyo-testdata`）のサブモジュールなので、単体テストは置かない。ただし `test/` の確認用HTML4つは `<script src="../content.js">` だけを読み込んでいるので、このままだと `content.js` が `KingOfZangyoAnnualPace` を見つけられずに止まる。4つとも `<script src="../content.js">` の前に `<script src="../annual-pace.js">` を1行足し、サブモジュール側でもコミットする。親リポジトリでは、更新したサブモジュールの参照もコミットする。
 
 ### `annual-pace.js` の関数
 
