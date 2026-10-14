@@ -115,7 +115,7 @@
 | `annual-pace.js` | 新規 | 判定ロジックとダイアログ・`title` の文言を作る関数。DOMを触らない |
 | `content.js` | 修正 | `ANNUAL_BANDS`、`getAnnualBandIndex`、`getAnnualOvertimeBackgroundColor` を `annual-pace.js` の結果を使う形に差し替える。`updateAnnualDataDisplay` と `showResultDialog` と `completeFetchAnnualOvertime` を修正する |
 | `manifest.json` | 修正 | `content_scripts.js` を `["annual-pace.js", "content.js"]` にする |
-| `Makefile` | 修正 | zipの対象に `annual-pace.js` を足す。`test` ターゲット（`node --test tests/`）を足す |
+| `Makefile` | 修正 | zipの対象に `annual-pace.js` を足す。`test` ターゲット（`node --test "tests/*.test.js"`）を足す |
 | `tests/annual-pace.test.js` | 新規 | 単体テスト |
 | `README.md` | 修正 | 年間の色分けの表を、式と例で書き直す |
 | `store-assets/STORE_LISTING.txt` | 修正 | 日本語版（47〜52行）と英語版（121〜125行）の年間の閾値を書き直す。バージョン履歴にも1行足す |
@@ -167,7 +167,7 @@ ES Modulesにしない理由。コンテンツスクリプトで `import` を使
 
 ## テスト
 
-`node --test tests/` で `annual-pace.js` を読み込んで検証する。依存パッケージは入れない（Node 22.18.0 で動作する標準機能）。
+`node --test "tests/*.test.js"` で `annual-pace.js` を読み込んで検証する。依存パッケージは入れない（Node 22.18.0 で動作する標準機能）。
 
 - 上の「最終更新日ごとの境目」の7行が一致する
 - 上の「色が変わる日」の表の黄と赤の日付が一致する（45h、30h、25h）
