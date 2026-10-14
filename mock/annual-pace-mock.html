@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>年間の色分けモック（残り月数で境目を動かす案）</title>
+
+  <!-- test/extension-test.html と同じ KING OF TIME 公式CSS -->
+  <link type="text/css" rel="stylesheet" href="https://s2.ta.kingoftime.jp/asset/design1/js/vendor/jquery-ui-1.13.2/jquery-ui.min.css">
+  <link type="text/css" rel="stylesheet" href="https://s2.ta.kingoftime.jp/asset/design1/css/base.kot.css">
+  <link type="text/css" rel="stylesheet" href="https://s2.ta.kingoftime.jp/asset/design1/css/block.kot.css">
+  <link type="text/css" rel="stylesheet" href="https://s2.ta.kingoftime.jp/asset/design1/css/specific.kot.css">
+  <link type="text/css" rel="stylesheet" href="https://s2.ta.kingoftime.jp/css/language/ja.css">
+
+  <style>
+    body { padding: 16px 24px 80px; background: #fff; }
+    .mock-panel {
+      border: 1px solid #ccc; background: #fafafa; padding: 12px 16px;
+      font-size: 14px; line-height: 1.8; margin-bottom: 24px; max-width: 1180px;
+    }
+    .mock-panel h2 { font-size: 15px; font-weight: bold; margin: 0 0 6px; }
+    .mock-panel label { margin-right: 16px; white-space: nowrap; }
+    .mock-panel input[type=number] { width: 56px; }
+    .mock-panel input[type=range] { width: 640px; vertical-align: middle; }
+    .mock-row { margin: 4px 0; }
+    .mock-calc { font-variant-numeric: tabular-nums; color: #333; }
+    .mock-columns { display: flex; gap: 64px; align-items: flex-start; flex-wrap: wrap; }
+    .mock-col-title { font-size: 13px; color: #666; margin-bottom: 6px; }
+    .mock-title-list { font-size: 13px; line-height: 1.7; max-width: 1180px; }
+    .mock-title-list dt { font-weight: bold; margin-top: 10px; }
+    .mock-title-list dd { margin: 2px 0 0 0; white-space: pre-line; }
+    .mock-dialog-inline { position: static; display: block; margin: 0; }
+  </style>
+
+  <!-- content.js の injectDialogStyles() と同じ内容 -->
+  <style>
+    .kot-zangyo-dialog {
+      border: none; border-radius: 4px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+      font-size: 16px; padding: 0; max-width: 600px; width: 90%; outline: none;
+    }
+    .kot-zangyo-dialog::backdrop { background-color: rgba(0, 0, 0, 0.5); }
+    .kot-zangyo-dialog-header {
+      background-color: #f5f5f5; border-bottom: 1px solid #e0e0e0;
+      padding: 16px 20px; font-size: 18px; font-weight: bold; color: #333;
+    }
+    .kot-zangyo-dialog-body { background-color: #fff; padding: 20px; color: #333; line-height: 1.6; }
+    .kot-zangyo-dialog-footer {
+      background-color: #fafafa; border-top: 1px solid #e0e0e0; padding: 16px 20px;
+      text-align: right; display: flex; justify-content: flex-end; gap: 12px;
+    }
+    .kot-zangyo-btn {
+      border: none; border-radius: 4px; padding: 8px 16px; font-size: 16px; font-weight: 500;
+      cursor: pointer; outline: none;
+    }
+    .kot-zangyo-btn-primary { background-color: #1d9e48; color: #fff; }
+  </style>
+</head>
+<body>
+
+<div class="mock-panel">
+  <h2>モックの操作</h2>
+  <div class="mock-row">
+    最終更新日（ボタンを押した日）
+    <input type="range" id="date" min="0" max="425" value="141">
+    <b id="dateLabel" class="mock-calc"></b>
+  </div>
+  <div class="mock-row">
+    残業のしかた
+    <label>毎月 <input type="number" id="pace1" value="45" min="0" max="120">h を</label>
+    <label><input type="number" id="switchAt" value="12" min="0" max="12"> か月続けて、以降は毎月</label>
+    <label><input type="number" id="pace2" value="20" min="0" max="120">h</label>
+    <span class="mock-calc" id="scenarioLabel"></span>
+  </div>
+  <div class="mock-row">
+    前回の取得
+    <label><input type="radio" name="prev" value="exists" checked> 新しい形式、または初めて取得</label>
+    <label><input type="radio" name="prev" value="legacy"> 古い形式（固定300h/330h）</label>
+  </div>
+  <div class="mock-row">
+    凡例のtitle属性
+    <label><input type="radio" name="tvar" value="none"> なし</label>
+    <label><input type="radio" name="tvar" value="band" checked> 案1 帯ごとの意味（採用）</label>
+    <label><input type="radio" name="tvar" value="formula"> 案2 式</label>
+    <label><input type="radio" name="tvar" value="mine"> 案3 自分の残り</label>
+    <label><input type="radio" name="tvar" value="mix"> 案4 帯ごと＋自分の残り</label>
+  </div>
+  <div class="mock-row mock-calc" id="calcLabel"></div>
+</div>
+
+<div class="mock-columns">
+  <div>
+    <div class="mock-col-title">現行（固定300h/330h/360h）</div>
+    <div id="sectionOld"></div>
+  </div>
+  <div>
+    <div class="mock-col-title">新方式（凡例にマウスを乗せるとtitleが出ます）</div>
+    <div id="sectionNew"></div>
+  </div>
+  <div>
+    <div class="mock-col-title">完了ダイアログ（新方式）</div>
+    <div id="dialogHolder" style="width: 520px;"></div>
+  </div>
+</div>
+
+<h4 class="htBlock-box_subTitle" style="margin-top: 32px;">title属性の文言（いま選んでいる日付で計算）</h4>
+<dl class="mock-title-list" id="titleList"></dl>
+
+<script>
+// ---------------- 判定ロジック（設計書の式） ----------------
+const FY = 2026;            // モックの年度
+const FY_START_MONTH = 4;   // 年度開始月
+const COLORS = ["#c8e6c9", "#fff59d", "#ef9a9a", "#d32f2f", "#990099"];
+
+function fyStart() { return new Date(FY, FY_START_MONTH - 1, 1); }
+function fyEndExclusive() { return new Date(FY + 1, FY_START_MONTH - 1, 1); }
+
+// 最終更新日のその日の終わりまでの経過月数（日割り）。年度外は 0 または 12 に丸める
+function elapsedMonths(date) {
+  if (date < fyStart()) return 0;
+  if (date >= fyEndExclusive()) return 12;
+  const monthIndex = (date.getFullYear() - FY) * 12 + date.getMonth() - (FY_START_MONTH - 1);
+  const daysInMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+  return monthIndex + date.getDate() / daysInMonth;
+}
+
+function isFinishedYear(date) { return date >= fyEndExclusive(); }
+
+// 帯の定義を返す。thresholds は [黄, 赤, 濃赤, 紫] の下限（時間）
+function computeBands(date, legacy) {
+  if (legacy) {
+    return { kind: "legacy", thresholds: [300, 330, 360, 540] };
+  }
+  if (isFinishedYear(date)) {
+    return { kind: "finished", thresholds: [null, null, 360, 540] };
+  }
+  const t = elapsedMonths(date);
+  const remaining = 12 - t;
+  const yellowRaw = 360 - 20 * (remaining + 1);
+  const redRaw = 360 - 10 * remaining;
+  return {
+    kind: "pace", t, remaining, yellowRaw, redRaw,
+    thresholds: [Math.floor(yellowRaw), Math.floor(redRaw), 360, 540],
+  };
+}
+
+function bandIndex(hours, bands) {
+  const [y, r, c, p] = bands.thresholds;
+  if (hours >= p) return 4;
+  if (hours >= c) return 3;
+  if (bands.kind === "finished") return 0;
+  if (hours >= r) return 2;
+  if (hours >= y) return 1;
+  return 0;
+}
+
+function bandLabels(bands) {
+  const [y, r] = bands.thresholds;
+  if (bands.kind === "finished") {
+    return [
+      { i: 0, label: "～360h" },
+      { i: 3, label: "360～540h(超過)" },
+      { i: 4, label: "540h+(特別条項超過)" },
+    ];
+  }
+  return [
+    { i: 0, label: `～${y}h` },
+    { i: 1, label: `${y}～${r}h` },
+    { i: 2, label: `${r}～360h` },
+    { i: 3, label: "360～540h(超過)" },
+    { i: 4, label: "540h+(特別条項超過)" },
+  ].filter(({ i }) => !(i === 2 && r >= 360)); // 年度の最終日は赤の幅が0になるので出さない
+}
+
+// ---------------- モックの入力 ----------------
+function dateFromSlider(v) { const d = fyStart(); d.setDate(d.getDate() + Number(v)); return d; }
+function fmtDate(d) {
+  return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, "0")}/${String(d.getDate()).padStart(2, "0")}`;
+}
+function fmtHM(hours) {
+  const m = Math.round(hours * 60);
+  return `${Math.floor(m / 60)}:${String(m % 60).padStart(2, "0")}`;
+}
+function num(id) { return Number(document.getElementById(id).value) || 0; }
+function radio(name) { return document.querySelector(`input[name=${name}]:checked`).value; }
+
+// 経過月数 t までの累計（毎月 pace1 を switchAt か月、以降 pace2）
+function cumulative(t) {
+  const p1 = num("pace1"), p2 = num("pace2"), s = Math.min(12, num("switchAt"));
+  return t <= s ? p1 * t : p1 * s + p2 * (t - s);
+}
+
+// ---------------- 描画（content.js と同じDOMとクラス） ----------------
+function buildLegend(bands, current, titles) {
+  const div = document.createElement("div");
+  div.style.textAlign = "left";
+  div.style.fontSize = "11px";
+  div.style.color = "#555";
+  div.style.marginTop = "3px";
+  div.style.lineHeight = "1.4";
+  if (titles && titles.whole) div.title = titles.whole;
+  bandLabels(bands).forEach(({ i, label }) => {
+    const span = document.createElement("span");
+    span.style.display = "inline-flex";
+    span.style.alignItems = "center";
+    span.style.marginLeft = "8px";
+    const isCurrent = i === current;
+    if (isCurrent) {
+      span.style.fontWeight = "bold";
+      span.style.borderBottom = "1.5px solid rgba(0,0,0,0.4)";
+    }
+    if (titles && titles.perBand) span.title = titles.perBand[i];
+    const sw = document.createElement("span");
+    sw.style.display = "inline-block";
+    sw.style.width = "9px";
+    sw.style.height = "9px";
+    sw.style.backgroundColor = COLORS[i];
+    sw.style.border = "1px solid rgba(0,0,0,0.15)";
+    sw.style.flexShrink = "0";
+    sw.style.marginRight = "2px";
+    if (isCurrent) sw.style.boxShadow = "0 0 0 1.5px rgba(0,0,0,0.35)";
+    const lb = document.createElement("span");
+    lb.textContent = label;
+    lb.style.color = isCurrent ? "#555" : "#999";
+    span.append(sw, lb);
+    div.appendChild(span);
+  });
+  return div;
+}
+
+function buildSection(hours, updated, bands, titles) {
+  const wrap = document.createElement("div");
+  const titleRow = document.createElement("div");
+  titleRow.style.display = "flex";
+  titleRow.style.alignItems = "baseline";
+  titleRow.style.gap = "4px";
+  const h4 = document.createElement("h4");
+  h4.className = "htBlock-box_subTitle";
+  h4.textContent = "年別データ";
+  h4.style.marginRight = "8px";
+  const sel = document.createElement("select");
+  sel.className = "htBlock-selectmenu";
+  sel.innerHTML = `<option>${FY}年度</option>`;
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "htBlock-buttonPrimary htBlock-buttonM";
+  btn.innerHTML = "<span>最新データで更新</span>";
+  titleRow.append(h4, sel, btn);
+
+  const h5 = document.createElement("h5");
+  h5.className = "htBlock-box_caption";
+  h5.textContent = `年間集計 (${FY}/04 〜 ${FY + 1}/03)`;
+  h5.style.marginTop = "8px";
+
+  const tc = document.createElement("div");
+  tc.className = "htBlock-normalTable specific-table";
+  const idx = bandIndex(hours, bands);
+  tc.innerHTML = `
+    <table class="specific-table_800" style="table-layout: fixed; width: 270px;">
+      <thead><tr>
+        <th style="text-align:center;width:130px;min-width:130px"><p>目安年間残業<br>(法定休日を除く)</p></th>
+        <th style="text-align:center;width:150px;min-width:150px"><p>最終更新</p></th>
+      </tr></thead>
+      <tbody><tr>
+        <td style="text-align:center;font-weight:bold;font-size:14px;width:120px;min-width:120px;background-color:${COLORS[idx]};${idx === 4 ? "color:#fff;" : ""}">${fmtHM(hours)}</td>
+        <td style="text-align:center;font-size:14px;width:120px;min-width:120px">${updated} 18:05</td>
+      </tr></tbody>
+    </table>`;
+  wrap.append(titleRow, h5, tc, buildLegend(bands, idx, titles));
+  return wrap;
+}
+
+// ---------------- title属性の文言 ----------------
+function makeTitles(variant, bands, date, hours) {
+  if (variant === "none") return null;
+  const day = fmtDate(date);
+  const overBands = {
+    3: "年360h（36協定の上限）を超えています。",
+    4: "年540h（36協定の特別条項の上限）を超えています。",
+  };
+  if (bands.kind === "finished") {
+    return { perBand: { 0: "年360h（36協定の上限）以内に収まっています。", ...overBands } };
+  }
+  const [y, r] = bands.thresholds;
+  const rem = bands.remaining.toFixed(1);
+  const perBand = {
+    0: "年360hまでの残り枠が、残りの月を月20hずつ使っても20h以上余る見込みです。",
+    1: "年360hまでの残り枠が「残りの月数×20h＋20h」を切る見込みです。残りを月20h以内にすれば収まりますが、余裕は20h未満です。",
+    2: "年360hまでの残り枠が「残りの月数×10h」を切る見込みです。残りの月を月10h未満にしないと、年360hを超えます。",
+    ...overBands,
+  };
+  const rem2 = bands.remaining.toFixed(2);
+  const formula =
+    `黄と赤の境目は、最終更新日（${day}）時点の年度の残り${rem2}か月から計算しています。\n` +
+    `黄 = 360h − 20h ×（残り${rem2}か月 + 1か月）= ${bands.yellowRaw.toFixed(2)}h → ${y}h（切り捨て）\n` +
+    `赤 = 360h − 10h × 残り${rem2}か月 = ${bands.redRaw.toFixed(2)}h → ${r}h（切り捨て）\n` +
+    `ボタンを押してデータを取り直すと、境目も計算し直します。`;
+  const left = 360 - hours;
+  const mine = left > 0
+    ? `最終更新日（${day}）時点で、年度の残りは${rem}か月です。\n` +
+      `年360hまであと${Math.floor(left)}hで、残りの月を平均${(left / bands.remaining).toFixed(1)}h以内にすれば収まります。`
+    : `最終更新日（${day}）時点で、年360hを超えています。`;
+  if (variant === "band") return { perBand };
+  if (variant === "formula") return { whole: formula };
+  if (variant === "mine") return { whole: mine };
+  if (variant === "mix") {
+    const mixed = {};
+    Object.keys(perBand).forEach((k) => { mixed[k] = `${perBand[k]}\n\n${mine}`; });
+    return { perBand: mixed };
+  }
+  return null;
+}
+
+// ---------------- 完了ダイアログ ----------------
+function buildDialog(hours, date, bands, prevMode) {
+  const dlg = document.createElement("div");
+  dlg.className = "kot-zangyo-dialog mock-dialog-inline";
+  const header = document.createElement("div");
+  header.className = "kot-zangyo-dialog-header";
+  header.textContent = "完了";
+
+  const body = document.createElement("div");
+  body.className = "kot-zangyo-dialog-body";
+  body.style.whiteSpace = "pre-line";
+  const idx = bandIndex(hours, bands);
+  body.style.backgroundColor = COLORS[idx];
+  if (idx === 4) body.style.color = "#fff";
+  body.style.padding = "20px";
+  body.style.borderRadius = "4px";
+  body.appendChild(document.createTextNode("正常に取得が完了しました。\n\n"));
+  const res = document.createElement("div");
+  res.textContent = `年間残業時間 (${FY}/04 〜 ${FY + 1}/03): \n${fmtHM(hours)}`;
+  res.style.fontWeight = "bold";
+  body.appendChild(res);
+
+  const note = document.createElement("div");
+  note.style.padding = "12px 20px 4px";
+  note.style.fontSize = "14px";
+  note.style.lineHeight = "1.7";
+  note.style.color = "#333";
+  note.style.whiteSpace = "pre-line";
+  const day = fmtDate(date);
+  let text;
+  if (bands.kind === "finished") {
+    text = "";
+  } else {
+    const [y, r] = bands.thresholds;
+    text = `年度の残日数に合わせ、凡例を更新しました（${day} 時点）\n  緑↔黄  ${y}h\n  黄↔赤  ${r}h`;
+    if (prevMode === "legacy") text += "\n年度の残りに応じて境目が動くようになりました。";
+  }
+  note.textContent = text;
+
+  const footer = document.createElement("div");
+  footer.className = "kot-zangyo-dialog-footer";
+  footer.innerHTML = '<button class="kot-zangyo-btn kot-zangyo-btn-primary">閉じる</button>';
+  // 過去の年度は凡例の説明を出さない（ダイアログは今と同じ見た目になる）
+  dlg.append(header, body, ...(text ? [note] : []), footer);
+  return dlg;
+}
+
+// ---------------- 全体の更新 ----------------
+function render() {
+  const date = dateFromSlider(document.getElementById("date").value);
+  const t = elapsedMonths(date);
+  const hours = cumulative(t);
+  const bands = computeBands(date, false);
+  const prevMode = radio("prev");
+
+  document.getElementById("dateLabel").textContent =
+    `${fmtDate(date)}${isFinishedYear(date) ? "（年度の終了後）" : ""}`;
+  document.getElementById("scenarioLabel").textContent =
+    `→ この日の累計 ${fmtHM(hours)}、年度末の累計 ${fmtHM(cumulative(12))}`;
+  document.getElementById("calcLabel").textContent = bands.kind === "pace"
+    ? `経過 ${t.toFixed(3)} か月／残り ${bands.remaining.toFixed(3)} か月／黄 ${bands.yellowRaw.toFixed(2)} → ${bands.thresholds[0]}h／赤 ${bands.redRaw.toFixed(2)} → ${bands.thresholds[1]}h`
+    : "年度が終わっているので、黄と赤はありません";
+
+  const titles = makeTitles(radio("tvar"), bands, date, hours);
+  document.getElementById("sectionOld").replaceChildren(
+    buildSection(hours, fmtDate(date), computeBands(date, true), null));
+  document.getElementById("sectionNew").replaceChildren(
+    buildSection(hours, fmtDate(date), bands, titles));
+  document.getElementById("dialogHolder").replaceChildren(
+    buildDialog(hours, date, bands, prevMode));
+
+  // 全案の文言を一覧にする
+  const list = document.getElementById("titleList");
+  list.replaceChildren();
+  [["band", "案1 帯ごとの意味（帯ごとに別のtitle）"], ["formula", "案2 式（凡例全体に1つ）"],
+   ["mine", "案3 自分の残り（凡例全体に1つ）"], ["mix", "案4 帯ごとの意味＋自分の残り"]].forEach(([v, name]) => {
+    const tt = makeTitles(v, bands, date, hours);
+    const dt = document.createElement("dt");
+    dt.textContent = name;
+    const dd = document.createElement("dd");
+    if (tt.whole) dd.textContent = tt.whole;
+    else dd.textContent = [0, 1, 2, 3, 4].filter((i) => tt.perBand[i]).map((i) => `［${["緑", "黄", "赤", "濃赤", "紫"][i]}］${tt.perBand[i]}`).join("\n");
+    list.append(dt, dd);
+  });
+}
+
+document.querySelectorAll("input").forEach((el) => el.addEventListener("input", render));
+render();
+</script>
+</body>
+</html>
