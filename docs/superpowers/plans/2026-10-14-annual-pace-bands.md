@@ -14,7 +14,8 @@
 
 - 緑と黄の境目は `360 − 20 ×（12 − t + 1）`、黄と赤の境目は `360 − 10 ×（12 − t）`。どちらも整数の時間に切り捨て、判定も切り捨てた値で行う
 - t は保存データの `lastUpdated` の日付と `fiscalYearStart` から日割りで出す。今日の日付と今の設定は使わない
-- 帯の色は `#c8e6c9` `#fff59d` `#ef9a9a` `#d32f2f` `#990099`（今の `ANNUAL_BANDS` と同じ）。540h以上は文字色 `#ffffff`
+- 帯の色は `#c8e6c9` `#fff59d` `#ef9a9a` `#d32f2f` `#990099`（今の `ANNUAL_BANDS` と同じ）
+- 濃赤と紫の帯の文字色はオフホワイト `#f5f5f5`（太字のまま）。年間（360h以上）も月間（45h以上）も同じ。それ以外の帯は文字色を指定しない（空文字）
 - 凡例の表示名は時間で書く（`～192h` `192～286h` `286～360h` `360～540h(超過)` `540h+(特別条項超過)`）
 - グローバルに置く名前は `KingOfZangyoAnnualPace` の1つだけ
 - 依存パッケージを入れない。`npm i -g` / `pip install` をしない
@@ -26,7 +27,7 @@
 - `fiscalYearStart` が文字列（`"4"`）で保存されている場合。ポップアップから来た値（`request.month`）の型が保証されていないので、数値に直して同じ結果を返すこと（Task 1 にテストあり）
 - `lastUpdated` が想定外の形（`"--"`、空文字、ISO形式）の場合。例外を投げず、古い形式として固定閾値で表示すること（Task 1 にテストあり）
 - 月末ちょうど（tが整数）の境目。浮動小数の誤差で180hが179hにならないこと（Task 1の7/31と12/31のテスト）
-- 540h以上の年度から少ない年度へドロップダウンで切り替えたとき、白い文字色が残らないこと。今のコードは文字色が空のとき何もしないので残りうる（Task 3 で常に代入し、手動確認に入れる）
+- 360h以上の年度から少ない年度へドロップダウンで切り替えたとき、オフホワイトの文字色が残らないこと。今のコードは文字色が空のとき何もしないので残りうる（Task 3 で常に代入し、手動確認に入れる）
 - 上書き前の保存データの読み込みに失敗した場合。完了処理を止めず、前のデータなしとして扱うこと（Task 3 の `.catch(() => null)`）
 
 ---
@@ -50,7 +51,7 @@
       thresholds: { yellow: number|null, red: number|null, crimson: 360, purple: 540 },
       bandIndex: -1〜4,        // 色の番号。annualData が null なら -1
       color: string,           // 背景色。bandIndex が -1 なら ""
-      textColor: string,       // 540h以上なら "#ffffff"、それ以外は ""
+      textColor: string,       // 濃赤と紫（bandIndex 3 と 4）なら "#f5f5f5"、それ以外は ""
       legend: [{ colorIndex, color, label, title }],  // 凡例に並べる帯
       legendIndex: number,     // legend の中で今いる帯の位置。無ければ -1
       asOf: string|null,       // "2026/08/20"。legacy なら null
@@ -151,12 +152,21 @@ describe("境目ちょうど", () => {
     assert.equal(computeAnnualBands(data(h(192), "2026/08/20"), 2026).bandIndex, 1);
     assert.equal(computeAnnualBands(data(h(192) - 1, "2026/08/20"), 2026).bandIndex, 0);
   });
-  test("360:00 は濃赤、540:00 は紫で文字が白", () => {
-    assert.equal(computeAnnualBands(data(h(360), "2026/08/20"), 2026).bandIndex, 3);
+  test("360:00 は濃赤、540:00 は紫で、どちらも文字がオフホワイト", () => {
+    const crimson = computeAnnualBands(data(h(360), "2026/08/20"), 2026);
+    assert.equal(crimson.bandIndex, 3);
+    assert.equal(crimson.color, "#d32f2f");
+    assert.equal(crimson.textColor, "#f5f5f5");
     const purple = computeAnnualBands(data(h(540), "2026/08/20"), 2026);
     assert.equal(purple.bandIndex, 4);
-    assert.equal(purple.textColor, "#ffffff");
     assert.equal(purple.color, "#990099");
+    assert.equal(purple.textColor, "#f5f5f5");
+  });
+  test("359:59 は赤で、文字色を指定しない", () => {
+    assert.equal(computeAnnualBands(data(h(360) - 1, "2026/08/20"), 2026).textColor, "");
+  });
+  test("古い形式でも濃赤の文字はオフホワイト", () => {
+    assert.equal(computeAnnualBands({ totalMinutes: h(400) }, 2026).textColor, "#f5f5f5");
   });
 });
 
@@ -270,6 +280,8 @@ Expected: FAIL。`Cannot find module '../annual-pace.js'`
  */
 const KingOfZangyoAnnualPace = (() => {
   const COLORS = ["#c8e6c9", "#fff59d", "#ef9a9a", "#d32f2f", "#990099"];
+  // 濃赤と紫の上の文字色。白はギラつくので少し落とす（濃赤とのコントラスト比 4.57:1）
+  const TEXT_ON_DARK = "#f5f5f5";
   const LIMIT_HOURS = 360; // 36協定の年間上限
   const SPECIAL_LIMIT_HOURS = 540; // 特別条項の年間上限
 
@@ -402,7 +414,7 @@ const KingOfZangyoAnnualPace = (() => {
       thresholds: base.thresholds,
       bandIndex,
       color: bandIndex >= 0 ? COLORS[bandIndex] : "",
-      textColor: bandIndex === 4 ? "#ffffff" : "",
+      textColor: bandIndex >= 3 ? TEXT_ON_DARK : "",
       legend,
       legendIndex: legend.findIndex((item) => item.colorIndex === bandIndex),
       asOf: base.asOf,
@@ -542,7 +554,7 @@ git commit -m "feat: 完了ダイアログで凡例の境目を知らせる文�
 ### Task 3: `content.js` を新しい判定に差し替える
 
 **Files:**
-- Modify: `content.js`（`ANNUAL_BANDS` 736〜742行、`getAnnualBandIndex` 753〜759行、`buildLegendElement` 765〜812行、年別データの初期凡例 1185〜1193行、`updateAnnualDataDisplay` 1256〜1320行、`getAnnualOvertimeBackgroundColor` と `getAnnualOvertimeTextColor` 1324〜1359行、`completeFetchAnnualOvertime` 2004〜2049行、`showResultDialog` 2185〜2247行）
+- Modify: `content.js`（`ANNUAL_BANDS` 736〜742行、`getAnnualBandIndex` 753〜759行、`buildLegendElement` 765〜812行、`getOvertimeTextColor` 842〜853行、年別データの初期凡例 1185〜1193行、`updateAnnualDataDisplay` 1256〜1320行、`getAnnualOvertimeBackgroundColor` と `getAnnualOvertimeTextColor` 1324〜1359行、`completeFetchAnnualOvertime` 2004〜2049行、`showResultDialog` 2185〜2247行）
 - Modify: `manifest.json`
 - Modify: `Makefile`
 - Modify: `test/extension-test.html`、`test/extension-test-時間休あり.html`、`test/extension-test-管理職.html`、`test/extension-test-早退型時間休.html`（サブモジュール）
@@ -620,7 +632,7 @@ zip:
       );
 ```
 
-「背景色と文字色を設定（時間単位で判定）」から「年間凡例を更新」の `replaceWith` までを次にする。文字色は空文字でも代入し、540h以上の年度から切り替えたときに白が残らないようにする。
+「背景色と文字色を設定（時間単位で判定）」から「年間凡例を更新」の `replaceWith` までを次にする。文字色は空文字でも代入し、360h以上の年度から切り替えたときにオフホワイトが残らないようにする。
 
 ```js
   // 背景色と文字色を設定（年度の残りに応じた境目で判定）
@@ -713,7 +725,27 @@ function showResultDialog(annualData, fiscalYear, previousAnnualData) {
     dialog.appendChild(footer);
 ```
 
-- [ ] **Step 8: 消した関数の呼び出しが残っていないことを確かめる**
+- [ ] **Step 8: 月間の文字色をそろえる**
+
+`getOvertimeTextColor` を次にする。呼び出し元（月間のセルを作る処理と更新する処理）は変えない。
+
+```js
+/**
+ * 月間残業時間に応じた文字色を取得する
+ * @param {number} overtimeMinutes - 残業時間（分）
+ * @returns {string} 文字色（16進数カラーコード）、変更不要の場合は空文字
+ */
+function getOvertimeTextColor(overtimeMinutes) {
+  const overtimeHours = overtimeMinutes / 60;
+  // 濃赤（45h以上）と紫（75h以上）の上は、白よりギラつかないオフホワイトにする（年間と同じ）
+  if (overtimeHours >= 45) {
+    return "#f5f5f5";
+  }
+  return "";
+}
+```
+
+- [ ] **Step 9: 消した関数の呼び出しが残っていないことを確かめる**
 
 Run: `grep -n -E "ANNUAL_BANDS|getAnnualBandIndex|getAnnualOvertimeBackgroundColor|getAnnualOvertimeTextColor" content.js`
 Expected: 何も出ない
@@ -721,7 +753,7 @@ Expected: 何も出ない
 Run: `node --check content.js && node --check annual-pace.js && make test`
 Expected: 構文エラーなし、テストは PASS
 
-- [ ] **Step 9: テスト用HTMLに読み込みを足す（サブモジュール）**
+- [ ] **Step 10: テスト用HTMLに読み込みを足す（サブモジュール）**
 
 `test/` の4ファイルで、`<script src="../content.js"></script>` の直前に1行足す。
 
@@ -733,19 +765,20 @@ Expected: 構文エラーなし、テストは PASS
 Run: `grep -c 'src="../annual-pace.js"' test/*.html`
 Expected: 4ファイルとも `1`
 
-- [ ] **Step 10: 実機で確かめる（Naokiと一緒に）**
+- [ ] **Step 11: 実機で確かめる（Naokiと一緒に）**
 
 Naokiに `chrome://extensions` でこの拡張を再読み込みしてもらい、KING OF TIMEのタイムカード画面で次を見る。拡張のコンソール（DevTools の Console、コンテキストを拡張に切り替える）にエラーが出ていないことも見る。ここで `KingOfZangyoAnnualPace` が `content.js` から見えることを実測で確かめる（設計書で確かめていなかった前提）。見えずに `ReferenceError` が出たら、`annual-pace.js` の `const KingOfZangyoAnnualPace = ...` を `globalThis.KingOfZangyoAnnualPace = ...` に変えて、テストを回し直す。
 
 - [ ] 再読み込みした直後の凡例は、保存済みの最終更新日の時点の境目になっている。Naokiの手元のデータは v2.4.8 で保存したもので `lastUpdated` と `fiscalYearStart` が入っているので、固定閾値（`～300h`）ではなく新方式の帯が出るのが正しい。帯にマウスを乗せると設計書の文が出る
 - [ ] 「最新データで更新」を押すと、完了ダイアログに「年度の残日数に合わせ、凡例を更新しました（今日の日付 時点）」と緑↔黄・黄↔赤の時間が出る。前のデータが新しい形式なので「年度の残りに応じて境目が動くようになりました。」の行は出ないのが正しい
 - [ ] ダイアログを閉じたあと、凡例の時間がダイアログと同じ値になっている。帯にマウスを乗せると設計書の文が出る
-- [ ] 年度のドロップダウンで過去の年度に切り替えると、その年度のデータの最終更新日に応じた帯になる。540h以上の年度から少ない年度へ切り替えて、文字が白のまま残らない
-- [ ] 月間の凡例と色は変わっていない
+- [ ] 年度のドロップダウンで過去の年度に切り替えると、その年度のデータの最終更新日に応じた帯になる。360h以上の年度から少ない年度へ切り替えて、文字がオフホワイトのまま残らない
+- [ ] 年間が濃赤か紫のとき、セルと完了ダイアログの文字がオフホワイト（太字）になっている
+- [ ] 月間の凡例と背景色は変わっていない。月間が45h以上（濃赤）か75h以上（紫）の月で、文字がオフホワイトになっている。月を切り替えて45h未満の月に戻ると、文字色が元（指定なし）に戻る
 
 古い形式のデータの表示（固定閾値、titleなし、ダイアログの追加の1行）は、Task 1 と Task 2 の単体テストで押さえている。実機でも見たい場合は、保存データから `lastUpdated` を外して書き戻せば再現できるが、Naokiのデータを書き換えるので、やるかどうかはNaokiが決める。
 
-- [ ] **Step 11: コミット（サブモジュール → 親リポジトリの順）**
+- [ ] **Step 12: コミット（サブモジュール → 親リポジトリの順）**
 
 サブモジュールはdetached HEADになっていることがある（2026-10-14時点は `main` にいた）。コミットの前に `git -C test status` でブランチを見て、detachedなら `git -C test switch main` してから作業する（`main` が無ければ `git -C test branch -a` で既定のブランチを確かめる）。サブモジュール側のpushはNaokiの許可が出るまでしない。pushしないうちは、親リポジトリが指すサブモジュールのコミットはリモートに無い状態になる。
 
@@ -755,7 +788,7 @@ git add extension-test.html extension-test-時間休あり.html extension-test-�
 git commit -m "test: annual-pace.jsを読み込む行を追加"
 cd ..
 git add manifest.json Makefile content.js test
-git commit -m "feat: 年間残業の色分けを年度の残りに応じた境目に切り替え、完了ダイアログで知らせる"
+git commit -m "feat: 年間残業の色分けを年度の残りに応じた境目に切り替え、濃赤と紫の文字色をオフホワイトにそろえる"
 ```
 
 ---

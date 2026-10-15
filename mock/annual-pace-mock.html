@@ -85,6 +85,16 @@
     <label><input type="radio" name="tvar" value="mine"> 案3 自分の残り</label>
     <label><input type="radio" name="tvar" value="mix"> 案4 帯ごと＋自分の残り</label>
   </div>
+  <div class="mock-row">
+    濃赤と紫の文字色（新方式）
+    <label><input type="radio" name="tcol" value="#000000"> 黒</label>
+    <label><input type="radio" name="tcol" value="#ffffff"> 白</label>
+    <label><input type="radio" name="tcol" value="#f5f5f5" checked> オフホワイト #f5f5f5</label>
+    <label><input type="radio" name="tcol" value="#eeeeee"> 薄いグレー #eeeeee</label>
+    <label><input type="radio" name="tcol" value="#ffebee"> 淡いピンク #ffebee</label>
+    <label><input type="checkbox" id="tnormal"> 太字をやめる</label>
+    <span class="mock-calc" id="contrastLabel"></span>
+  </div>
   <div class="mock-row mock-calc" id="calcLabel"></div>
 </div>
 
@@ -142,6 +152,31 @@ function computeBands(date, legacy) {
     kind: "pace", t, remaining, yellowRaw, redRaw,
     thresholds: [Math.floor(yellowRaw), Math.floor(redRaw), 360, 540],
   };
+}
+
+// 文字色。新方式の濃赤と紫はモックの選択。現行の列は今の製品どおり（紫だけ白）
+function textColorFor(idx, bands) {
+  if (bands.kind === "legacy") return idx === 4 ? "#ffffff" : "";
+  if (idx >= 3) {
+    const c = document.querySelector("input[name=tcol]:checked");
+    return c ? c.value : "#f5f5f5";
+  }
+  return "";
+}
+function fontWeightFor(idx, bands) {
+  const n = document.getElementById("tnormal");
+  return idx === 3 && bands.kind !== "legacy" && n && n.checked ? "normal" : "bold";
+}
+
+// WCAG 2.x のコントラスト比
+function luminance(hex) {
+  const v = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)
+    .map((c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2];
+}
+function contrast(a, b) {
+  const [x, y] = [luminance(a), luminance(b)].sort((p, q) => q - p);
+  return (x + 0.05) / (y + 0.05);
 }
 
 function bandIndex(hours, bands) {
@@ -262,7 +297,7 @@ function buildSection(hours, updated, bands, titles) {
         <th style="text-align:center;width:150px;min-width:150px"><p>最終更新</p></th>
       </tr></thead>
       <tbody><tr>
-        <td style="text-align:center;font-weight:bold;font-size:14px;width:120px;min-width:120px;background-color:${COLORS[idx]};${idx === 4 ? "color:#fff;" : ""}">${fmtHM(hours)}</td>
+        <td style="text-align:center;font-weight:bold;font-size:14px;width:120px;min-width:120px;background-color:${COLORS[idx]};${textColorFor(idx, bands) ? `color:${textColorFor(idx, bands)};` : ""}font-weight:${fontWeightFor(idx, bands)};">${fmtHM(hours)}</td>
         <td style="text-align:center;font-size:14px;width:120px;min-width:120px">${updated} 18:05</td>
       </tr></tbody>
     </table>`;
@@ -324,7 +359,7 @@ function buildDialog(hours, date, bands, prevMode) {
   body.style.whiteSpace = "pre-line";
   const idx = bandIndex(hours, bands);
   body.style.backgroundColor = COLORS[idx];
-  if (idx === 4) body.style.color = "#fff";
+  if (textColorFor(idx, bands)) body.style.color = textColorFor(idx, bands);
   body.style.padding = "20px";
   body.style.borderRadius = "4px";
   body.appendChild(document.createTextNode("正常に取得が完了しました。\n\n"));
@@ -373,6 +408,9 @@ function render() {
   document.getElementById("calcLabel").textContent = bands.kind === "pace"
     ? `経過 ${t.toFixed(3)} か月／残り ${bands.remaining.toFixed(3)} か月／黄 ${bands.yellowRaw.toFixed(2)} → ${bands.thresholds[0]}h／赤 ${bands.redRaw.toFixed(2)} → ${bands.thresholds[1]}h`
     : "年度が終わっているので、黄と赤はありません";
+
+  document.getElementById("contrastLabel").textContent =
+    `→ コントラスト比 濃赤 #d32f2f ${contrast(radio("tcol"), "#d32f2f").toFixed(2)}:1／紫 #990099 ${contrast(radio("tcol"), "#990099").toFixed(2)}:1`;
 
   const titles = makeTitles(radio("tvar"), bands, date, hours);
   document.getElementById("sectionOld").replaceChildren(

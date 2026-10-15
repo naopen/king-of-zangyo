@@ -113,7 +113,7 @@
 | ファイル | 操作 | 内容 |
 |---|---|---|
 | `annual-pace.js` | 新規 | 判定ロジックとダイアログ・`title` の文言を作る関数。DOMを触らない |
-| `content.js` | 修正 | `ANNUAL_BANDS`、`getAnnualBandIndex`、`getAnnualOvertimeBackgroundColor` を `annual-pace.js` の結果を使う形に差し替える。`updateAnnualDataDisplay` と `showResultDialog` と `completeFetchAnnualOvertime` を修正する |
+| `content.js` | 修正 | `ANNUAL_BANDS`、`getAnnualBandIndex`、`getAnnualOvertimeBackgroundColor` を `annual-pace.js` の結果を使う形に差し替える。`updateAnnualDataDisplay` と `showResultDialog` と `completeFetchAnnualOvertime` を修正する。月間の文字色を決める `getOvertimeTextColor` を45h以上で `#f5f5f5` にする |
 | `manifest.json` | 修正 | `content_scripts.js` を `["annual-pace.js", "content.js"]` にする |
 | `Makefile` | 修正 | zipの対象に `annual-pace.js` を足す。`test` ターゲット（`node --test "tests/*.test.js"`）を足す |
 | `tests/annual-pace.test.js` | 新規 | 単体テスト |
@@ -140,7 +140,20 @@ buildBandsNotice(bands, previousAnnualData)
   → 完了ダイアログに足す文字列。足すものが無ければ空文字
 ```
 
-色のコード（`#c8e6c9` など5色）は今の `ANNUAL_BANDS` と同じ値を `annual-pace.js` に移す。文字色（540h以上で白）を決める `getAnnualOvertimeTextColor` は帯の番号で判定する形に直す。
+色のコード（`#c8e6c9` など5色）は今の `ANNUAL_BANDS` と同じ値を `annual-pace.js` に移す。文字色を決める `getAnnualOvertimeTextColor` は帯の番号で判定する形に直す。
+
+### 文字色
+
+濃赤と紫の帯は、文字色をオフホワイト `#f5f5f5` にする（太字はそのまま）。年間だけでなく月間（45～75hの濃赤、75h以上の紫）もそろえる。いまは濃赤が黒、紫が白で、Naokiが「濃赤に黒は見にくい」「白はギラギラする」と判断した。モックで見比べて決めた（2026-10-15）。
+
+| 背景 | 文字色 | コントラスト比 |
+|---|---|---|
+| 濃赤 `#d32f2f` | 黒（いま） | 4.22:1 |
+| 濃赤 `#d32f2f` | `#f5f5f5` | 4.57:1 |
+| 紫 `#990099` | 白（いま） | 7.47:1 |
+| 紫 `#990099` | `#f5f5f5` | 6.84:1 |
+
+どちらもWCAGのAA（通常の文字で4.5:1以上）を満たす。古い形式のデータを固定閾値で表示するときも、帯の番号で同じ文字色にする。
 
 グローバルに置く名前は `KingOfZangyoAnnualPace` の1つだけにする。中の関数と定数は即時関数で閉じ込め、外から使う2つの関数だけをこのオブジェクトで公開する。`content.js` からは `KingOfZangyoAnnualPace.computeAnnualBands(...)` と呼ぶ。Nodeでは同じオブジェクトを `module.exports` で渡す。
 
@@ -184,7 +197,7 @@ ES Modulesにしない理由。コンテンツスクリプトで `import` を使
 
 ## やらないこと
 
-- 月間の色分けは変えない
+- 月間の色分け（境目と背景色）は変えない。変えるのは濃赤と紫の文字色だけ
 - 「1か月遅れても月20hで収まる」を保証する式（余裕を45hにする案）は採らない
 - 今日の日付を基準に境目を動かすことはしない
 - 凡例を年360hに対する割合や言葉だけ（安全範囲、注意など）で書く案は採らない。モックで見比べ、セルの時間と凡例をそのまま比べられる時間の表記を残した
