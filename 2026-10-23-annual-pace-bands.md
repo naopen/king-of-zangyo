@@ -35,11 +35,13 @@ Naokiの問題提起。「年間残量時間の色が変わるタイミングが
 
 ## いまの状態
 
-年度の引き継ぎの修正まで、すべてmainにマージ済み（早送り）。年度の引き継ぎはNaokiが実機で確かめた。pushはまだしていない。ストア掲載文のv2.5.0の行は、Naokiの言葉「背景色の色分けが動的に変化するようになりました」に合わせた。年度の引き継ぎは行に足さない（Naokiの判断）。テストは `make test` で46件。
+年度の引き継ぎの修正まで、すべてmainにマージ済み（早送り）。年度の引き継ぎはNaokiが実機で確かめた。ストア掲載文のv2.5.0の行は、Naokiの言葉「背景色の色分けが動的に変化するようになりました」に合わせた。年度の引き継ぎは行に足さない（Naokiの判断）。年間の色分けの説明は、例の数字ではなく判定のしかたで書いた（日本語の段はNaokiの文のまま）。テストは `make test` で46件。
+
+2026-10-23に `test/`（サブモジュール）→親の順でpushした。2026-10-24にNaokiがv2.5.0のzipをChrome ウェブストアに提出し、審査待ち。
 
 ## 残っていること
 
-- pushは `test/`（サブモジュール）を先に、親を後にする。親だけ先に出すと、別の環境でサブモジュールを取ってくるときに `1ab1c41` が見つからず失敗する
+- 審査の結果を待つ
 - 直さずに残した軽微な指摘。完了ダイアログの「緑↔黄」の字下げは `white-space: pre-line` でつぶれる。未来の年度を選ぶと、確認ダイアログのOKのあとに「未来のため取得できません」が出る
 
 ## ハマりどころ
@@ -47,5 +49,7 @@ Naokiの問題提起。「年間残量時間の色が変わるタイミングが
 このリポジトリは `submodule.recurse=true`。`git checkout main` のたびに `test/` が親の記録したコミットへ切り替わり、detached HEAD になる。マージやブランチの切り替えのあとは `git -C test status -sb` でmainにいるかを見る。
 
 テストは `node --test "tests/*.test.js"`。ディレクトリを渡すとNode 22で失敗する。
+
+Chrome ウェブストアのデベロッパーダッシュボードは、Claude in Chromeで操作できない。拡張からのページの読み取りも画面の撮影も「The extensions gallery cannot be scripted.」で拒否される。提出はNaokiが手で行った。zipは `make clean && make zip` で作り直す（`zip -r` は既存のzipに追記するため）。
 
 テスト用HTMLを組み込みブラウザで開くとき、pythonのhttp.serverはmacOSの権限で `~/Documents` を読めない。一時フォルダーに写して配信した。テスト用HTMLの保存データはlocalStorageの `king-of-zangyo-mock-sync` と `king-of-zangyo-mock-local` にある。
