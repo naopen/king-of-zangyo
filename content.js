@@ -743,6 +743,16 @@ function getMonthlyBandIndex(overtimeMinutes) {
 }
 
 /**
+ * 年間凡例の置き場所だけを作る（中身は描かない）
+ * 保存データを読み込んだら updateAnnualDataDisplay がこの要素を本物の凡例に差し替える
+ */
+function buildEmptyAnnualLegend() {
+  const div = document.createElement("div");
+  div.id = ANNUAL_LEGEND_ID;
+  return div;
+}
+
+/**
  * 閾値凡例のdiv要素を構築する
  * currentBandIndex が -1 の場合はすべてのバンドを等価表示（未取得状態）
  * textAlign: "right"（月間・セルが右端）または "left"（年間・セルが左端）
@@ -1170,15 +1180,8 @@ async function injectAnnualDataSection() {
 
     tableContainer.appendChild(table);
 
-    // 年間凡例（初期は現在地未確定なので等価表示、左寄せで目安年間残業セルに揃える）
-    const annualLegendDiv = buildLegendElement(
-      KingOfZangyoAnnualPace.computeAnnualBands(null, currentFiscalYear).legend,
-      -1,
-      ANNUAL_LEGEND_ID,
-      "left",
-    );
-    annualLegendDiv.style.display =
-      overtimeEnabled && legendEnabled ? "" : "none";
+    // 年間凡例は、境目が保存データの最終更新日で決まるため、読み込むまで中身を描かない
+    const annualLegendDiv = buildEmptyAnnualLegend();
 
     // セクションを構築
     sectionContainer.appendChild(titleContainer);
@@ -1257,16 +1260,10 @@ function updateAnnualDataDisplay(annualData, fiscalYear) {
     hoursCell.style.backgroundColor = "#F9F9F9"; // 初期値に戻す
     hoursCell.style.color = ""; // 文字色をリセット（360h超後のオフホワイト残留を防ぐ）
     updatedCell.textContent = "未取得";
+    // 未取得のあいだは比べる値が無いので、凡例を出さない
     const existingAnnualLegend = document.getElementById(ANNUAL_LEGEND_ID);
     if (existingAnnualLegend) {
-      const newLegend = buildLegendElement(
-        KingOfZangyoAnnualPace.computeAnnualBands(null, fiscalYear).legend,
-        -1,
-        ANNUAL_LEGEND_ID,
-        "left",
-      );
-      newLegend.style.display = overtimeEnabled && legendEnabled ? "" : "none";
-      existingAnnualLegend.replaceWith(newLegend);
+      existingAnnualLegend.replaceWith(buildEmptyAnnualLegend());
     }
     return;
   }
