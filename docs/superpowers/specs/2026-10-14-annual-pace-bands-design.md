@@ -157,6 +157,8 @@ buildBandsNotice(bands, previousAnnualData)
 
 グローバルに置く名前は `KingOfZangyoAnnualPace` の1つだけにする。中の関数と定数は即時関数で閉じ込め、外から使う2つの関数だけをこのオブジェクトで公開する。`content.js` からは `KingOfZangyoAnnualPace.computeAnnualBands(...)` と呼ぶ。Nodeでは同じオブジェクトを `module.exports` で渡す。
 
+こうする理由。同じ拡張のコンテンツスクリプトは、ファイルが違ってもグローバルを1つ共有する。`content.js` の679行目には、`annual-pace.js` で使う `parseDate` と同じ名前の別の関数がある。一番外側に並べると、`annual-pace.js` の関数が `content.js` の `parseDate` をエラーなしに呼んでしまう（2026-10-23 にブラウザで実測）。比べた4案（一番外側に並べる、即時関数、動的 `import()`、ES Modules＋バンドラー）と根拠は `docs/superpowers/research/2026-10-23-content-script-file-split.md` にある。Naokiが2026-10-23に、今回は即時関数の案にし、ES Modules＋バンドラーは今後検討すると決めた。
+
 ```js
 const KingOfZangyoAnnualPace = (() => {
   // 定数と内部の関数はここに閉じ込める
