@@ -148,7 +148,35 @@ const KingOfZangyoAnnualPace = (() => {
     };
   }
 
-  return { computeAnnualBands };
+  /** 保存データが古い形式（最終更新日か年度開始月が無い）か */
+  function isLegacyData(annualData) {
+    return (
+      !annualData ||
+      !parseDate(annualData.lastUpdated) ||
+      !parseStartMonth(annualData.fiscalYearStart)
+    );
+  }
+
+  /**
+   * 完了ダイアログに足す、凡例の境目の知らせ
+   * @param {Object} bands - computeAnnualBands の返り値（取り直したデータ）
+   * @param {Object|null} previousAnnualData - 上書きする前の保存データ
+   * @returns {string} 足す文言。足すものが無ければ空文字
+   */
+  function buildBandsNotice(bands, previousAnnualData) {
+    if (bands.kind !== "pace") return "";
+    const lines = [
+      `年度の残日数に合わせ、凡例を更新しました（${bands.asOf} 時点）`,
+      `  緑↔黄  ${bands.thresholds.yellow}h`,
+      `  黄↔赤  ${bands.thresholds.red}h`,
+    ];
+    if (previousAnnualData && isLegacyData(previousAnnualData)) {
+      lines.push("年度の残りに応じて境目が動くようになりました。");
+    }
+    return lines.join("\n");
+  }
+
+  return { computeAnnualBands, buildBandsNotice };
 })();
 
 if (typeof module !== "undefined") {

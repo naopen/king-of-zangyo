@@ -1,6 +1,6 @@
 const { test, describe } = require("node:test");
 const assert = require("node:assert/strict");
-const { computeAnnualBands } = require("../annual-pace.js");
+const { computeAnnualBands, buildBandsNotice } = require("../annual-pace.js");
 
 // 保存データを作る。fiscalYearStart の既定は4月
 function data(totalMinutes, date, fiscalYearStart = 4) {
@@ -179,5 +179,34 @@ describe("古い形式のデータ", () => {
   });
   test("totalMinutes が無ければ0として扱う", () => {
     assert.equal(computeAnnualBands({ lastUpdated: "2026/08/20 18:05", fiscalYearStart: 4 }, 2026).bandIndex, 0);
+  });
+});
+
+describe("完了ダイアログに足す文言", () => {
+  const current = computeAnnualBands(data(h(209), "2026/08/20"), 2026);
+  const expected =
+    "年度の残日数に合わせ、凡例を更新しました（2026/08/20 時点）\n" +
+    "  緑↔黄  192h\n" +
+    "  黄↔赤  286h";
+
+  test("前のデータが新しい形式", () => {
+    assert.equal(buildBandsNotice(current, data(h(194), "2026/08/10")), expected);
+  });
+  test("前のデータが無い（初めて取得）", () => {
+    assert.equal(buildBandsNotice(current, null), expected);
+  });
+  test("前のデータが古い形式なら1行足す", () => {
+    assert.equal(
+      buildBandsNotice(current, { totalMinutes: h(194), yearRange: "2026/04-2027/03" }),
+      expected + "\n年度の残りに応じて境目が動くようになりました。",
+    );
+  });
+  test("過去の年度は何も足さない（前が古い形式でも）", () => {
+    const finished = computeAnnualBands(data(h(350), "2027/04/01"), 2026);
+    assert.equal(buildBandsNotice(finished, { totalMinutes: h(350) }), "");
+  });
+  test("今のデータが古い形式なら何も足さない", () => {
+    const legacy = computeAnnualBands({ totalMinutes: h(100) }, 2026);
+    assert.equal(buildBandsNotice(legacy, null), "");
   });
 });
