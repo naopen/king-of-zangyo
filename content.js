@@ -1340,10 +1340,18 @@ async function handleAnnualUpdateButtonClick() {
       return;
     }
 
+    // 所要時間の目安は取得する月数から出す（1か月あたり待機1秒＋ページ読み込みで約2秒）
+    const monthCount = calculateFiscalYearMonths(
+      FISCAL_YEAR_START_MONTH,
+      selectedFiscalYear,
+    ).length;
+    const durationNote =
+      monthCount > 0 ? `処理には約${monthCount * 2}秒かかります。\n` : "";
+
     // 確認ダイアログ（選択年度を表示）
     const confirmed = await showConfirmDialog(
       `データ更新`,
-      `${selectedFiscalYear}年度の年間残業時間データを取得します。\n処理には10秒〜20秒かかる場合があります。\nよろしいですか？`,
+      `${selectedFiscalYear}年度の年間残業時間データを取得します。\n${durationNote}よろしいですか？`,
     );
 
     if (!confirmed) {
