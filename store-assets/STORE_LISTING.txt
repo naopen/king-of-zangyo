@@ -45,13 +45,13 @@ v2.4.0: 管理職の勤務がある場合の残業時間を計算できるよう
   - 紫: 75時間以上（特別条項超過）
 
 年間残業時間:
-  黄と赤の境目は、最後に更新した日から見た年度の残りに応じて動きます。
-  （例: 2026/08/20 に更新した場合）
-  - 緑: 0～192時間（安全範囲）
-  - 黄: 192～286時間（注意）
-  - 赤: 286～360時間（危険）
+  年360h（36協定の上限）に収まるかを、最終更新日を含む年度の残月数で判定します。
+  - 緑: 残りの月を月20hずつ使っても、年360hまで20h以上余る（安全範囲）
+  - 黄: 年360hまでの残り枠が「残りの月数×20h＋20h」を切った（注意。残りを月20h以内にすれば収まる）
+  - 赤: 年360hまでの残り枠が「残りの月数×10h」を切った（危険。残りの月を月10h未満にしないと年360hを超える）
   - 濃赤: 360～540時間（超過）
   - 紫: 540時間以上（特別条項超過）
+  凡例に具体的な値が表示されます。「最新データで更新」を押すと再計算します。
 
 • 所定労働時間のカスタマイズ
 所定労働時間を0.5時間刻みで自由に設定可能です（デフォルト：7.5時間）。
@@ -120,13 +120,13 @@ Monthly Overtime:
   - Purple: 75+ hours (special clause exceeded)
 
 Annual Overtime:
-  The yellow and red thresholds move with the time left in the fiscal year, counted from the date you last updated.
-  (Example: updated on 2026/08/20)
-  - Green: 0-192 hours (safe range)
-  - Yellow: 192-286 hours (caution)
-  - Red: 286-360 hours (warning)
+  Colors show whether you will stay within 360 hours a year (the 36 Agreement limit), based on the months left in the fiscal year, including the date of your last update.
+  - Green: 20+ hours to spare even if you use 20 hours a month for the remaining months (safe range)
+  - Yellow: the room left before 360 hours is less than (months left × 20h + 20h) (caution; keeping the rest to 20h a month keeps you within the limit)
+  - Red: the room left is less than (months left × 10h) (warning; you must keep the remaining months under 10h a month to stay within 360 hours)
   - Dark Red: 360-540 hours (exceeded)
   - Purple: 540+ hours (special clause exceeded)
+  The legend shows the actual threshold values. Clicking the update button recalculates them.
 
 • Customizable Standard Work Hours
 Set your standard work hours in 0.5-hour increments (default: 7.5 hours).
