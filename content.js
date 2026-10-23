@@ -8,6 +8,7 @@ const LEGEND_KEY = "kingOfZangyoLegendEnabled";
 const ANNUAL_DATA_KEY_PREFIX = "kingOfZangyoAnnualData_"; // 年度別キーの接頭辞
 const ANNUAL_DATA_YEARS_KEY = "kingOfZangyoAnnualDataYears"; // 保存済み年度リスト
 const PROCESSING_STATE_KEY = "kingOfZangyoProcessingState";
+const NEXT_DISPLAY_YEAR_KEY = "kingOfZangyoNextDisplayYear";
 
 // DOM要素の一意なID
 const OVERTIME_HEADER_ID = "king-of-zangyo-header";
@@ -1048,13 +1049,16 @@ async function injectAnnualDataSection() {
       FISCAL_YEAR_START_MONTH,
     );
 
+    // 取得完了後に戻ってきた場合は、更新した年度を表示する
+    const displayYear = (await takeNextDisplayYear()) ?? currentFiscalYear;
+
     // 保存済み年度リストを取得
     const savedYears = await getSavedFiscalYears();
 
-    // 現在年度と保存済み年度を結合（重複削除、降順）
-    const allYears = [...new Set([currentFiscalYear, ...savedYears])].sort(
-      (a, b) => b - a,
-    );
+    // 現在年度・表示年度・保存済み年度を結合（重複削除、降順）
+    const allYears = [
+      ...new Set([currentFiscalYear, displayYear, ...savedYears]),
+    ].sort((a, b) => b - a);
 
     const fiscalYearSelect = document.createElement("select");
     fiscalYearSelect.id = "annual-fiscal-year-select";
@@ -1065,7 +1069,7 @@ async function injectAnnualDataSection() {
       const option = document.createElement("option");
       option.value = year;
       option.textContent = `${year}年度`;
-      if (year === currentFiscalYear) {
+      if (year === displayYear) {
         option.selected = true;
       }
       fiscalYearSelect.appendChild(option);
@@ -1193,7 +1197,7 @@ async function injectAnnualDataSection() {
     flexContainer.appendChild(sectionContainer);
 
     // 保存されているデータを読み込んで表示
-    loadAndDisplayAnnualData();
+    loadAndDisplayAnnualData(displayYear);
   } catch (error) {
     console.error(
       "King-of-Zangyo: 年別データセクション注入中にエラーが発生しました:",
@@ -1220,20 +1224,13 @@ async function handleFiscalYearChange(event) {
 
 /**
  * 保存された年間データを読み込んで表示を更新する（初期表示用）
+ * @param {number} fiscalYear - 表示する年度（ドロップダウンで選択した年度と同じ）
  */
-async function loadAndDisplayAnnualData() {
+async function loadAndDisplayAnnualData(fiscalYear) {
   try {
-    // 現在年度を判定
-    const currentFiscalYear = determineFiscalYear(
-      new Date().getFullYear(),
-      new Date().getMonth() + 1,
-      FISCAL_YEAR_START_MONTH,
-    );
+    const annualData = await loadAnnualData(fiscalYear);
 
-    // 現在年度のデータを読み込み
-    const annualData = await loadAnnualData(currentFiscalYear);
-
-    updateAnnualDataDisplay(annualData, currentFiscalYear);
+    updateAnnualDataDisplay(annualData, fiscalYear);
   } catch (error) {
     console.error("King-of-Zangyo: 年間データ読み込みエラー:", error);
   }
@@ -1721,6 +1718,46 @@ function clearProcessingState() {
 }
 
 /**
+ * 次のページ読み込みで表示する年度を保存する
+ * 取得完了後に元のページへ戻ると拡張が読み込み直されるため、更新した年度をそこへ引き継ぐ
+ * @param {number} fiscalYear - 表示する年度
+ * @returns {Promise<void>}
+ */
+function saveNextDisplayYear(fiscalYear) {
+  return new Promise((resolve, reject) => {
+    chrome.storage.local.set(
+      { [NEXT_DISPLAY_YEAR_KEY]: { fiscalYear, savedAt: Date.now() } },
+      () => {
+        if (chrome.runtime.lastError) {
+          reject(chrome.runtime.lastError);
+        } else {
+          resolve();
+        }
+      },
+    );
+  });
+}
+
+/**
+ * 保存した表示年度を1回だけ取り出して消す
+ * 保存から1分を過ぎた値は使わない（ページ遷移に失敗して残った値で、後日過去の年度が出るのを防ぐ）
+ * @returns {Promise<number|null>} 表示する年度（無い場合はnull）
+ */
+function takeNextDisplayYear() {
+  return new Promise((resolve) => {
+    chrome.storage.local.get([NEXT_DISPLAY_YEAR_KEY], (result) => {
+      const saved = chrome.runtime.lastError
+        ? null
+        : result[NEXT_DISPLAY_YEAR_KEY];
+      chrome.storage.local.remove([NEXT_DISPLAY_YEAR_KEY], () => {
+        const isFresh = saved && Date.now() - saved.savedAt < 60 * 1000;
+        resolve(isFresh ? saved.fiscalYear : null);
+      });
+    });
+  });
+}
+
+/**
  * ページロード時に処理状態をチェックして自動再開
  */
 async function checkAndResumeProcessing() {
@@ -2009,8 +2046,9 @@ async function completeFetchAnnualOvertime(state, progressDialog) {
     // 結果ダイアログを表示（年度を指定）
     await showResultDialog(annualData, targetFiscalYear, previousAnnualData);
 
-    // 元のページに戻る
+    // 元のページに戻る（読み込み直したあとも、更新した年度を表示する）
     if (state.originalYear && state.originalMonth) {
+      await saveNextDisplayYear(targetFiscalYear);
       await navigateToMonth(state.originalYear, state.originalMonth);
     }
   } catch (error) {
