@@ -21,7 +21,7 @@
   "content_scripts": [
     {
       "matches": ["https://s2.ta.kingoftime.jp/admin/*"],
-      "js": ["content.js"],
+      "js": ["annual-pace.js", "content.js"],
       "run_at": "document_idle"
     }
   ]

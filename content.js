@@ -724,7 +724,7 @@ function formatMinutesToTime(minutes) {
   return isNegative ? `-${formattedTime}` : formattedTime;
 }
 
-// 月間・年間それぞれの閾値バンド定義
+// 月間の閾値バンド定義（年間は annual-pace.js が年度の残りから作る）
 const MONTHLY_BANDS = [
   { color: "#c8e6c9", label: "～30h" },
   { color: "#fff59d", label: "30～40h" },
@@ -733,28 +733,12 @@ const MONTHLY_BANDS = [
   { color: "#990099", label: "75h+(36協定特別条項超過)" },
 ];
 
-const ANNUAL_BANDS = [
-  { color: "#c8e6c9", label: "～300h" },
-  { color: "#fff59d", label: "300～330h" },
-  { color: "#ef9a9a", label: "330～360h" },
-  { color: "#d32f2f", label: "360～540h(超過)" },
-  { color: "#990099", label: "540h+(特別条項超過)" },
-];
-
 function getMonthlyBandIndex(overtimeMinutes) {
   const h = overtimeMinutes / 60;
   if (h < 30) return 0;
   if (h < 40) return 1;
   if (h < 45) return 2;
   if (h < 75) return 3;
-  return 4;
-}
-
-function getAnnualBandIndex(hours) {
-  if (hours < 300) return 0;
-  if (hours < 330) return 1;
-  if (hours < 360) return 2;
-  if (hours < 540) return 3;
   return 4;
 }
 
@@ -777,11 +761,14 @@ function buildLegendElement(
   div.style.marginTop = "3px";
   div.style.lineHeight = "1.4";
 
-  bands.forEach(({ color, label }, i) => {
+  bands.forEach(({ color, label, title }, i) => {
     const span = document.createElement("span");
     span.style.display = "inline-flex";
     span.style.alignItems = "center";
     span.style.marginLeft = "8px";
+    if (title) {
+      span.title = title;
+    }
     const isCurrent = currentBandIndex >= 0 && i === currentBandIndex;
     const isUnresolved = currentBandIndex < 0;
     if (isCurrent) {
@@ -846,8 +833,9 @@ function getOvertimeBackgroundColor(overtimeMinutes) {
  */
 function getOvertimeTextColor(overtimeMinutes) {
   const overtimeHours = overtimeMinutes / 60;
-  if (overtimeHours >= 75) {
-    return "#ffffff";
+  // 濃赤（45h以上）と紫（75h以上）の上は、白よりギラつかないオフホワイトにする（年間と同じ）
+  if (overtimeHours >= 45) {
+    return "#f5f5f5";
   }
   return "";
 }
@@ -1184,7 +1172,7 @@ async function injectAnnualDataSection() {
 
     // 年間凡例（初期は現在地未確定なので等価表示、左寄せで目安年間残業セルに揃える）
     const annualLegendDiv = buildLegendElement(
-      ANNUAL_BANDS,
+      KingOfZangyoAnnualPace.computeAnnualBands(null, currentFiscalYear).legend,
       -1,
       ANNUAL_LEGEND_ID,
       "left",
@@ -1267,12 +1255,12 @@ function updateAnnualDataDisplay(annualData, fiscalYear) {
     caption.textContent = `年間集計 (${fiscalYear}年度)`;
     hoursCell.textContent = "未取得";
     hoursCell.style.backgroundColor = "#F9F9F9"; // 初期値に戻す
-    hoursCell.style.color = ""; // 文字色をリセット（540h超後の白文字残留を防ぐ）
+    hoursCell.style.color = ""; // 文字色をリセット（360h超後のオフホワイト残留を防ぐ）
     updatedCell.textContent = "未取得";
     const existingAnnualLegend = document.getElementById(ANNUAL_LEGEND_ID);
     if (existingAnnualLegend) {
       const newLegend = buildLegendElement(
-        ANNUAL_BANDS,
+        KingOfZangyoAnnualPace.computeAnnualBands(null, fiscalYear).legend,
         -1,
         ANNUAL_LEGEND_ID,
         "left",
@@ -1295,14 +1283,10 @@ function updateAnnualDataDisplay(annualData, fiscalYear) {
   const totalMinutes = annualData.totalMinutes || 0;
   hoursCell.textContent = formatMinutesToTime(totalMinutes);
 
-  // 背景色と文字色を設定（時間単位で判定）
-  const totalHours = totalMinutes / 60;
-  hoursCell.style.backgroundColor =
-    getAnnualOvertimeBackgroundColor(totalHours);
-  const textColor = getAnnualOvertimeTextColor(totalHours);
-  if (textColor) {
-    hoursCell.style.color = textColor;
-  }
+  // 背景色と文字色を設定（年度の残りに応じた境目で判定）
+  const bands = KingOfZangyoAnnualPace.computeAnnualBands(annualData, fiscalYear);
+  hoursCell.style.backgroundColor = bands.color;
+  hoursCell.style.color = bands.textColor;
 
   // 最終更新を表示
   updatedCell.textContent = annualData.lastUpdated || "--";
@@ -1311,50 +1295,14 @@ function updateAnnualDataDisplay(annualData, fiscalYear) {
   const existingAnnualLegend = document.getElementById(ANNUAL_LEGEND_ID);
   if (existingAnnualLegend) {
     const newLegend = buildLegendElement(
-      ANNUAL_BANDS,
-      getAnnualBandIndex(totalHours),
+      bands.legend,
+      bands.legendIndex,
       ANNUAL_LEGEND_ID,
       "left",
     );
     newLegend.style.display = overtimeEnabled && legendEnabled ? "" : "none";
     existingAnnualLegend.replaceWith(newLegend);
   }
-}
-
-/**
- * 年間残業時間の背景色を取得する
- * @param {number} hours - 年間残業時間（時間単位）
- * @returns {string} 背景色（16進数カラーコード）
- */
-function getAnnualOvertimeBackgroundColor(hours) {
-  if (hours < 300) {
-    // 0~299.9999時間：緑色
-    return "#c8e6c9";
-  } else if (hours < 330) {
-    // 300~329.9999時間：黄色
-    return "#fff59d";
-  } else if (hours < 360) {
-    // 330~359.9999時間：赤色
-    return "#ef9a9a";
-  } else if (hours < 540) {
-    // 360~539.9999時間：クリムゾンレッド
-    return "#d32f2f";
-  } else {
-    // 540時間以上：紫色
-    return "#990099";
-  }
-}
-
-/**
- * 年間残業時間の文字色を取得する
- * @param {number} hours - 年間残業時間（時間単位）
- * @returns {string} 文字色（16進数カラーコード）。デフォルトの場合は空文字
- */
-function getAnnualOvertimeTextColor(hours) {
-  if (hours >= 540) {
-    return "#ffffff";
-  }
-  return "";
 }
 
 /**
@@ -2009,6 +1957,11 @@ async function completeFetchAnnualOvertime(state, progressDialog) {
       monthlyData: state.monthlyData,
     };
 
+    // 上書き前のデータ（古い形式かどうかを完了ダイアログで使う）
+    const previousAnnualData = await loadAnnualData(targetFiscalYear).catch(
+      () => null,
+    );
+
     // 指定年度のデータとして保存
     await saveAnnualData(annualData, targetFiscalYear);
 
@@ -2046,7 +1999,7 @@ async function completeFetchAnnualOvertime(state, progressDialog) {
     updateAnnualDataDisplay(annualData, targetFiscalYear);
 
     // 結果ダイアログを表示（年度を指定）
-    await showResultDialog(annualData, targetFiscalYear);
+    await showResultDialog(annualData, targetFiscalYear, previousAnnualData);
 
     // 元のページに戻る
     if (state.originalYear && state.originalMonth) {
@@ -2179,10 +2132,12 @@ function updateProgress(currentMonth, totalMonths, progressDialog) {
 
 /**
  * 結果ダイアログを表示する
- * @param {Object} annualData - 年間データ
+ * @param {Object} annualData - 取り直した年間データ
+ * @param {number} fiscalYear - 年度
+ * @param {Object|null} previousAnnualData - 上書きする前の保存データ
  * @returns {Promise<void>}
  */
-function showResultDialog(annualData, fiscalYear) {
+function showResultDialog(annualData, fiscalYear, previousAnnualData) {
   return new Promise((resolve) => {
     const dialog = document.createElement("dialog");
     dialog.className = "kot-zangyo-dialog";
@@ -2195,7 +2150,6 @@ function showResultDialog(annualData, fiscalYear) {
     body.className = "kot-zangyo-dialog-body";
 
     const totalMinutes = annualData.totalMinutes || 0;
-    const totalHours = totalMinutes / 60;
 
     // 結果メッセージを作成（HH:MM形式）
     const yearRangeFormatted = annualData.yearRange
@@ -2215,13 +2169,24 @@ function showResultDialog(annualData, fiscalYear) {
     body.style.whiteSpace = "pre-line";
 
     // 背景色と文字色を設定
-    body.style.backgroundColor = getAnnualOvertimeBackgroundColor(totalHours);
-    const dialogTextColor = getAnnualOvertimeTextColor(totalHours);
-    if (dialogTextColor) {
-      body.style.color = dialogTextColor;
-    }
+    const bands = KingOfZangyoAnnualPace.computeAnnualBands(annualData, fiscalYear);
+    body.style.backgroundColor = bands.color;
+    body.style.color = bands.textColor;
     body.style.padding = "20px";
     body.style.borderRadius = "4px";
+
+    // 凡例の境目の知らせ（色の背景の外に出す。過去の年度などで空なら出さない）
+    const noticeText = KingOfZangyoAnnualPace.buildBandsNotice(
+      bands,
+      previousAnnualData,
+    );
+    const notice = document.createElement("div");
+    notice.textContent = noticeText;
+    notice.style.padding = "12px 20px 4px";
+    notice.style.fontSize = "14px";
+    notice.style.lineHeight = "1.7";
+    notice.style.color = "#333";
+    notice.style.whiteSpace = "pre-line";
 
     const footer = document.createElement("div");
     footer.className = "kot-zangyo-dialog-footer";
@@ -2239,6 +2204,9 @@ function showResultDialog(annualData, fiscalYear) {
 
     dialog.appendChild(header);
     dialog.appendChild(body);
+    if (noticeText) {
+      dialog.appendChild(notice);
+    }
     dialog.appendChild(footer);
 
     document.body.appendChild(dialog);
