@@ -17,11 +17,11 @@ Automatically displays cumulative overtime hours on KING OF TIME attendance page
 
 【主なバージョン履歴】
 
+v2.5.0: 年間残業時間の黄と赤の境目が、年度の残りに応じて動くようになりました
 v2.4.8: 年間残業時間の取得中にダイアログの表示が崩れる不具合を修正しました
 v2.4.4: 残業時間の閾値をひと目で確認できる凡例を、月間・年間の集計テーブル下に追加しました
 v2.4.1: すべてのパターンの時間休で残業時間が正しく計算されるようになりました
 v2.4.0: 管理職の勤務がある場合の残業時間を計算できるようになりました
-v2.2.0: 半日休暇（AM有休・PM有休）の残業時間を計算できるようになりました
 
 【主な機能】
 
@@ -45,9 +45,11 @@ v2.2.0: 半日休暇（AM有休・PM有休）の残業時間を計算できる�
   - 紫: 75時間以上（特別条項超過）
 
 年間残業時間:
-  - 緑: 0～300時間（安全範囲）
-  - 黄: 300～330時間（注意）
-  - 赤: 330～360時間（危険）
+  黄と赤の境目は、最後に更新した日から見た年度の残りに応じて動きます。
+  （例: 2026/08/20 に更新した場合）
+  - 緑: 0～192時間（安全範囲）
+  - 黄: 192～286時間（注意）
+  - 赤: 286～360時間（危険）
   - 濃赤: 360～540時間（超過）
   - 紫: 540時間以上（特別条項超過）
 
@@ -91,11 +93,11 @@ KING OF TIME (https://s2.ta.kingoftime.jp/admin/*) の勤怠管理画面での�
 
 Key Version History
 
+v2.5.0: The yellow and red annual overtime thresholds now move with the time left in the fiscal year
 v2.4.8: Fixed broken dialog styling during annual overtime data retrieval
 v2.4.4: Added a color-coded threshold legend below the monthly and annual overtime summary tables
 v2.4.1: Overtime is now correctly calculated for all hourly leave patterns
 v2.4.0: Overtime is now correctly calculated when managerial work shifts are present
-v2.2.0: Added overtime calculation for half-day leave (AM/PM leave)
 
 Key Features
 
@@ -118,9 +120,11 @@ Monthly Overtime:
   - Purple: 75+ hours (special clause exceeded)
 
 Annual Overtime:
-  - Green: 0-300 hours (safe range)
-  - Yellow: 300-330 hours (caution)
-  - Red: 330-360 hours (warning)
+  The yellow and red thresholds move with the time left in the fiscal year, counted from the date you last updated.
+  (Example: updated on 2026/08/20)
+  - Green: 0-192 hours (safe range)
+  - Yellow: 192-286 hours (caution)
+  - Red: 286-360 hours (warning)
   - Dark Red: 360-540 hours (exceeded)
   - Purple: 540+ hours (special clause exceeded)
 
