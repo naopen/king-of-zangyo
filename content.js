@@ -1340,13 +1340,16 @@ async function handleAnnualUpdateButtonClick() {
       return;
     }
 
-    // 所要時間の目安は取得する月数から出す（1か月あたり待機1秒＋ページ読み込みで約2秒）
+    // 所要時間の目安は取得する月数から出す。決め打ちの待機（開始0.5秒＋月の切り替え1秒×(月数−1)＋終了1秒）に
+    // ページ読み込み1か月約0.5秒を足す（2026年10月、7か月で実測11秒強）
     const monthCount = calculateFiscalYearMonths(
       FISCAL_YEAR_START_MONTH,
       selectedFiscalYear,
     ).length;
     const durationNote =
-      monthCount > 0 ? `処理には約${monthCount * 2}秒かかります。\n` : "";
+      monthCount > 0
+        ? `処理には約${Math.round(monthCount * 1.5 + 0.5)}秒かかります。\n`
+        : "";
 
     // 確認ダイアログ（選択年度を表示）
     const confirmed = await showConfirmDialog(
