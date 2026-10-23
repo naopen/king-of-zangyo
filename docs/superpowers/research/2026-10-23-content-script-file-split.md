@@ -14,7 +14,7 @@
 
 ### 同じ拡張のコンテンツスクリプトは、ファイルが違っても1つのグローバルを共有する
 
-MDNの「Content scripts」に次の記述がある。Chromeの公式ドキュメントには、同じ拡張のファイル同士が共有するかの記述が無い。Chromiumのソース（`extensions/renderer/isolated_world_manager.h`）は、拡張のIDごとに1つの実行環境を作る作りになっている。
+MDNの「Content scripts」に次の記述がある。Chromeの公式ドキュメントには、同じ拡張のファイル同士が共有するかの記述が無い。調査を任せたサブエージェントは、Chromiumのソース（`extensions/renderer/isolated_world_manager.h`）のコメントから、拡張のIDごとに1つの実行環境を作る作りだと読み取った（このソースは私は開いて確かめていない）。
 
 > There is only one global scope per frame, per extension.
 > This means that variables from a content script can be accessed by any other content scripts, regardless of how the content script was loaded.
@@ -86,7 +86,7 @@ Google JavaScript Style Guide も、新しいファイルは `goog.module` かES
 
 ### 拡張の開発では、ES Modulesで書いて1ファイルにまとめるのが一般的
 
-Chrome公式のサンプル（GoogleChrome/chrome-extensions-samples、2026-10-20のコミット）では、外部ライブラリを使うコンテンツスクリプトをRollupで1ファイルにまとめている（`functional-samples/ai.gemini-on-device-summarization/`）。現行のサンプルのコンテンツスクリプトは12件とも1エントリ1ファイルで、複数ファイルを並べた例は旧版（MV2）のアーカイブに1件あるだけだった。
+Chrome公式のサンプル（GoogleChrome/chrome-extensions-samples、2026-10-20のコミット）では、外部ライブラリを使うコンテンツスクリプトをRollupで1ファイルにまとめている（`functional-samples/ai.gemini-on-device-summarization/`）。サブエージェントが数えたところ、現行のサンプルのコンテンツスクリプトは12件とも1エントリ1ファイルで、複数ファイルを並べた例は旧版（MV2）のアーカイブに1件あるだけだった（件数は私は数え直していない）。
 
 拡張のフレームワークのWXTも、コンテンツスクリプトをES Modulesのまま出力する機能はまだ無いと書いている。
 
@@ -117,7 +117,9 @@ esbuildで `--format=iife --global-name=名前` を指定すると、中身を�
 | C | ES Modulesで書き、`content.js` から `import(chrome.runtime.getURL(...))` で読む | 起きない | そのまま読める | 不要 | どこからでも `import` できる。ただしファイルがKING OF TIMEのページ側からも読めるようになり、`content.js` の起動が非同期になる |
 | D | ES Modulesで書き、esbuildなどで1ファイルにまとめる | 起きない | そのまま読める | 必要 | どこからでも `import` できる。ビルド手順と依存パッケージを保守し続けることになる |
 
-案Bに残る弱点は、外に出す名前そのもの（`KingOfZangyoAnnualPace`）がぶつかる可能性。拡張ごとに実行環境が分かれているので、ぶつかる相手は同じ拡張のファイルだけで、拡張に固有の長い名前にすれば実際には起きない。
+案Bに残る弱点は2つある。1つ目は、外に出す名前そのもの（`KingOfZangyoAnnualPace`）がぶつかる可能性。拡張ごとに実行環境が分かれているので、ぶつかる相手は同じ拡張のファイルだけで、拡張に固有の長い名前にすれば実際には起きない。ただし `const` で宣言しているので、万一ぶつかると後ろのファイルが丸ごと止まる。2つ目は、閉じ込めた中の関数を、あとでグローバルに1つずつ出したくなった場合。たとえば `parseDate` を `window.parseDate` として出すと、`content.js` の `parseDate` とぶつかる。案Bが防げるのは、名前空間の中に置いている間だけ。
+
+案CとDのES Modulesには、この2つ目の弱点が無い。名前を決めるのが出す側ではなく使う側だから。使う側が `import { parseDate as annualParseDate } from "./annual-pace.js"` のように、自分のファイルでぶつからない名前を付けて取り込める。「どこに出しても名前がぶつからない」を仕組みとして保証できるのは、ES Modulesだけ。
 
 ## 推奨
 
