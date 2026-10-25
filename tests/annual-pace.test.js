@@ -182,6 +182,43 @@ describe("古い形式のデータ", () => {
   });
 });
 
+// v1.3.0〜v2.4.8 が保存していた形。年間データは v1.3.0 で入り、最初から lastUpdated と fiscalYearStart を持つ
+function savedByV248(totalMinutes, lastUpdated, fiscalYear) {
+  return {
+    totalHours: totalMinutes / 60,
+    totalMinutes,
+    lastUpdated,
+    fiscalYearStart: 4,
+    yearRange: `${fiscalYear}/04-${fiscalYear + 1}/03`,
+    monthlyData: { [`${fiscalYear}-04`]: totalMinutes },
+    fiscalYear,
+  };
+}
+
+describe("v2.4.8 以前に保存したデータ", () => {
+  test("アップデート直後から、最終更新日の時点の境目で描く", () => {
+    const bands = computeAnnualBands(savedByV248(h(250), "2026/09/30 18:05", 2026), 2026);
+    assert.equal(bands.kind, "pace");
+    assert.equal(bands.thresholds.yellow, 220);
+    assert.equal(bands.thresholds.red, 300);
+    assert.equal(bands.bandIndex, 1); // 固定の境目では緑だった
+  });
+  test("年度が終わってから更新した年度は3段階", () => {
+    const bands = computeAnnualBands(savedByV248(h(300), "2026/04/02 20:00", 2025), 2025);
+    assert.equal(bands.kind, "finished");
+    assert.equal(bands.bandIndex, 0); // 固定の境目では黄だった
+  });
+  test("取り直したとき、完了ダイアログに古い形式向けの1行を足さない", () => {
+    const current = computeAnnualBands(data(h(260), "2026/10/26"), 2026);
+    assert.equal(
+      buildBandsNotice(current, savedByV248(h(250), "2026/09/30 18:05", 2026)),
+      "年度の残日数に合わせ、凡例を更新しました（2026/10/26 時点）\n" +
+        "  緑↔黄  236h\n" +
+        "  黄↔赤  308h",
+    );
+  });
+});
+
 describe("完了ダイアログに足す文言", () => {
   const current = computeAnnualBands(data(h(209), "2026/08/20"), 2026);
   const expected =
