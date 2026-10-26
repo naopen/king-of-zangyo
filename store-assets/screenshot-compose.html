@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  width: 1280px;
+  height: 800px;
+  background: #f0f0f0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica", "Arial", sans-serif;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 1fr 176px;
+  grid-template-rows: 1fr 1fr;
+  gap: 12px;
+  padding: 16px;
+}
+
+/* 各バンド（OFF / ON）*/
+.band {
+  grid-column: 1;
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* バンドのラベルヘッダー */
+.band-header {
+  padding: 10px 0;
+  text-align: center;
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: 1px;
+  flex-shrink: 0;
+}
+.band-header.off { background: #455a64; color: #fff; }
+.band-header.on { background: #2e7d32; color: #fff; }
+
+/* バンドの中身: ポップアップ(左) + テーブル(右) */
+.band-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  gap: 16px;
+  min-height: 0;
+}
+
+/* ポップアップ: 固定幅で上下バンド統一 */
+.band-popup {
+  flex-shrink: 0;
+  width: 200px;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+  overflow: hidden;
+}
+.band-popup img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* テーブル部分 */
+.band-table {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+}
+.band-table img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+}
+
+/* 右列: 色セル */
+.color-section {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  display: flex;
+  flex-direction: column;
+}
+.color-header {
+  background: #c62828;
+  color: #fff;
+  text-align: center;
+  padding: 10px 0;
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: 1px;
+  border-radius: 8px 8px 0 0;
+  flex-shrink: 0;
+}
+.color-body {
+  flex: 1;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 4px;
+}
+.color-body img {
+  display: block;
+  width: 144px;
+  height: auto;
+}
+</style>
+</head>
+<body>
+
+  <!-- Band 1: OFF -->
+  <div class="band">
+    <div class="band-header off">残業時間表示 OFF</div>
+    <div class="band-body">
+      <div class="band-popup">
+        <img src="tmp-parts/part-popup-off.png">
+      </div>
+      <div class="band-table">
+        <img src="full-before-wide.png">
+      </div>
+    </div>
+  </div>
+
+  <!-- Band 2: ON -->
+  <div class="band">
+    <div class="band-header on">残業時間表示 ON</div>
+    <div class="band-body">
+      <div class="band-popup">
+        <img src="tmp-parts/part-popup-on.png">
+      </div>
+      <div class="band-table">
+        <img src="full-after-wide.png">
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Color cells -->
+  <div class="color-section">
+    <div class="color-header">残業量で色が変化</div>
+    <div class="color-body">
+      <img src="tmp-parts/val-header.png">
+      <img src="tmp-parts/val-green.png">
+      <img src="tmp-parts/val-yellow.png">
+      <img src="tmp-parts/val-red.png">
+      <img src="tmp-parts/val-crimson.png">
+      <img src="tmp-parts/val-purple.png">
+    </div>
+  </div>
+
+</body>
+</html>

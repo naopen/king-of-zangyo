@@ -223,3 +223,6 @@ $RECYCLE.BIN/
 
 # VSCode
 .vscode/
+
+# Playwright MCP のログとスクリーンショット
+.playwright-mcp/
