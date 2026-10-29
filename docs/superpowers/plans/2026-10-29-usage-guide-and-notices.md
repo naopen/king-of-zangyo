@@ -19,6 +19,8 @@
 - 使い方の吹き出しの「詳しく見る」は `guide/index.html#annual-fetch`、変更点の吹き出しは `guide/index.html#annual-colors` を開く
 - 使い方ページのフッターは「KING OF TIME 公式とは関係のない、非公式の拡張機能です。」と「© （開いた時点の年） かんなん」。バージョン番号は出さない
 - 拡張のページはMV3のCSPでインラインのスクリプトが動かないので、年を入れる処理は外部ファイル `guide/guide.js` に書く
+- 使い方ページの書体は `-apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", sans-serif` のシステムの書体にする。Google Fontsは読まない（拡張のページから毎回外へ読みにいくのを避ける。モックの `<link>` は外す）
+- `web_accessible_resources` に入れるのは `guide/index.html` だけ。ページの中の画像やCSS、`kagkag/` は、拡張のページから同じオリジンで読めるので入れない（入れるとKING OF TIMEのページからカグカグの画像を取れてしまう）
 - 保存キーは既存に合わせて `kingOfZangyo` で始める。閉じた記録は `chrome.storage.sync` の `kingOfZangyoDismissedNotices`（文字列の配列）
 - 変更点の吹き出しの識別子は `annual-pace-2.5.0`
 - コミットメッセージは1行の日本語。`Co-Authored-By` は付けない。`git add` はパスを名指しする
@@ -30,7 +32,7 @@
 - 残業時間表示がオフのとき：どちらの吹き出しも出さない（Task 1でテスト）
 - 年間データの取得中（月ごとにページが切り替わっている途中）：吹き出しを出さない（Task 1でテスト）
 - 前の年度だけ取得したことがあり、今年度は「未取得」の人：使い方の吹き出しを出さない（Task 1でテスト）
-- 閾値凡例表示がオフで、年間の凡例が無いとき：変更点の吹き出しは年間集計の表の下を指す（Task 6で確かめる）
+- 年間の凡例が無いとき（閾値凡例表示がオフ、または前の年度だけ取得していて今年度が「未取得」）：変更点の吹き出しは年間集計の表の下を指す（Task 6で確かめる）
 - 年度のプルダウンを切り替えて年別データが描き直されたとき：吹き出しが古い位置に取り残されない（Task 5、Task 6で確かめる）
 
 ---
@@ -91,7 +93,7 @@ git commit -m "吹き出しの出し分けを決める notices.js を足した"
 - Create: `guide/index.html`、`guide/guide.css`、`guide/guide.js`
 - Create: `guide/img/shot-monthly.png`、`shot-annual.png`、`shot-annual-unfetched.png`、`shot-popup.png`
 - Create: `store-assets/guide-shots.html`（切り抜き画像を作るページ）
-- Modify: `manifest.json`（`web_accessible_resources` に `guide/*` と `kagkag/*` を、`matches` は `https://s2.ta.kingoftime.jp/*` で足す）
+- Modify: `manifest.json`（`web_accessible_resources` に `{ "resources": ["guide/index.html"], "matches": ["https://s2.ta.kingoftime.jp/*"] }` を足す）
 - Test: `tests/guide.test.js`
 
 **Interfaces:**
@@ -116,7 +118,7 @@ Expected: `guide/index.html` が無いので失敗する
 
 - [ ] **Step 4: ページを書く**
 
-モック（`docs/superpowers/mocks/2026-10-29-guide/index.html`）を元に、`<style>` を `guide/guide.css` に、年を入れる処理を `guide/guide.js` に分ける。文面と表はモックのまま使う。モックはNaokiが「すごく良さそう」と評価したものなので、文面を書き換えるときは設計書と `README.md` に照らして事実だけを直す。
+モック（`docs/superpowers/mocks/2026-10-29-guide/index.html`）を元に、`<style>` を `guide/guide.css` に、年を入れる処理を `guide/guide.js` に分ける。Google Fontsの `<link>` は外し、書体はGlobal Constraintsのとおりにする。文面と表はモックのまま使う。モックはNaokiが「すごく良さそう」と評価したものなので、文面を書き換えるときは設計書と `README.md` に照らして事実だけを直す。
 
 - [ ] **Step 5: 通ることを確かめる**
 
@@ -221,7 +223,7 @@ git commit -m "更新ボタンの名前を「更新」にし、横に使い方�
 
 **Interfaces:**
 - Consumes: `KingOfZangyoNotices.pickNotice`（Task 1）、更新ボタンの探し方（Task 4）
-- Produces: `renderNotices()`（引数なし、Promise）。年別データを描き終えたときと、年度を切り替えて描き直したときに呼ぶ。呼ぶたびに前の吹き出しと赤い点を消してから描く
+- Produces: `renderNotices()`（引数なし、Promise）。`updateAnnualDataDisplay(annualData, fiscalYear)`（`content.js` 1244行目付近）の最後で呼ぶ。この関数は、初回の表示と年度の切り替えの両方で通り、年の凡例もここで描き直される。呼ぶたびに前の吹き出しと赤い点を消してから描く
 
 - [ ] **Step 1: `renderNotices()` を書く**
 
@@ -251,7 +253,7 @@ git commit -m "年間残業時間を取得していない人に、更新ボタ�
 
 - [ ] **Step 1: `"change"` のときの描画を足す**
 
-年の凡例（`#king-of-zangyo-annual-legend`）の直下に、凡例を隠さずに吹き出しを出す。凡例が無い（閾値凡例表示がオフ）ときは年間集計の表の直下を指す。位置は要素の実寸から決め、幅を決め打ちしない（凡例は1行で約472px）。文面は「色の境目が、年度の残りに応じて動くようになりました。境目は「更新」を押した日を基準に計算します。」。「詳しく見る」は `guide/index.html#annual-colors`。「閉じる」で `withDismissed` した配列を `kingOfZangyoDismissedNotices` に保存して消す。
+年の凡例（`#king-of-zangyo-annual-legend`）の直下に、凡例を隠さずに吹き出しを出す。凡例が無いときは年間集計の表の直下を指す。凡例が無いのは、閾値凡例表示がオフのときと、表示中の年度が「未取得」のとき（前の年度だけ取得した人は、今年度を開くとこの状態になる）。どちらの場合も吹き出しは出す。出さないと、前の年度だけ取得した人には一度も届かないため。位置は要素の実寸から決め、幅を決め打ちしない（凡例は1行で約472px）。文面は「色の境目が、年度の残りに応じて動くようになりました。境目は「更新」を押した日を基準に計算します。」。「詳しく見る」は `guide/index.html#annual-colors`。「閉じる」で `withDismissed` した配列を `kingOfZangyoDismissedNotices` に保存して消す。
 
 - [ ] **Step 2: 取得の完了で閉じた扱いにする**
 
@@ -263,6 +265,8 @@ git commit -m "年間残業時間を取得していない人に、更新ボタ�
 Expected: 凡例の下に吹き出しが出て、凡例は隠れない。「閉じる」のあと開き直すと出ない
 閾値凡例表示をオフにして開く
 Expected: 年間集計の表の下に出る
+保存データを `{ kingOfZangyoAnnualDataYears: [2025], kingOfZangyoAnnualData_2025: {…} }`（2026年度は無し）にして開く
+Expected: 今年度（2026年度）は「未取得」の表で、その下に変更点の吹き出しが出る。使い方の吹き出しは出ない
 一度も取得していない状態から取得を完了する
 Expected: 完了のあと、変更点の吹き出しは出ない
 
