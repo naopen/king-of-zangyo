@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KING OF ZANGYO の使い方</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap">
+<style>
+  :root {
+    --text: #1a1a1a;
+    --sub: #555;
+    --line: #d9d9d9;
+    --bg: #fff;
+    --soft: #f6f8f7;
+    --link: #1565c0;
+    --green: #1f9946; /* 拡張のアイコンの緑 */
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: "Noto Sans JP", sans-serif; font-size: 16px; line-height: 1.8; }
+  a { color: var(--link); }
+  .page { max-width: 860px; margin: 0 auto; padding: 0 24px 120px; position: relative; }
+
+  header { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 40px 0 24px; border-bottom: 1px solid var(--line); }
+  header h1 { font-size: 30px; line-height: 1.4; margin: 0; }
+  header p { margin: 8px 0 0; color: var(--sub); }
+  header img { width: 120px; height: auto; flex-shrink: 0; }
+
+  nav { padding: 20px 0 8px; }
+  nav ol { margin: 0; padding-left: 1.4em; columns: 2; column-gap: 32px; }
+  nav li { break-inside: avoid; }
+
+  section { padding: 40px 0 8px; border-top: 1px solid var(--line); position: relative; }
+  section:first-of-type { border-top: none; }
+  h2 { font-size: 22px; line-height: 1.5; margin: 0 0 12px; }
+  h2 .no { color: var(--green); margin-right: 8px; font-variant-numeric: tabular-nums; }
+  h3 { font-size: 17px; margin: 24px 0 8px; }
+  p { margin: 0 0 12px; }
+
+  figure { margin: 16px 0 20px; }
+  figure img.shot { display: block; max-width: 100%; height: auto; border: 1px solid var(--line); }
+  figcaption { font-size: 14px; color: var(--sub); margin-top: 6px; }
+
+  table.bands { border-collapse: collapse; width: 100%; font-size: 15px; margin: 8px 0 16px; }
+  .bands th, .bands td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
+  .bands th { background: var(--soft); font-weight: 700; }
+  .bands td.num { white-space: nowrap; font-variant-numeric: tabular-nums; }
+  /* 色の名前の列は折り返さない（「濃赤」が2行に割れるため） */
+  .bands td:first-child, .bands th:first-child { white-space: nowrap; }
+  .swatch { display: inline-block; width: 14px; height: 14px; border: 1px solid rgba(0,0,0,.2); vertical-align: -2px; margin-right: 6px; }
+
+  ol.steps { padding-left: 1.4em; margin: 0 0 12px; }
+  ol.steps li { margin-bottom: 6px; }
+
+  /* 注意の囲み。1pxの枠と淡い地色だけにする */
+  .note { display: flex; gap: 16px; align-items: center; border: 1px solid var(--line); background: var(--soft); padding: 12px 16px; margin: 16px 0; }
+  .note img { width: 72px; height: auto; flex-shrink: 0; }
+  .note p { margin: 0; }
+
+  .side { display: flex; gap: 24px; align-items: flex-start; }
+  .side > :first-child { flex: 1; min-width: 0; }
+  .side > img { width: 110px; height: auto; flex-shrink: 0; margin-top: 8px; }
+
+  .popup-row { display: flex; gap: 28px; align-items: flex-start; }
+  .popup-row figure { margin-top: 0; flex-shrink: 0; }
+  .popup-row figure img.shot { width: 240px; }
+  dl.settings { margin: 0; }
+  .settings dt { font-weight: 700; }
+  .settings dd { margin: 0 0 12px; }
+
+  .flying { position: absolute; right: -8px; top: -36px; width: 96px; height: auto; }
+  footer { padding-top: 40px; border-top: 1px solid var(--line); display: flex; align-items: flex-end; justify-content: space-between; color: var(--sub); font-size: 14px; }
+  footer img { width: 120px; height: auto; }
+
+  @media (max-width: 640px) {
+    nav ol { columns: 1; }
+    header img { width: 84px; }
+    .side, .popup-row { flex-direction: column; }
+    .side > img { display: none; }
+    .flying { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+<header>
+  <div>
+    <h1>KING OF ZANGYO の使い方</h1>
+    <p>KING OF TIMEのタイムカード画面に、月と年度の目安残業を足して表示する拡張です。</p>
+  </div>
+  <img src="img/new-pose10.png" alt="">
+</header>
+
+<nav>
+  <ol>
+    <li><a href="#about">何をする拡張か</a></li>
+    <li><a href="#monthly">月間の色分け</a></li>
+    <li><a href="#annual-fetch">年間残業時間の取り方</a></li>
+    <li><a href="#annual-colors">年間の色分け</a></li>
+    <li><a href="#settings">設定</a></li>
+    <li><a href="#patterns">対応している勤務パターン</a></li>
+  </ol>
+</nav>
+
+<section id="about">
+  <h2><span class="no">1</span>何をする拡張か</h2>
+  <p>タイムカード画面の「月別データ」に「現時点の目安残業（法定休日を除く）」の列を、その右に「年別データ」を足します。どちらも残業時間の多さで背景の色が変わります。</p>
+  <p>月の目安残業は、画面を開くたびに自動で計算します。当日分は、所定労働時間を超えてから反映されます。年間の目安残業は、自分で「更新」を押したときに集計します（3を参照）。</p>
+</section>
+
+<section id="monthly">
+  <img class="flying" src="img/new-pose21.png" alt="">
+  <h2><span class="no">2</span>月間の色分け</h2>
+  <figure>
+    <img class="shot" src="img/shot-monthly.png" alt="月別データの表。右端に現時点の目安残業 44:08 が赤い背景で出ている">
+    <figcaption>右端の列が、この拡張が足した「現時点の目安残業」です。表の下の凡例で、いまの段階に下線が付きます。</figcaption>
+  </figure>
+  <table class="bands">
+    <thead><tr><th>色</th><th>範囲</th><th>意味</th></tr></thead>
+    <tbody>
+      <tr><td><span class="swatch" style="background:rgb(200,230,201)"></span>緑</td><td class="num">0〜30時間</td><td>安全範囲</td></tr>
+      <tr><td><span class="swatch" style="background:rgb(255,245,157)"></span>黄</td><td class="num">30〜40時間</td><td>注意</td></tr>
+      <tr><td><span class="swatch" style="background:rgb(239,154,154)"></span>赤</td><td class="num">40〜45時間</td><td>危険</td></tr>
+      <tr><td><span class="swatch" style="background:rgb(211,47,47)"></span>濃赤</td><td class="num">45〜75時間</td><td>超過（36協定）</td></tr>
+      <tr><td><span class="swatch" style="background:rgb(153,0,153)"></span>紫</td><td class="num">75時間以上</td><td>特別条項超過</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="annual-fetch">
+  <h2><span class="no">3</span>年間残業時間の取り方</h2>
+  <p>年間の目安残業は、一度も取得していないと「未取得」と出ます。年度ごとに、次の手順で取得します。</p>
+  <figure>
+    <img class="shot" src="img/shot-annual-unfetched.png" alt="年別データ。目安年間残業と最終更新が未取得になっている" style="width:320px">
+    <figcaption>まだ取得していない状態</figcaption>
+  </figure>
+  <ol class="steps">
+    <li>年別データの年度を選びます。いまの年度が最初から選ばれています</li>
+    <li>「更新」を押します</li>
+    <li>確認のダイアログに、取得にかかる時間の目安が出ます。OKを押します</li>
+    <li>画面が1か月ずつ切り替わりながら、年度の初めの月から順に集計します</li>
+    <li>終わると完了のダイアログが出ます。閉じると元の画面に戻り、取得した年度が表示されます</li>
+  </ol>
+  <div class="note">
+    <img src="img/new-pose15.png" alt="">
+    <p>集計の途中は、画面が勝手に切り替わります。故障ではないので、完了のダイアログが出るまでそのまま待ってください。12か月分で約23秒です。</p>
+  </div>
+  <figure>
+    <img class="shot" src="img/shot-annual.png" alt="年別データ。目安年間残業 250:12 が黄色の背景で出ている。最終更新 2026/10/29 18:30" style="width:500px">
+    <figcaption>取得したあと。最終更新に、取得した日時が出ます。数字は自動では変わらないので、ときどき「更新」を押してください。</figcaption>
+  </figure>
+</section>
+
+<section id="annual-colors">
+  <h2><span class="no">4</span>年間の色分け</h2>
+  <div class="side">
+    <div>
+      <p>年間は、年360時間（36協定の上限）に収まるかを見て色を決めます。境目は固定ではなく、最終更新日の時点で年度があと何か月残っているかで動きます。年度の後半ほど、少ない時間で黄や赤になります。</p>
+      <p>境目の具体的な時間は、表の下の凡例に出ます。「更新」を押すたびに計算し直し、完了のダイアログでも知らせます。</p>
+    </div>
+    <img src="img/alt_06.png" alt="">
+  </div>
+  <table class="bands">
+    <thead><tr><th>色</th><th>判定</th><th>意味</th></tr></thead>
+    <tbody>
+      <tr><td><span class="swatch" style="background:rgb(200,230,201)"></span>緑</td><td>残りの月を月20時間ずつ使っても、年360時間まで20時間以上余る</td><td>安全範囲</td></tr>
+      <tr><td><span class="swatch" style="background:rgb(255,245,157)"></span>黄</td><td>年360時間までの残り枠が「残りの月数×20時間＋20時間」を切った</td><td>注意（残りを月20時間以内にすれば収まる）</td></tr>
+      <tr><td><span class="swatch" style="background:rgb(239,154,154)"></span>赤</td><td>年360時間までの残り枠が「残りの月数×10時間」を切った</td><td>危険（残りの月を月10時間未満にしないと超える）</td></tr>
+      <tr><td><span class="swatch" style="background:rgb(211,47,47)"></span>濃赤</td><td class="num">360〜540時間</td><td>超過</td></tr>
+      <tr><td><span class="swatch" style="background:rgb(153,0,153)"></span>紫</td><td class="num">540時間以上</td><td>特別条項超過</td></tr>
+    </tbody>
+  </table>
+  <p>年度が終わったあとに更新した年度は、緑（360時間未満）、濃赤、紫の3段階で表示します。</p>
+</section>
+
+<section id="settings">
+  <h2><span class="no">5</span>設定</h2>
+  <p>Chromeのツールバーにある拡張機能のアイコンを押すと、設定画面が開きます。</p>
+  <div class="popup-row">
+    <figure><img class="shot" src="img/shot-popup.png" alt="設定画面。残業時間表示と閾値凡例表示のスイッチ、所定労働時間 7.5、年度開始月 4月"></figure>
+    <dl class="settings">
+      <dt>残業時間表示</dt><dd>拡張の表示をまとめてオン・オフします。</dd>
+      <dt>閾値凡例表示</dt><dd>表の下の凡例を出すかどうかを切り替えます。</dd>
+      <dt>所定労働時間</dt><dd>0.5時間刻みで設定します。最初は7.5時間です。</dd>
+      <dt>年度開始月</dt><dd>会社の年度に合わせます。最初は4月です。</dd>
+    </dl>
+  </div>
+</section>
+
+<section id="patterns">
+  <h2><span class="no">6</span>対応している勤務パターン</h2>
+  <p>次の勤務も、残業時間を計算できます。法定休日は計算から除いています。</p>
+  <ul>
+    <li>時間休</li>
+    <li>半日休暇（AM有休・PM有休）</li>
+    <li>管理職勤務</li>
+  </ul>
+</section>
+
+<footer>
+  <div>
+    <p style="margin:0">KING OF TIME 公式とは関係のない、非公式の拡張機能です。</p>
+    <p style="margin:0">© <span id="year"></span> かんなん</p>
+  </div>
+  <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+  <img src="img/new-pose04.png" alt="">
+</footer>
+
+</div>
+</body>
+</html>
