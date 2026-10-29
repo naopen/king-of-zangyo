@@ -162,9 +162,13 @@
     // 右上の角だけを区切って、設定画面の区画にする。区画の左と下に線を引く
     const cornerX = 1280 - SIDE - wPop - INSET;
     const cornerB = TOP + CAP + CAP_GAP + hPop + INSET;
-    // ONの右側には年別データがあるので、ONは区画の下の線より下から始める。OFFはONのすぐ上に置く
-    const onY = Math.max(TOP + CAP + CAP_GAP + H(offBox) * s + GAP + CAP + CAP_GAP, cornerB + INSET);
-    const offY = onY - CAP_GAP - CAP - GAP - H(offBox) * s;
+    // ONの右側には年別データがあるので、ONは区画の下の線より下から始める。OFFはONのすぐ上に置く。
+    // そのうえで、線との間を INSET だけにすると窮屈なので、ONだけを ON_DROP 下げる（OFFは動かさない）
+    // OFFは、ONのすぐ上の位置から OFF_RAISE だけ上げる。上の空白とのつり合いを見て決めた値
+    const ON_DROP = 40, OFF_RAISE = 40;
+    const onY0 = Math.max(TOP + CAP + CAP_GAP + H(offBox) * s + GAP + CAP + CAP_GAP, cornerB + INSET);
+    const offY = onY0 - CAP_GAP - CAP - GAP - H(offBox) * s - OFF_RAISE;
+    const onY = onY0 + ON_DROP;
 
     caption('残業時間表示 OFF', SIDE, offY - CAP_GAP - CAP);
     crop(off, offBox, s, SIDE, offY);
