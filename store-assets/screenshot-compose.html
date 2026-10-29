@@ -1,163 +1,132 @@
 <!DOCTYPE html>
+<!--
+  Chrome ウェブストア用のスクリーンショット（1280x800）を書き出すページ。
+  テスト用HTML（test/ サブモジュール）を枠の中に2つ読み込み、上にOFF、下にONを並べる。
+  OFFとONは同じ倍率で、同じ列が上下でそろう。
+
+  書き出し方（リポジトリのルートで）
+    1. ルートを配信する。macOSの権限で ~/Documents は python の http.server から読めないので、一時フォルダーに写してから配信する
+       rsync -a --exclude .git ./ "$TMPDIR/koz/" && python3 -m http.server 8731 --bind 127.0.0.1 --directory "$TMPDIR/koz"
+    2. 別の端末で、ヘッドレスの Chrome で撮る
+       "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --hide-scrollbars \
+         --force-device-scale-factor=1 --user-data-dir="$TMPDIR/koz-chrome" --window-size=1280,800 \
+         --virtual-time-budget=15000 --screenshot=store-assets/screenshot.png \
+         "http://127.0.0.1:8731/store-assets/screenshot-compose.html?export=1"
+
+  ブラウザで開くと、テスト用HTMLの保存データ（localStorage）を下の値で上書きする。
+-->
 <html lang="ja">
 <head>
 <meta charset="utf-8">
+<title>ストア用スクリーンショット</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@700&display=swap">
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body {
-  width: 1280px;
-  height: 800px;
-  background: #f0f0f0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica", "Arial", sans-serif;
-  overflow: hidden;
-  display: grid;
-  grid-template-columns: 1fr 176px;
-  grid-template-rows: 1fr 1fr;
-  gap: 12px;
-  padding: 16px;
-}
-
-/* 各バンド（OFF / ON）*/
-.band {
-  grid-column: 1;
-  background: #fff;
-  border-radius: 8px;
-  border: 1px solid #ddd;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-/* バンドのラベルヘッダー */
-.band-header {
-  padding: 10px 0;
-  text-align: center;
-  font-weight: 700;
-  font-size: 18px;
-  letter-spacing: 1px;
-  flex-shrink: 0;
-}
-.band-header.off { background: #455a64; color: #fff; }
-.band-header.on { background: #2e7d32; color: #fff; }
-
-/* バンドの中身: ポップアップ(左) + テーブル(右) */
-.band-body {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  padding: 12px;
-  gap: 16px;
-  min-height: 0;
-}
-
-/* ポップアップ: 固定幅で上下バンド統一 */
-.band-popup {
-  flex-shrink: 0;
-  width: 200px;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.12);
-  overflow: hidden;
-}
-.band-popup img {
-  display: block;
-  width: 100%;
-  height: auto;
-}
-
-/* テーブル部分 */
-.band-table {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  min-width: 0;
-}
-.band-table img {
-  width: 100%;
-  height: auto;
-  display: block;
-  border-radius: 4px;
-  border: 1px solid #ddd;
-}
-
-/* 右列: 色セル */
-.color-section {
-  grid-column: 2;
-  grid-row: 1 / 3;
-  display: flex;
-  flex-direction: column;
-}
-.color-header {
-  background: #c62828;
-  color: #fff;
-  text-align: center;
-  padding: 10px 0;
-  font-weight: 700;
-  font-size: 18px;
-  letter-spacing: 1px;
-  border-radius: 8px 8px 0 0;
-  flex-shrink: 0;
-}
-.color-body {
-  flex: 1;
-  background: #fff;
-  border: 1px solid #ddd;
-  border-top: none;
-  border-radius: 0 0 8px 8px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  padding: 8px 4px;
-}
-.color-body img {
-  display: block;
-  width: 144px;
-  height: auto;
-}
+  body { margin: 0; padding: 16px; background: #ddd; font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", sans-serif; }
+  .shot { width: 1280px; height: 800px; position: relative; overflow: hidden; background: #fff; }
+  .clip { position: absolute; overflow: hidden; background: #fff; }
+  .clip .frame { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+  .clip iframe { border: 0; display: block; }
+  .cap { position: absolute; color: #1a1a1a; font-family: "Noto Sans JP", sans-serif; font-size: 28px; font-weight: 700; line-height: 1; }
 </style>
 </head>
 <body>
+<div class="shot" id="shot"></div>
+<script>
+  const SRC = '../test/extension-test.html';
+  const shot = document.getElementById('shot');
 
-  <!-- Band 1: OFF -->
-  <div class="band">
-    <div class="band-header off">残業時間表示 OFF</div>
-    <div class="band-body">
-      <div class="band-popup">
-        <img src="tmp-parts/part-popup-off.png">
-      </div>
-      <div class="band-table">
-        <img src="full-before-wide.png">
-      </div>
-    </div>
-  </div>
+  // 撮る前に、テスト用HTMLの保存データを決まった値にする（2026年度を2026/10/29 18:30に250:12で取得済み）。
+  // ヘッドレスのChromeは毎回まっさらなので、ここで入れないと年間データが「未取得」で写る。
+  // lastUpdated は content.js の formatDateTime と同じ「YYYY/MM/DD HH:mm」の形にする
+  localStorage.setItem('king-of-zangyo-mock-sync', JSON.stringify({
+    kingOfZangyoAnnualDataYears: [2026],
+    kingOfZangyoAnnualData_2026: { totalMinutes: 250 * 60 + 12, lastUpdated: '2026/10/29 18:30', fiscalYearStart: 4, fiscalYear: 2026 },
+  }));
+  localStorage.setItem('king-of-zangyo-mock-local', '{}');
 
-  <!-- Band 2: ON -->
-  <div class="band">
-    <div class="band-header on">残業時間表示 ON</div>
-    <div class="band-body">
-      <div class="band-popup">
-        <img src="tmp-parts/part-popup-on.png">
-      </div>
-      <div class="band-table">
-        <img src="full-after-wide.png">
-      </div>
-    </div>
-  </div>
+  // ?export=1 のときは、画像の外側の余白を消して 1280x800 ちょうどで撮れるようにする
+  if (new URLSearchParams(location.search).has('export')) document.body.style.padding = '0';
 
-  <!-- Right: Color cells -->
-  <div class="color-section">
-    <div class="color-header">残業量で色が変化</div>
-    <div class="color-body">
-      <img src="tmp-parts/val-header.png">
-      <img src="tmp-parts/val-green.png">
-      <img src="tmp-parts/val-yellow.png">
-      <img src="tmp-parts/val-red.png">
-      <img src="tmp-parts/val-crimson.png">
-      <img src="tmp-parts/val-purple.png">
-    </div>
-  </div>
+  // 見えなくした拡張の列は、罫線と背景も消して、表がそこで終わっているように見せる
+  function hideExtensionColumn(doc) {
+    ['king-of-zangyo-header', 'king-of-zangyo-cell'].forEach(id => { const c = doc.getElementById(id); if (c) Object.assign(c.style, { border: 'none', background: 'transparent', visibility: 'hidden' }); });
+  }
 
+  // 実装前の仮。ボタン名「更新」と「?使い方」の入口を画面の上で足している。
+  // 使い方ページと入口を実装したら、この関数と呼び出しを消して、拡張そのものの表示で撮り直す
+  function applyPlannedUi(doc) {
+    const btn = doc.querySelector('#king-of-zangyo-annual-section button');
+    btn.querySelector('span').textContent = '更新';
+    const pill = doc.createElement('span');
+    pill.style.cssText = 'display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 10px 0 5px;margin-left:4px;border:1px solid #999;border-radius:14px;background:#fff;color:#555;font-size:13px;position:relative;top:-1px';
+    pill.innerHTML = '<span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:#777;color:#fff;font-weight:bold;font-size:12px">?</span>使い方';
+    btn.after(pill);
+  }
+
+  function prepare(doc, off) {
+    doc.querySelectorAll('body *').forEach(e => { const p = getComputedStyle(e).position; if (p === 'fixed' || p === 'sticky') e.style.display = 'none'; });
+    // 月別データの上にある KING OF TIME のボタン（スケジュール申請など）は、切り抜きの上端に端だけ写るので隠す
+    doc.querySelectorAll('button, input[type=button], input[type=submit], select').forEach(e => { if (!e.closest('#king-of-zangyo-annual-section')) e.style.visibility = 'hidden'; });
+    // ボタンの並び（ツールバー）の下線も、切り抜きの上端に1本の線として写るので隠す
+    doc.querySelectorAll('.htBlock-toolbar').forEach(e => { if (!e.querySelector('#king-of-zangyo-annual-section')) e.style.visibility = 'hidden'; });
+    // OFFは拡張の部品を消さずに見えなくする。消すと表の列幅が組み直され、ONと列の位置がずれる
+    if (off) { doc.querySelectorAll('[id^="king-of-zangyo"]').forEach(e => { e.style.visibility = 'hidden'; e.querySelectorAll('*').forEach(c => c.style.visibility = 'hidden'); }); hideExtensionColumn(doc); return; }
+    applyPlannedUi(doc);
+  }
+  const abs = (doc, el) => { const w = doc.defaultView, r = el.getBoundingClientRect(); return { l: r.left + w.scrollX, t: r.top + w.scrollY, r: r.right + w.scrollX, b: r.bottom + w.scrollY }; };
+  // option 要素など大きさ0の要素は (0,0) を返すので除く
+  const visible = e => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0; };
+  const union = (doc, els) => { const rs = els.flatMap(p => [p, ...p.querySelectorAll('*')]).filter(visible).map(e => abs(doc, e)); return { l: Math.min(...rs.map(r => r.l)), t: Math.min(...rs.map(r => r.t)), r: Math.max(...rs.map(r => r.r)), b: Math.max(...rs.map(r => r.b)) }; };
+
+  function load(off) {
+    return new Promise(res => {
+      const f = document.createElement('iframe'); f.src = SRC + '?r=' + Math.random(); f.scrolling = 'no';
+      f.style.width = '1500px'; f.style.height = '900px';
+      const frame = document.createElement('div'); frame.className = 'frame'; frame.appendChild(f);
+      const clip = document.createElement('div'); clip.className = 'clip'; clip.appendChild(frame);
+      clip.style.visibility = 'hidden'; shot.appendChild(clip);
+      // 拡張の描画が終わるのを待つ
+      f.onload = () => setTimeout(() => { prepare(f.contentDocument, off); res({ f, frame, clip, doc: f.contentDocument }); }, 2500);
+    });
+  }
+  // 枠を切り抜く範囲まで縮めてからスクロールする。広いままだと右へ十分にスクロールできない
+  function crop(p, box, s, x, y) {
+    const bw = box.r - box.l, bh = box.b - box.t;
+    p.f.style.width = bw + 'px'; p.f.style.height = bh + 'px';
+    p.doc.defaultView.scrollTo(box.l, box.t);
+    p.frame.style.transform = `scale(${s})`;
+    Object.assign(p.clip.style, { left: x + 'px', top: y + 'px', width: bw * s + 'px', height: bh * s + 'px', visibility: 'visible' });
+  }
+  function caption(text, x, y) { const c = document.createElement('div'); c.className = 'cap'; c.textContent = text; c.style.left = x + 'px'; c.style.top = y + 'px'; shot.appendChild(c); }
+
+  (async () => {
+    const [on, off] = [await load(false), await load(true)];
+    const PAD = 14, MARGIN = 48, CAP = 26, CAP_GAP = 14, GAP = 44;
+
+    // 左端は、どちらも「③育介短所定内残業」の列の境目ちょうど。余白を足すと隣の列が細く写る。
+    // この位置なら月の凡例（表の右端にそろえてある）も左端まで入る
+    const onTbl = on.doc.querySelector('th.custom4').closest('table');
+    const onBox = union(on.doc, [on.doc.getElementById('king-of-zangyo-annual-section'), on.doc.getElementById('king-of-zangyo-monthly-legend'), onTbl]);
+    // 上端は年別データの見出しの行のすぐ上。それより上は KING OF TIME の区切り線が写る
+    const annualTop = abs(on.doc, on.doc.getElementById('king-of-zangyo-annual-section')).t;
+    Object.assign(onBox, { l: abs(on.doc, on.doc.querySelector('th.custom4')).l, t: annualTop - 1, r: onBox.r + PAD, b: onBox.b + PAD });
+
+    const ot = abs(off.doc, off.doc.querySelector('th.custom4').closest('table'));
+    // 右端は、見えなくした拡張の列の手前（フレックス不足時間の列の右端）まで
+    const offBox = { l: abs(off.doc, off.doc.querySelector('th.custom4')).l, t: ot.t - 6, r: abs(off.doc, off.doc.querySelector('th.custom7')).r + 1, b: ot.b + PAD };
+
+    // 倍率は、ONの切り抜きが左右の余白を残して収まる値。OFFも同じ倍率にする
+    const s = Math.min((1280 - MARGIN * 2) / (onBox.r - onBox.l), 1.6);
+    const hOn = (onBox.b - onBox.t) * s, hOff = (offBox.b - offBox.t) * s;
+    const total = CAP + CAP_GAP + hOff + GAP + CAP + CAP_GAP + hOn;
+    let y = Math.round((800 - total) / 2);
+
+    caption('残業時間表示 OFF', MARGIN, y); y += CAP + CAP_GAP;
+    crop(off, offBox, s, MARGIN, y); y += hOff + GAP;
+    caption('残業時間表示 ON', MARGIN, y); y += CAP + CAP_GAP;
+    crop(on, onBox, s, MARGIN, y);
+  })();
+</script>
 </body>
 </html>
