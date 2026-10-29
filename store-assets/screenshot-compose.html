@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <!--
   Chrome ウェブストア用のスクリーンショット（1280x800）を書き出すページ。
-  テスト用HTML（test/ サブモジュール）を枠の中に2つ読み込み、上にOFF、下にONを並べる。
-  OFFとONは同じ倍率で、同じ列が上下でそろう。
+  テスト用HTML（test/ サブモジュール）を枠の中に読み込み、上にOFF、下にONを並べる。
+  OFFとONは同じ倍率で、同じ列が上下でそろう。右上の角だけを線で区切り、設定画面（popup.html）を置く。
 
   書き出し方（リポジトリのルートで）
     1. ルートを配信する。macOSの権限で ~/Documents は python の http.server から読めないので、一時フォルダーに写してから配信する
@@ -10,7 +10,7 @@
     2. 別の端末で、ヘッドレスの Chrome で撮る
        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --hide-scrollbars \
          --force-device-scale-factor=1 --user-data-dir="$TMPDIR/koz-chrome" --window-size=1280,800 \
-         --virtual-time-budget=15000 --screenshot=store-assets/screenshot.png \
+         --virtual-time-budget=20000 --screenshot=store-assets/screenshot.png \
          "http://127.0.0.1:8731/store-assets/screenshot-compose.html?export=1"
 
   ブラウザで開くと、テスト用HTMLの保存データ（localStorage）を下の値で上書きする。
@@ -27,13 +27,17 @@
   .clip { position: absolute; overflow: hidden; background: #fff; }
   .clip .frame { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
   .clip iframe { border: 0; display: block; }
+  /* 設定画面の地は #f9f9f9 で白い背景と見分けにくいので、1pxの枠で輪郭を出す */
+  .clip.popup { outline: 1px solid #d0d0d0; }
   .cap { position: absolute; color: #1a1a1a; font-family: "Noto Sans JP", sans-serif; font-size: 28px; font-weight: 700; line-height: 1; }
+  .rule { position: absolute; background: #d0d0d0; }
 </style>
 </head>
 <body>
 <div class="shot" id="shot"></div>
 <script>
   const SRC = '../test/extension-test.html';
+  const POPUP = '../popup.html';
   const shot = document.getElementById('shot');
 
   // 撮る前に、テスト用HTMLの保存データを決まった値にする（2026年度を2026/10/29 18:30に250:12で取得済み）。
@@ -79,17 +83,48 @@
   const visible = e => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0; };
   const union = (doc, els) => { const rs = els.flatMap(p => [p, ...p.querySelectorAll('*')]).filter(visible).map(e => abs(doc, e)); return { l: Math.min(...rs.map(r => r.l)), t: Math.min(...rs.map(r => r.t)), r: Math.max(...rs.map(r => r.r)), b: Math.max(...rs.map(r => r.b)) }; };
 
+  function frameFor(src, width, height, extraClass) {
+    const f = document.createElement('iframe'); f.src = src + '?r=' + Math.random(); f.scrolling = 'no';
+    f.style.width = width + 'px'; f.style.height = height + 'px';
+    const frame = document.createElement('div'); frame.className = 'frame'; frame.appendChild(f);
+    const clip = document.createElement('div'); clip.className = 'clip' + (extraClass ? ' ' + extraClass : ''); clip.appendChild(frame);
+    clip.style.visibility = 'hidden'; shot.appendChild(clip);
+    return { f, frame, clip };
+  }
   function load(off) {
     return new Promise(res => {
-      const f = document.createElement('iframe'); f.src = SRC + '?r=' + Math.random(); f.scrolling = 'no';
-      f.style.width = '1500px'; f.style.height = '900px';
-      const frame = document.createElement('div'); frame.className = 'frame'; frame.appendChild(f);
-      const clip = document.createElement('div'); clip.className = 'clip'; clip.appendChild(frame);
-      clip.style.visibility = 'hidden'; shot.appendChild(clip);
+      const p = frameFor(SRC, 1500, 900);
       // 拡張の描画が終わるのを待つ
-      f.onload = () => setTimeout(() => { prepare(f.contentDocument, off); res({ f, frame, clip, doc: f.contentDocument }); }, 2500);
+      p.f.onload = () => setTimeout(() => { prepare(p.f.contentDocument, off); res({ ...p, doc: p.f.contentDocument }); }, 2500);
     });
   }
+
+  // 拡張アイコンを押して開く設定画面。popup.js は chrome API が無いので動かない。設定画面の状態は、ここで作る
+  function loadPopup() {
+    return new Promise(res => {
+      const p = frameFor(POPUP, 300, 600, 'popup');
+      p.f.onload = () => setTimeout(() => {
+        const d = p.f.contentDocument;
+        // スイッチは0.3秒かけて色が変わる。撮る瞬間に途中の色で写らないよう、動きを止める
+        const st = d.createElement('style'); st.textContent = '*,*::before{transition:none!important}'; d.head.appendChild(st);
+        // 既定の状態（どちらもオン）で写す
+        d.getElementById('toggle-switch').checked = true;
+        d.getElementById('legend-toggle-switch').checked = true;
+        d.getElementById('standard-hours').value = 7.5;
+        d.getElementById('fiscal-year-start').value = '4';
+        // フッター（thanks to と developed by の2行）は写さない
+        d.querySelector('.footer').style.display = 'none';
+        // 実装前の仮。設定の下に「使い方を見る」を置く予定。実装したら消す
+        const a = d.createElement('a'); a.textContent = '使い方を見る'; a.href = '#';
+        a.style.cssText = 'display:block;text-align:center;margin:4px 0 0;color:#1565c0;text-decoration:underline;font-size:14px';
+        d.querySelector('.container').appendChild(a);
+        const h = d.querySelector('.container').getBoundingClientRect().height;
+        p.f.style.height = h + 'px';
+        res({ ...p, w: 300, h });
+      }, 500);
+    });
+  }
+
   // 枠を切り抜く範囲まで縮めてからスクロールする。広いままだと右へ十分にスクロールできない
   function crop(p, box, s, x, y) {
     const bw = box.r - box.l, bh = box.b - box.t;
@@ -99,10 +134,12 @@
     Object.assign(p.clip.style, { left: x + 'px', top: y + 'px', width: bw * s + 'px', height: bh * s + 'px', visibility: 'visible' });
   }
   function caption(text, x, y) { const c = document.createElement('div'); c.className = 'cap'; c.textContent = text; c.style.left = x + 'px'; c.style.top = y + 'px'; shot.appendChild(c); }
+  function rule(x, y, w, h) { const d = document.createElement('div'); d.className = 'rule'; Object.assign(d.style, { left: x + 'px', top: y + 'px', width: w + 'px', height: h + 'px' }); shot.appendChild(d); }
 
   (async () => {
-    const [on, off] = [await load(false), await load(true)];
-    const PAD = 14, MARGIN = 48, CAP = 26, CAP_GAP = 14, GAP = 44;
+    const [on, off, popup] = [await load(false), await load(true), await loadPopup()];
+    const PAD = 14, CAP = 26, CAP_GAP = 14, GAP = 44, SIDE = 40, TOP = 40, INSET = 28;
+    const W = b => b.r - b.l, H = b => b.b - b.t;
 
     // 左端は、どちらも「③育介短所定内残業」の列の境目ちょうど。余白を足すと隣の列が細く写る。
     // この位置なら月の凡例（表の右端にそろえてある）も左端まで入る
@@ -116,16 +153,29 @@
     // 右端は、見えなくした拡張の列の手前（フレックス不足時間の列の右端）まで
     const offBox = { l: abs(off.doc, off.doc.querySelector('th.custom4')).l, t: ot.t - 6, r: abs(off.doc, off.doc.querySelector('th.custom7')).r + 1, b: ot.b + PAD };
 
-    // 倍率は、ONの切り抜きが左右の余白を残して収まる値。OFFも同じ倍率にする
-    const s = Math.min((1280 - MARGIN * 2) / (onBox.r - onBox.l), 1.6);
-    const hOn = (onBox.b - onBox.t) * s, hOff = (offBox.b - offBox.t) * s;
-    const total = CAP + CAP_GAP + hOff + GAP + CAP + CAP_GAP + hOn;
-    let y = Math.round((800 - total) / 2);
+    // OFFとONは画像の幅いっぱいに使う。OFFもONと同じ倍率にする
+    const s = Math.min((1280 - SIDE * 2) / W(onBox), 1.6);
+    // 設定画面は表より小さくする。大きいと区画が縦に伸び、その下から始まるONがOFFから離れる
+    const sPop = 0.7;
+    const wPop = popup.w * sPop, hPop = popup.h * sPop;
 
-    caption('残業時間表示 OFF', MARGIN, y); y += CAP + CAP_GAP;
-    crop(off, offBox, s, MARGIN, y); y += hOff + GAP;
-    caption('残業時間表示 ON', MARGIN, y); y += CAP + CAP_GAP;
-    crop(on, onBox, s, MARGIN, y);
+    // 右上の角だけを区切って、設定画面の区画にする。区画の左と下に線を引く
+    const cornerX = 1280 - SIDE - wPop - INSET;
+    const cornerB = TOP + CAP + CAP_GAP + hPop + INSET;
+    // ONの右側には年別データがあるので、ONは区画の下の線より下から始める。OFFはONのすぐ上に置く
+    const onY = Math.max(TOP + CAP + CAP_GAP + H(offBox) * s + GAP + CAP + CAP_GAP, cornerB + INSET);
+    const offY = onY - CAP_GAP - CAP - GAP - H(offBox) * s;
+
+    caption('残業時間表示 OFF', SIDE, offY - CAP_GAP - CAP);
+    crop(off, offBox, s, SIDE, offY);
+    caption('残業時間表示 ON', SIDE, onY - CAP_GAP - CAP);
+    crop(on, onBox, s, SIDE, onY);
+
+    rule(cornerX, 0, 1, cornerB);
+    rule(cornerX, cornerB, 1280 - cornerX, 1);
+    caption('設定画面', cornerX + INSET, TOP);
+    popup.frame.style.transform = `scale(${sPop})`;
+    Object.assign(popup.clip.style, { left: (cornerX + INSET) + 'px', top: (TOP + CAP + CAP_GAP) + 'px', width: wPop + 'px', height: hPop + 'px', visibility: 'visible' });
   })();
 </script>
 </body>
