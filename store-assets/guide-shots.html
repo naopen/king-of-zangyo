@@ -2,7 +2,6 @@
 <!--
   使い方ページ（guide/index.html）に載せる切り抜き画像を作るページ。
   ?part=monthly|annual|annual-unfetched|popup を、左上に原寸で切り抜いて置く。周りはマゼンタ（#ff00ff）で、あとで切り落とす。
-  ボタン名は画面の上で「更新」に差し替えている（ボタン名の変更が入るまでの扱い。screenshot-compose.html の applyPlannedUi と同じ）。
 
   書き出し方（リポジトリのルートで）
     1. ルートを配信する。macOSの権限で ~/Documents は python の http.server から読めないので、一時フォルダーに写してから配信する
@@ -46,9 +45,10 @@
       d.querySelector('.footer').style.display = 'none';
       const c = d.querySelector('.container').getBoundingClientRect(); box = { l: 0, t: 0, r: 300, b: c.height };
     } else {
+      // 拡張が出す吹き出し（使い方・変更点）は、この画像には写さない
+      const hideNotices = d.createElement('style'); hideNotices.textContent = '.kot-zangyo-notice-bubble,.kot-zangyo-notice-dot{display:none!important}'; d.head.appendChild(hideNotices);
       d.querySelectorAll('body *').forEach(e => { const p = getComputedStyle(e).position; if (p === 'fixed' || p === 'sticky') e.style.display = 'none'; });
       const sec = d.getElementById('king-of-zangyo-annual-section');
-      const btn = sec.querySelector('button'); btn.querySelector('span').textContent = '更新';
       if (part === 'monthly') {
         const tbl = d.querySelector('th.custom4').closest('table');
         const u = union(d, [tbl, d.getElementById('king-of-zangyo-monthly-legend')]);

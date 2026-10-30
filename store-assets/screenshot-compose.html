@@ -57,26 +57,16 @@
     ['king-of-zangyo-header', 'king-of-zangyo-cell'].forEach(id => { const c = doc.getElementById(id); if (c) Object.assign(c.style, { border: 'none', background: 'transparent', visibility: 'hidden' }); });
   }
 
-  // 実装前の仮。ボタン名「更新」と「?使い方」の入口を画面の上で足している。
-  // 使い方ページと入口を実装したら、この関数と呼び出しを消して、拡張そのものの表示で撮り直す
-  function applyPlannedUi(doc) {
-    const btn = doc.querySelector('#king-of-zangyo-annual-section button');
-    btn.querySelector('span').textContent = '更新';
-    const pill = doc.createElement('span');
-    pill.style.cssText = 'display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 10px 0 5px;margin-left:4px;border:1px solid #999;border-radius:14px;background:#fff;color:#555;font-size:13px;position:relative;top:-1px';
-    pill.innerHTML = '<span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:#777;color:#fff;font-weight:bold;font-size:12px">?</span>使い方';
-    btn.after(pill);
-  }
-
   function prepare(doc, off) {
+    // 拡張が出す吹き出し（使い方・変更点）は、画像には写さない
+    const hideNotices = doc.createElement('style'); hideNotices.textContent = '.kot-zangyo-notice-bubble,.kot-zangyo-notice-dot{display:none!important}'; doc.head.appendChild(hideNotices);
     doc.querySelectorAll('body *').forEach(e => { const p = getComputedStyle(e).position; if (p === 'fixed' || p === 'sticky') e.style.display = 'none'; });
     // 月別データの上にある KING OF TIME のボタン（スケジュール申請など）は、切り抜きの上端に端だけ写るので隠す
     doc.querySelectorAll('button, input[type=button], input[type=submit], select').forEach(e => { if (!e.closest('#king-of-zangyo-annual-section')) e.style.visibility = 'hidden'; });
     // ボタンの並び（ツールバー）の下線も、切り抜きの上端に1本の線として写るので隠す
     doc.querySelectorAll('.htBlock-toolbar').forEach(e => { if (!e.querySelector('#king-of-zangyo-annual-section')) e.style.visibility = 'hidden'; });
     // OFFは拡張の部品を消さずに見えなくする。消すと表の列幅が組み直され、ONと列の位置がずれる
-    if (off) { doc.querySelectorAll('[id^="king-of-zangyo"]').forEach(e => { e.style.visibility = 'hidden'; e.querySelectorAll('*').forEach(c => c.style.visibility = 'hidden'); }); hideExtensionColumn(doc); return; }
-    applyPlannedUi(doc);
+    if (off) { doc.querySelectorAll('[id^="king-of-zangyo"]').forEach(e => { e.style.visibility = 'hidden'; e.querySelectorAll('*').forEach(c => c.style.visibility = 'hidden'); }); hideExtensionColumn(doc); }
   }
   const abs = (doc, el) => { const w = doc.defaultView, r = el.getBoundingClientRect(); return { l: r.left + w.scrollX, t: r.top + w.scrollY, r: r.right + w.scrollX, b: r.bottom + w.scrollY }; };
   // option 要素など大きさ0の要素は (0,0) を返すので除く
@@ -114,10 +104,6 @@
         d.getElementById('fiscal-year-start').value = '4';
         // フッター（thanks to と developed by の2行）は写さない
         d.querySelector('.footer').style.display = 'none';
-        // 実装前の仮。設定の下に「使い方を見る」を置く予定。実装したら消す
-        const a = d.createElement('a'); a.textContent = '使い方を見る'; a.href = '#';
-        a.style.cssText = 'display:block;text-align:center;margin:4px 0 0;color:#1565c0;text-decoration:underline;font-size:14px';
-        d.querySelector('.container').appendChild(a);
         const h = d.querySelector('.container').getBoundingClientRect().height;
         p.f.style.height = h + 'px';
         res({ ...p, w: 300, h });
