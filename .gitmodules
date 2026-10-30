@@ -1,3 +1,6 @@
 [submodule "test"]
 	path = test
 	url = https://github.com/naopen/king-of-zangyo-testdata.git
+[submodule "kagkag"]
+	path = kagkag
+	url = https://github.com/naopen/king-of-zangyo-kagkag.git
