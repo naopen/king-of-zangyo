@@ -1410,7 +1410,7 @@ function renderChangeNotice() {
   const text = document.createElement("p");
   text.className = "kot-zangyo-notice-text";
   text.textContent =
-    "色の境目が、年度の残りに応じて動くようになりました。境目は「更新」を押した日を基準に計算します。";
+    "背景色の切り替わりが年度の残り日数に応じて変化するようになりました。";
   bubble.appendChild(text);
 
   const footer = document.createElement("div");
