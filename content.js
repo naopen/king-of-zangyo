@@ -1085,9 +1085,22 @@ async function injectAnnualDataSection() {
     updateButton.style.position = "relative";
     // updateButton.style.top = "-1px";
     const buttonSpan = document.createElement("span");
-    buttonSpan.textContent = "最新データで更新";
+    buttonSpan.textContent = "更新";
     updateButton.appendChild(buttonSpan);
     updateButton.addEventListener("click", handleAnnualUpdateButtonClick);
+
+    // 使い方ページへの入口（更新ボタンの直後に置く）
+    const guideLink = document.createElement("a");
+    guideLink.className = "kot-zangyo-guide-link";
+    guideLink.href = chrome.runtime.getURL("guide/index.html");
+    guideLink.target = "_blank";
+    guideLink.rel = "noopener";
+    guideLink.title = "使い方";
+    const guideMark = document.createElement("span");
+    guideMark.className = "kot-zangyo-guide-link-mark";
+    guideMark.textContent = "?";
+    guideLink.appendChild(guideMark);
+    guideLink.appendChild(document.createTextNode("使い方"));
 
     // セクション見出しとボタンを横並びにするコンテナ
     const titleContainer = document.createElement("div");
@@ -1105,6 +1118,7 @@ async function injectAnnualDataSection() {
     titleContainer.appendChild(sectionTitle);
     titleContainer.appendChild(fiscalYearSelect);
     titleContainer.appendChild(updateButton);
+    titleContainer.appendChild(guideLink);
 
     // 年間集計テーブルの見出し
     const tableCaption = document.createElement("h5");
@@ -2273,6 +2287,42 @@ function injectDialogStyles() {
   const styleElement = document.createElement("style");
   styleElement.id = "king-of-zangyo-dialog-styles";
   styleElement.textContent = `
+    /* 使い方ページへの入口（更新ボタンの右） */
+    .kot-zangyo-guide-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      height: 28px;
+      padding: 0 10px 0 5px;
+      margin-left: 4px;
+      border: 1px solid #999;
+      border-radius: 14px;
+      background: #fff;
+      color: #555;
+      font-size: 13px;
+      text-decoration: none;
+      position: relative;
+      top: -1px;
+      box-sizing: border-box;
+      white-space: nowrap;
+    }
+    .kot-zangyo-guide-link:hover {
+      background: #f2f2f2;
+      text-decoration: none;
+    }
+    .kot-zangyo-guide-link-mark {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #777;
+      color: #fff;
+      font-weight: bold;
+      font-size: 12px;
+    }
+
     /* ダイアログ基本スタイル（King of Time公式に準拠） */
     .kot-zangyo-dialog {
       border: none;
