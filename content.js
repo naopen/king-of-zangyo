@@ -1336,7 +1336,8 @@ function renderAnnualDataSection(annualData, fiscalYear) {
 }
 
 const DISMISSED_NOTICES_KEY = "kingOfZangyoDismissedNotices";
-const NOTICE_BUBBLE_CLASS = "kot-zangyo-notice-bubble";
+const STALE_DISMISSED_AT_KEY = "kingOfZangyoStaleNoticeDismissedAt"; // 更新を促す吹き出しを閉じた時刻（ミリ秒）
+const NOTICE_BUBBLE_CLASS ="kot-zangyo-notice-bubble";
 const NOTICE_DOT_CLASS = "kot-zangyo-notice-dot";
 
 /**
@@ -1362,11 +1363,22 @@ async function renderNotices() {
 
   const [stored, processingState, savedYears] = await Promise.all([
     new Promise((resolve) => {
-      chrome.storage.sync.get([STORAGE_KEY, DISMISSED_NOTICES_KEY], resolve);
+      chrome.storage.sync.get(
+        [STORAGE_KEY, DISMISSED_NOTICES_KEY, STALE_DISMISSED_AT_KEY],
+        resolve,
+      );
     }),
     loadProcessingState(),
     getSavedFiscalYears(),
   ]);
+
+  // 保存済みの全年度のうち、いちばん新しい最終更新（読めなければ null）
+  const annualDataList = await Promise.all(
+    (savedYears || []).map((year) => loadAnnualData(year).catch(() => null)),
+  );
+  const latestLastUpdated = KingOfZangyoNotices.newestLastUpdated(
+    annualDataList.map((data) => data?.lastUpdated),
+  );
 
   // 読み込み中に別の描画が走っていても、描く直前に必ず消す
   clearNoticeElements();
@@ -1376,10 +1388,19 @@ async function renderNotices() {
     processing: processingState?.isProcessing === true,
     savedYears: savedYears || [],
     dismissed: stored[DISMISSED_NOTICES_KEY] || [],
+    latestLastUpdated,
+    staleDismissedAt:
+      typeof stored[STALE_DISMISSED_AT_KEY] === "number"
+        ? stored[STALE_DISMISSED_AT_KEY]
+        : null,
+    now: Date.now(),
   });
 
   if (notice === "usage") {
     renderUsageNotice(updateButton);
+  }
+  if (notice === "stale") {
+    renderStaleNotice(updateButton);
   }
   if (notice === "change") {
     renderChangeNotice();
@@ -1486,6 +1507,42 @@ async function markChangeNoticeDismissed() {
  * @param {HTMLElement} updateButton - 更新ボタン
  */
 function renderUsageNotice(updateButton) {
+  renderUpdateButtonNotice(
+    updateButton,
+    "このボタンで年度の残業時間を集計できます。年360hに収まりそうかを色で表示します。",
+    clearNoticeElements,
+  );
+}
+
+/**
+ * 更新を促す吹き出し（使い方の吹き出しと同じ見た目・位置）を描く
+ * 閉じたら、押した時刻を保存して、さらに30日は出さない
+ * @param {HTMLElement} updateButton - 更新ボタン
+ */
+function renderStaleNotice(updateButton) {
+  renderUpdateButtonNotice(
+    updateButton,
+    "最終更新から1か月以上経過しています。「更新」を押すと最新の残業時間を集計できます。",
+    async () => {
+      try {
+        await new Promise((resolve) => {
+          chrome.storage.sync.set({ [STALE_DISMISSED_AT_KEY]: Date.now() }, resolve);
+        });
+      } catch (error) {
+        console.error("King-of-Zangyo: 更新を促す吹き出しの閉じた日の保存エラー:", error);
+      }
+      clearNoticeElements();
+    },
+  );
+}
+
+/**
+ * 更新ボタンの赤い点と、直下の吹き出しを描く（使い方・更新を促す吹き出しの共通部分）
+ * @param {HTMLElement} updateButton - 更新ボタン
+ * @param {string} message - 吹き出しの文面
+ * @param {() => void} onClose - 「閉じる」を押したときの処理
+ */
+function renderUpdateButtonNotice(updateButton, message, onClose) {
   const dot = document.createElement("span");
   dot.className = NOTICE_DOT_CLASS;
   updateButton.appendChild(dot);
@@ -1500,8 +1557,7 @@ function renderUsageNotice(updateButton) {
 
   const text = document.createElement("p");
   text.className = "kot-zangyo-notice-text";
-  text.textContent =
-    "このボタンで年度の残業時間を集計できます。年360hに収まりそうかを色で表示します。";
+  text.textContent = message;
   bubble.appendChild(text);
 
   const footer = document.createElement("div");
@@ -1518,7 +1574,7 @@ function renderUsageNotice(updateButton) {
   closeButton.type = "button";
   closeButton.className = "kot-zangyo-notice-close";
   closeButton.textContent = "閉じる";
-  closeButton.addEventListener("click", clearNoticeElements);
+  closeButton.addEventListener("click", onClose);
 
   footer.appendChild(moreLink);
   footer.appendChild(closeButton);
