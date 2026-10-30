@@ -125,6 +125,16 @@ h1 {
   font-size: 13px;
 }
 
+/* 使い方リンク */
+.guide-link {
+  display: block;
+  text-align: center;
+  color: #1565c0;
+  text-decoration: underline;
+  font-size: 14px;
+  margin: 4px 0 16px;
+}
+
 /* フッター */
 .footer {
   text-align: center;
