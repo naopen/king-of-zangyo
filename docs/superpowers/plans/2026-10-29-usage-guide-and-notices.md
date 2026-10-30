@@ -366,3 +366,53 @@ Expected: すべてPASSし、zipに `manifest.json` のバージョン2.6.0が�
 git add manifest.json store-assets guide/img
 git commit -m "バージョンを2.6.0にし、ストア画像と使い方ページの画像を実物で撮り直した"
 ```
+
+### Task 9: 更新を促す吹き出し（設計書 3b、2026-10-30に追加）
+
+注: 節へのリンクは、Task 5・6 の時点の `#annual-fetch` ではなく、いまは `guide/index.html?section=annual-fetch` の形（設計書5節）。
+
+**Files:**
+- Modify: `notices.js`、`tests/notices.test.js`、`content.js`
+
+**Interfaces:**
+- Produces: `KingOfZangyoNotices.pickNotice({ enabled, processing, savedYears, dismissed, latestLastUpdated, staleDismissedAt, now }) -> "usage" | "change" | "stale" | null`。追加の3つは `latestLastUpdated: string | null`（"YYYY/MM/DD HH:mm"）、`staleDismissedAt: number | null`（ミリ秒）、`now: number`（ミリ秒）。追加の3つを渡さない呼び出しは、これまでと同じ結果になる（"stale" を返さない）
+- Produces: `KingOfZangyoNotices.STALE_DAYS`（`30`）
+- 優先順は usage ＞ change ＞ stale。同時に2つは出さない
+- "stale" の条件: `latestLastUpdated` を手元の時刻として読めて、`now` がそこから30日以上たっている。かつ、`staleDismissedAt` が null か、`now` がそこから30日以上たっている。`latestLastUpdated` が読めない値なら "stale" にしない
+- `notices.js` は今日の日付を自分で取らない（`annual-pace.js` と同じく、同じ入力なら同じ結果）。`now` は呼び出し側が渡す
+
+- [ ] **Step 1: 失敗するテストを書く**
+
+固定の日付で書く（例: `now = new Date(2026, 9, 30, 12, 0).getTime()`）。
+- 追加の3つを渡さない既存の呼び出しは、既存の13件がそのまま通る
+- 最終更新が30日前ちょうどなら "stale"、29日前なら null
+- `staleDismissedAt` が10日前なら null、31日前なら "stale"
+- 一度も取得していない人は、最終更新の値に関係なく "usage"
+- 変更点が未読（dismissed に CHANGE_NOTICE_ID が無い）で最終更新が古い人は "change"（stale より先）
+- `latestLastUpdated` が "abc" なら "stale" にならない
+- 表示オフ・取得中なら null
+
+- [ ] **Step 2: 失敗を確かめる**
+
+Run: `make test`
+Expected: 新しいテストが失敗する
+
+- [ ] **Step 3: `notices.js` を直す**
+
+- [ ] **Step 4: `content.js` に描画を足す**
+
+`renderNotices()` で、保存済みの全年度の `lastUpdated` のうちいちばん新しいもの（`latestLastUpdated`）、`chrome.storage.sync` の `kingOfZangyoStaleNoticeDismissedAt`（無ければ null）、`Date.now()` を読んで `pickNotice` に渡す。"stale" なら、使い方の吹き出し（C1）と同じ見た目・位置で更新ボタンを指す吹き出しを出し、赤い点も付ける（同じボタン、同じ操作を促すため。Claudeの判断）。文面は「最終更新から1か月以上経過しています。「更新」を押すと最新の残業時間を集計できます。」（Naokiが決めた）。「詳しく見る」は `guide/index.html?section=annual-fetch`。「閉じる」は `Date.now()` を `kingOfZangyoStaleNoticeDismissedAt` に保存して消す。更新ボタンを押したら消す（取得が完了すれば最終更新が新しくなるので、保存は要らない）。
+
+- [ ] **Step 5: テスト用HTMLで確かめる**
+
+保存データの最終更新を31日前にして開く → 更新を促す吹き出しが出る（変更点を既読にしておく）。閉じた日を10日前にする → 出ない。31日前にする → また出る。変更点が未読なら、変更点の吹き出しが先に出る。
+
+- [ ] **Step 6: テストとコミット**
+
+Run: `make test`
+Expected: すべてPASS
+
+```bash
+git add notices.js tests/notices.test.js content.js
+git commit -m "最終更新から1か月以上たった人に、更新を促す吹き出しを出す"
+```
