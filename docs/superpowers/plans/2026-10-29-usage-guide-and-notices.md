@@ -34,6 +34,7 @@
 - 前の年度だけ取得したことがあり、今年度は「未取得」の人：使い方の吹き出しを出さない（Task 1でテスト）
 - 年間の凡例が無いとき（閾値凡例表示がオフ、または前の年度だけ取得していて今年度が「未取得」）：変更点の吹き出しは年間集計の表の下を指す（Task 6で確かめる）
 - 年度のプルダウンを切り替えて年別データが描き直されたとき：吹き出しが古い位置に取り残されない（Task 5、Task 6で確かめる）
+- 拡張の更新（`update`）やChrome本体の更新（`chrome_update`）：使い方ページを開かない（Task 1でテスト、Task 7bで確かめる）
 
 ---
 
@@ -45,14 +46,14 @@
 - Modify: `manifest.json`（`content_scripts.js` を `["annual-pace.js", "notices.js", "content.js"]` にする）
 
 **Interfaces:**
-- Produces: `KingOfZangyoNotices.CHANGE_NOTICE_ID`（`"annual-pace-2.5.0"`）、`KingOfZangyoNotices.pickNotice({ enabled: boolean, processing: boolean, savedYears: number[], dismissed: string[] }) -> "usage" | "change" | null`、`KingOfZangyoNotices.withDismissed(dismissed: string[], id: string) -> string[]`（重複させず足した新しい配列を返す）
+- Produces: `KingOfZangyoNotices.shouldOpenGuideOnInstalled(reason: string) -> boolean`（`"install"` のときだけ true）、`KingOfZangyoNotices.CHANGE_NOTICE_ID`（`"annual-pace-2.5.0"`）、`KingOfZangyoNotices.pickNotice({ enabled: boolean, processing: boolean, savedYears: number[], dismissed: string[] }) -> "usage" | "change" | null`、`KingOfZangyoNotices.withDismissed(dismissed: string[], id: string) -> string[]`（重複させず足した新しい配列を返す）
 
 - [ ] **Step 1: 失敗するテストを書く**
 
 ```js
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
-const { pickNotice, withDismissed, CHANGE_NOTICE_ID } = require("../notices.js");
+const { pickNotice, withDismissed, shouldOpenGuideOnInstalled, CHANGE_NOTICE_ID } = require("../notices.js");
 const base = { enabled: true, processing: false, savedYears: [], dismissed: [] };
 
 test("一度も取得していなければ使い方", () => assert.equal(pickNotice(base), "usage"));
@@ -62,6 +63,11 @@ test("取得したことがあり、閉じていなければ変更点", () => as
 test("変更点を閉じていれば何も出さない", () => assert.equal(pickNotice({ ...base, savedYears: [2026], dismissed: [CHANGE_NOTICE_ID] }), null));
 test("表示オフなら何も出さない", () => assert.equal(pickNotice({ ...base, enabled: false }), null));
 test("取得中なら何も出さない", () => assert.equal(pickNotice({ ...base, processing: true }), null));
+// 更新で使い方ページを開かないことを、ここで縛る（設計書「やらないこと」）
+test("インストール直後は使い方ページを開く", () => assert.equal(shouldOpenGuideOnInstalled("install"), true));
+for (const reason of ["update", "chrome_update", "shared_module_update", undefined]) {
+  test(`${reason} では開かない`, () => assert.equal(shouldOpenGuideOnInstalled(reason), false));
+}
 test("withDismissed は重複させない", () => assert.deepEqual(withDismissed(["a"], "a"), ["a"]));
 test("withDismissed は元の配列を変えない", () => { const d = []; withDismissed(d, "a"); assert.deepEqual(d, []); });
 ```
@@ -78,7 +84,7 @@ Expected: `notices.test.js` が `Cannot find module '../notices.js'` で失敗�
 - [ ] **Step 4: 通ることを確かめる**
 
 Run: `make test`
-Expected: 既存の49件と新しい8件がすべてPASS
+Expected: 既存の49件と新しい13件がすべてPASS
 
 - [ ] **Step 5: コミット**
 
@@ -299,6 +305,37 @@ Expected: 「使い方を見る」で使い方ページが新しいタブで開�
 ```bash
 git add popup.html popup.css popup.js
 git commit -m "設定画面に使い方ページを開くリンクを足した"
+```
+
+### Task 7b: インストール直後に使い方ページを開く
+
+**Files:**
+- Create: `background.js`
+- Modify: `manifest.json`（`"background": { "service_worker": "background.js" }` を足す。`permissions` は増やさない）
+- Modify: `Makefile`（`zip` に `background.js` を足す）
+
+**Interfaces:**
+- Consumes: `KingOfZangyoNotices.shouldOpenGuideOnInstalled`（Task 1）
+
+- [ ] **Step 1: `background.js` を書く**
+
+先頭で `importScripts("notices.js")` し、`chrome.runtime.onInstalled.addListener(({ reason }) => { if (KingOfZangyoNotices.shouldOpenGuideOnInstalled(reason)) chrome.tabs.create({ url: chrome.runtime.getURL("guide/index.html") }); })`。判定を `background.js` に書き足さない（条件は `notices.js` のテストで縛ってある）。
+
+- [ ] **Step 2: 確かめる**
+
+`chrome://extensions` で拡張を削除してから、`make zip` を展開したフォルダーを「パッケージ化されていない拡張機能を読み込む」で入れる
+Expected: 使い方ページが1回だけ開く
+同じ拡張で `chrome://extensions` の更新ボタン（再読み込み）を押す
+Expected: 何も開かない（`reason` は `update`）。サービスワーカーのコンソールにエラーが出ていない
+
+- [ ] **Step 3: テストとコミット**
+
+Run: `make test`
+Expected: すべてPASS
+
+```bash
+git add background.js manifest.json Makefile
+git commit -m "新しくインストールした直後だけ使い方ページを開く"
 ```
 
 ### Task 8: バージョンとストア画像
