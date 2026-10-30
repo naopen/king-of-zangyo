@@ -1530,7 +1530,7 @@ function renderStaleNotice(updateButton) {
     () => {
       // 保存を待たずに先に消す（押してから消えるまでに間が空かないように）
       // 赤い点は残す。最終更新から30日以上たっているあいだは出し続ける（設計書 3b）
-      document.querySelectorAll(`.${NOTICE_BUBBLE_CLASS}`).forEach((element) => element.remove());
+      removeNoticeBubbles();
       chrome.storage.sync.set({ [STALE_DISMISSED_AT_KEY]: Date.now() }, () => {
         if (chrome.runtime.lastError) {
           console.error("King-of-Zangyo: 更新を促す吹き出しの閉じた日の保存エラー:", chrome.runtime.lastError);
@@ -1586,19 +1586,24 @@ function renderUpdateButtonNotice(updateButton, message, onClose) {
   bubble.style.top = `${updateButton.offsetTop + updateButton.offsetHeight + 8}px`;
   host.appendChild(bubble);
 
-  // 更新ボタンを押したら案内は役目を終える
-  updateButton.addEventListener("click", clearNoticeElements, { once: true });
+  // 更新ボタンを押したら吹き出しは役目を終える。赤い点は残す（確認ダイアログでやめた人にも出し続けるため。
+  // 取得が始まれば画面が切り替わり、取得中は点を出さない）
+  updateButton.addEventListener("click", removeNoticeBubbles, { once: true });
 }
 
 /**
- * 更新ボタンの右上に赤い点を付ける。押したら点も吹き出しも消す
+ * 更新ボタンの右上に赤い点を付ける
  * @param {HTMLElement} updateButton - 更新ボタン
  */
 function renderUpdateDot(updateButton) {
   const dot = document.createElement("span");
   dot.className = NOTICE_DOT_CLASS;
   updateButton.appendChild(dot);
-  updateButton.addEventListener("click", clearNoticeElements, { once: true });
+}
+
+/** 吹き出しだけを消す（赤い点は残す） */
+function removeNoticeBubbles() {
+  document.querySelectorAll(`.${NOTICE_BUBBLE_CLASS}`).forEach((element) => element.remove());
 }
 
 /**
