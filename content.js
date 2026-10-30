@@ -1397,7 +1397,7 @@ function renderUsageNotice(updateButton) {
   const text = document.createElement("p");
   text.className = "kot-zangyo-notice-text";
   text.textContent =
-    "このボタンで、年度の残業時間を集計できます。年360hに収まりそうかを色で表示します。";
+    "このボタンで年度の残業時間を集計できます。年360hに収まりそうかを色で表示します。";
   bubble.appendChild(text);
 
   const footer = document.createElement("div");
