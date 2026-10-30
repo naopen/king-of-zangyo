@@ -233,7 +233,7 @@ git commit -m "更新ボタンの名前を「更新」にし、横に使い方�
 
 - [ ] **Step 1: `renderNotices()` を書く**
 
-保存データから `enabled`（`kingOfZangyoEnabled`、無ければ true）、`processing`（`loadProcessingState()` の `isProcessing`）、`savedYears`（`getSavedFiscalYears()`）、`dismissed`（`kingOfZangyoDismissedNotices`、無ければ `[]`）を読み、`pickNotice` に渡す。`"usage"` なら、更新ボタンに赤い点（直径10px、白い2pxの縁）を付け、ボタンの直下に吹き出しを出す。文面は「このボタンで、年度の残業時間を集計できます。年360hに収まりそうかを色で示します。」。下に「詳しく見る」（`guide/index.html#annual-fetch` を新しいタブで開く）と「閉じる」。「閉じる」と更新ボタンのクリックで、吹き出しと赤い点を消す。閉じたことは保存しない（次に開けばまた出る）。
+保存データから `enabled`（`kingOfZangyoEnabled`、無ければ true）、`processing`（`loadProcessingState()` の `isProcessing`）、`savedYears`（`getSavedFiscalYears()`）、`dismissed`（`kingOfZangyoDismissedNotices`、無ければ `[]`）を読み、`pickNotice` に渡す。`"usage"` なら、更新ボタンに赤い点（直径10px、白い2pxの縁）を付け、ボタンの直下に吹き出しを出す。文面は「このボタンで年度の残業時間を集計できます。年360hに収まりそうかを色で表示します。」（2026-10-30にNaokiが直した）。下に「詳しく見る」（`guide/index.html#annual-fetch` を新しいタブで開く）と「閉じる」。「閉じる」と更新ボタンのクリックで、吹き出しと赤い点を消す。閉じたことは保存しない（次に開けばまた出る）。
 
 - [ ] **Step 2: 確かめる**
 
