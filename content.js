@@ -1256,6 +1256,20 @@ async function loadAndDisplayAnnualData(fiscalYear) {
  * @param {number} fiscalYear - 年度
  */
 function updateAnnualDataDisplay(annualData, fiscalYear) {
+  try {
+    renderAnnualDataSection(annualData, fiscalYear);
+  } finally {
+    // 早期 return を含むどの経路でも、吹き出しの出し分けをやり直す
+    renderNotices().catch((error) => {
+      console.error("King-of-Zangyo: 吹き出し表示エラー:", error);
+    });
+  }
+}
+
+/**
+ * 年別データセクションの表示を書き換える本体（updateAnnualDataDisplay から呼ぶ）
+ */
+function renderAnnualDataSection(annualData, fiscalYear) {
   const hoursCell = document.getElementById("annual-overtime-hours");
   const updatedCell = document.getElementById("annual-last-updated");
   const caption = document.getElementById("annual-table-caption");
@@ -1311,6 +1325,109 @@ function updateAnnualDataDisplay(annualData, fiscalYear) {
     newLegend.style.display = overtimeEnabled && legendEnabled ? "" : "none";
     existingAnnualLegend.replaceWith(newLegend);
   }
+}
+
+const DISMISSED_NOTICES_KEY = "kingOfZangyoDismissedNotices";
+const NOTICE_BUBBLE_CLASS = "kot-zangyo-notice-bubble";
+const NOTICE_DOT_CLASS = "kot-zangyo-notice-dot";
+
+/**
+ * 前回描いた吹き出しと赤い点を消す
+ */
+function clearNoticeElements() {
+  document
+    .querySelectorAll(`.${NOTICE_BUBBLE_CLASS}, .${NOTICE_DOT_CLASS}`)
+    .forEach((element) => element.remove());
+}
+
+/**
+ * 保存データを読み、出すべきお知らせを1つ選んで描く
+ * 呼ぶたびに前の表示を消してから描くので、年度の切り替えでも重複しない
+ */
+async function renderNotices() {
+  const updateButton = document.querySelector(
+    `#${ANNUAL_SECTION_ID} button.htBlock-buttonPrimary`,
+  );
+  if (!updateButton) {
+    return;
+  }
+
+  const [stored, processingState, savedYears] = await Promise.all([
+    new Promise((resolve) => {
+      chrome.storage.sync.get([STORAGE_KEY, DISMISSED_NOTICES_KEY], resolve);
+    }),
+    loadProcessingState(),
+    getSavedFiscalYears(),
+  ]);
+
+  // 読み込み中に別の描画が走っていても、描く直前に必ず消す
+  clearNoticeElements();
+
+  const notice = KingOfZangyoNotices.pickNotice({
+    enabled: stored[STORAGE_KEY] !== undefined ? stored[STORAGE_KEY] : true,
+    processing: processingState?.isProcessing === true,
+    savedYears: savedYears || [],
+    dismissed: stored[DISMISSED_NOTICES_KEY] || [],
+  });
+
+  if (notice === "usage") {
+    renderUsageNotice(updateButton);
+  }
+  // "change"（変更のお知らせ）の吹き出しは Task 6 でここに足す
+}
+
+/**
+ * 使い方の吹き出し（更新ボタンの赤い点と、直下の説明）を描く
+ * 閉じたことは保存しない（次に開けばまた出る）
+ * @param {HTMLElement} updateButton - 更新ボタン
+ */
+function renderUsageNotice(updateButton) {
+  const dot = document.createElement("span");
+  dot.className = NOTICE_DOT_CLASS;
+  updateButton.appendChild(dot);
+
+  const bubble = document.createElement("div");
+  bubble.className = NOTICE_BUBBLE_CLASS;
+  bubble.setAttribute("role", "note");
+
+  const arrow = document.createElement("span");
+  arrow.className = "kot-zangyo-notice-arrow";
+  bubble.appendChild(arrow);
+
+  const text = document.createElement("p");
+  text.className = "kot-zangyo-notice-text";
+  text.textContent =
+    "このボタンで、年度の残業時間を集計できます。年360hに収まりそうかを色で示します。";
+  bubble.appendChild(text);
+
+  const footer = document.createElement("div");
+  footer.className = "kot-zangyo-notice-footer";
+
+  const moreLink = document.createElement("a");
+  moreLink.className = "kot-zangyo-notice-more";
+  moreLink.href = chrome.runtime.getURL("guide/index.html#annual-fetch");
+  moreLink.target = "_blank";
+  moreLink.rel = "noopener";
+  moreLink.textContent = "詳しく見る";
+
+  const closeButton = document.createElement("button");
+  closeButton.type = "button";
+  closeButton.className = "kot-zangyo-notice-close";
+  closeButton.textContent = "閉じる";
+  closeButton.addEventListener("click", clearNoticeElements);
+
+  footer.appendChild(moreLink);
+  footer.appendChild(closeButton);
+  bubble.appendChild(footer);
+
+  // 更新ボタンの直下に、レイアウトを押さずに重ねる
+  const host = updateButton.offsetParent || updateButton.parentElement;
+  bubble.style.left = `${updateButton.offsetLeft}px`;
+  bubble.style.top = `${updateButton.offsetTop + updateButton.offsetHeight + 8}px`;
+  host.appendChild(bubble);
+
+  // 更新ボタンを押したら案内は役目を終える
+  updateButton.addEventListener("click", clearNoticeElements, { once: true });
 }
 
 /**
@@ -2321,6 +2438,71 @@ function injectDialogStyles() {
       color: #fff;
       font-weight: bold;
       font-size: 12px;
+    }
+
+    /* 使い方の吹き出し（更新ボタンの直下）と赤い点 */
+    .kot-zangyo-notice-dot {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #d32f2f;
+      border: 2px solid #fff;
+      box-sizing: content-box;
+      pointer-events: none;
+    }
+    .kot-zangyo-notice-bubble {
+      position: absolute;
+      z-index: 100;
+      width: 250px;
+      box-sizing: border-box;
+      padding: 10px 12px 8px;
+      border: 1px solid #b7c7d6;
+      border-radius: 4px;
+      background: #f4f8fb;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+      color: #333;
+      font-size: 13px;
+      line-height: 1.6;
+      text-align: left;
+    }
+    .kot-zangyo-notice-arrow {
+      position: absolute;
+      top: -6px;
+      left: 18px;
+      width: 10px;
+      height: 10px;
+      background: #f4f8fb;
+      border-top: 1px solid #b7c7d6;
+      border-left: 1px solid #b7c7d6;
+      transform: rotate(45deg);
+    }
+    .kot-zangyo-notice-text {
+      margin: 0;
+      color: #333;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .kot-zangyo-notice-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 6px;
+      font-size: 13px;
+    }
+    .kot-zangyo-notice-more {
+      color: #1565c0;
+      text-decoration: underline;
+    }
+    .kot-zangyo-notice-close {
+      border: none;
+      background: none;
+      padding: 0;
+      color: #555;
+      font-size: 13px;
+      cursor: pointer;
     }
 
     /* ダイアログ基本スタイル（King of Time公式に準拠） */
