@@ -9,6 +9,7 @@
     "128": "icons/icon128.png"
   },
   "permissions": ["storage", "activeTab"],
+  "background": { "service_worker": "background.js" },
   "action": {
     "default_popup": "popup.html",
     "default_title": "KING OF ZANGYO設定",

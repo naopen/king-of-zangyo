@@ -8,7 +8,7 @@ check-assets:
 	done
 
 zip: check-assets
-	zip -r king-of-zangyo.zip manifest.json popup.html popup.js popup.css annual-pace.js content.js notices.js icons/ guide/ $(KAGKAG_PNGS)
+	zip -r king-of-zangyo.zip manifest.json popup.html popup.js popup.css annual-pace.js content.js notices.js background.js icons/ guide/ $(KAGKAG_PNGS)
 
 test:
 	node --test "tests/*.test.js"
