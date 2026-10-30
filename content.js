@@ -1426,7 +1426,9 @@ function renderChangeNotice() {
 
   const moreLink = document.createElement("a");
   moreLink.className = "kot-zangyo-notice-more";
-  moreLink.href = chrome.runtime.getURL("guide/index.html#annual-colors");
+  // 節は # ではなく ?section= で渡す。# だとブラウザが読み込みと同時にその節へ飛び、
+  // 使い方ページの側で先頭からスクロールして見せられないため（guide/guide.js）
+  moreLink.href = chrome.runtime.getURL("guide/index.html?section=annual-colors");
   moreLink.target = "_blank";
   moreLink.rel = "noopener";
   moreLink.textContent = "詳しく見る";
@@ -1507,7 +1509,7 @@ function renderUsageNotice(updateButton) {
 
   const moreLink = document.createElement("a");
   moreLink.className = "kot-zangyo-notice-more";
-  moreLink.href = chrome.runtime.getURL("guide/index.html#annual-fetch");
+  moreLink.href = chrome.runtime.getURL("guide/index.html?section=annual-fetch");
   moreLink.target = "_blank";
   moreLink.rel = "noopener";
   moreLink.textContent = "詳しく見る";
@@ -2535,6 +2537,15 @@ function injectDialogStyles() {
     .kot-zangyo-guide-link:hover {
       background: #f2f2f2;
       text-decoration: none;
+    }
+    /* KING OF TIME の a:visited（青）、a:hover、a:active が .kot-zangyo-guide-link より強く効くので、
+       擬似クラスを付けて同じ灰色に固定する。押したあとに色が変わらないようにするため */
+    .kot-zangyo-guide-link:link,
+    .kot-zangyo-guide-link:visited,
+    .kot-zangyo-guide-link:hover,
+    .kot-zangyo-guide-link:active,
+    .kot-zangyo-guide-link:focus {
+      color: #555;
     }
     .kot-zangyo-guide-link-mark {
       display: inline-flex;
