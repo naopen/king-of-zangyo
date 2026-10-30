@@ -1,6 +1,6 @@
 # 年間残業の色分けを、年度の残りに応じて動かす
 
-2026-10-14 にNaokiと壁打ちして決めた内容。モックは `mock/annual-pace-mock.html`。
+2026-10-14 にNaokiと壁打ちして決めた内容。モックは `docs/superpowers/mocks/2026-10-14-annual-pace-bands/annual-pace-mock.html`。
 
 ## なぜ変えるか
 

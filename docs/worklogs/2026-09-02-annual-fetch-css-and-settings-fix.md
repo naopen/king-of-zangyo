@@ -5,7 +5,7 @@
 > king-of-zangyo の年間集計まわりで、`await checkAndResumeProcessing()` に起因する
 > 2件の不具合（ダイアログCSS未適用・所定労働時間がデフォルト値のまま）を
 > 2026-09-02 に修正した（コミット 3005aa4, f6e136a）。
-> 経緯は `2026-09-02-annual-fetch-css-and-settings-fix.md` を読んでほしい。
+> 経緯は `docs/worklogs/2026-09-02-annual-fetch-css-and-settings-fix.md` を読んでほしい。
 
 ## 発端
 

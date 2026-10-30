@@ -3,7 +3,7 @@
 ## 再開プロンプト（コピペ用）
 
 > king-of-zangyo の v2.6.0（使い方の案内と変更の知らせ）の実装を始めたい。
-> 経緯は `2026-10-29-usage-guide-and-notices.md` を読んでほしい。設計は
+> 経緯は `docs/worklogs/2026-10-29-usage-guide-and-notices.md` を読んでほしい。設計は
 > `docs/superpowers/specs/2026-10-29-usage-guide-and-notices-design.md`、計画は
 > `docs/superpowers/plans/2026-10-29-usage-guide-and-notices.md` にある。作業ブランチは `feature/usage-guide-and-notices`。
 
@@ -80,7 +80,7 @@ Claude in Chromeでは `chrome-extension://` のページ、ツールバーの�
 - ストア掲載文の v2.6.0 の行は下書き。Naokiの言葉に合わせて直す
 - 本体の作業ブランチのpushと、mainへのマージ
 - `README.md` には「MIT License」とあるが、ライセンスのファイル（LICENSE）がリポジトリに無い。MITライセンスは、著作権表示とライセンスの全文を一緒に配ることを条件にしている。今回とは別の小さな作業として扱う
-- 壁打ちのモック一式 `.superpowers/brainstorm/27662-1793257764/` は未追跡のまま。中に仮のカグカグの画像 `content/kagukagu-sample.png` があるので、`.superpowers/` を丸ごと `git add` しない
+- 壁打ちのモック一式は、2026-10-30に `docs/superpowers/mocks/2026-10-29-brainstorm/` へ移した。仮のカグカグの画像は公開リポジトリに入れず、`.superpowers/` ごと消した
 - `~/Downloads/` に、今回落とした画像の「(1)」付きの重複が3つある（`kagkag-flying-01 (1).svg` など）。消すかはNaokiが決める
 
 ## ハマりどころ
