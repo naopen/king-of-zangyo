@@ -2616,6 +2616,14 @@ function injectDialogStyles() {
       color: #1565c0;
       text-decoration: underline;
     }
+    /* KING OF TIME の a:visited などで別の青に変わらないよう、擬似クラスを付けて同じ青に固定する */
+    .kot-zangyo-notice-more:link,
+    .kot-zangyo-notice-more:visited,
+    .kot-zangyo-notice-more:hover,
+    .kot-zangyo-notice-more:active,
+    .kot-zangyo-notice-more:focus {
+      color: #1565c0;
+    }
     .kot-zangyo-notice-close {
       border: none;
       background: none;
