@@ -17,7 +17,7 @@ Automatically displays cumulative overtime hours on KING OF TIME attendance page
 
 【主なバージョン履歴】
 
-v2.6.0: 使い方ページを追加し、初めての人と変更点を知らせる吹き出しを出すようにしました
+v2.6.0: 使い方ページを追加し、初めての人や1か月以上更新していない人に、年間残業時間の更新を案内する吹き出しを出すようにしました
 v2.5.0: 年間残業時間の背景色の色分けが動的に変化するようになりました
 v2.4.8: 年間残業時間の取得中にダイアログの表示が崩れる不具合を修正しました
 v2.4.4: 残業時間の閾値をひと目で確認できる凡例を、月間・年間の集計テーブル下に追加しました
@@ -94,7 +94,7 @@ KING OF TIME (https://s2.ta.kingoftime.jp/admin/*) の勤怠管理画面での�
 
 Key Version History
 
-v2.6.0: Added a usage guide page and in-page tips for first-time users and recent changes
+v2.6.0: Added a usage guide page and in-page tips for first-time users, recent changes, and annual data not updated for over a month
 v2.5.0: The background color coding for annual overtime now changes dynamically
 v2.4.8: Fixed broken dialog styling during annual overtime data retrieval
 v2.4.4: Added a color-coded threshold legend below the monthly and annual overtime summary tables
