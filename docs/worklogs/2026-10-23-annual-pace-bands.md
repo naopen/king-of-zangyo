@@ -3,7 +3,7 @@
 ## 再開プロンプト（コピペ用）
 
 > king-of-zangyo の v2.5.0（年間残業の黄と赤の境目を年度の残りから計算する変更）の続きをやりたい。
-> 経緯は `2026-10-23-annual-pace-bands.md` を読んでほしい。設計は
+> 経緯は `docs/worklogs/2026-10-23-annual-pace-bands.md` を読んでほしい。設計は
 > `docs/superpowers/specs/2026-10-14-annual-pace-bands-design.md`、計画は
 > `docs/superpowers/plans/2026-10-14-annual-pace-bands.md` にある。
 

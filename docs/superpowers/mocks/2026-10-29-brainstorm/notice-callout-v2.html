@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>吹き出しの出し方</title>
+<link type="text/css" rel="stylesheet" href="https://s2.ta.kingoftime.jp/asset/design1/css/base.kot.css">
+<link type="text/css" rel="stylesheet" href="https://s2.ta.kingoftime.jp/asset/design1/css/block.kot.css">
+<link type="text/css" rel="stylesheet" href="https://s2.ta.kingoftime.jp/asset/design1/css/specific.kot.css">
+<style>
+  body { background: #eee; padding: 16px; font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", sans-serif; }
+  .q { max-width: 980px; font-size: 16px; line-height: 1.7; margin: 0 0 16px; color: #222; }
+  .q h1 { font-size: 20px; font-weight: bold; margin: 0 0 4px; }
+  .row { display: flex; gap: 16px; flex-wrap: wrap; max-width: 980px; }
+  .variant { flex: 1 1 440px; background: #fff; border: 2px solid #ccc; border-radius: 6px; padding: 12px 16px 16px; cursor: pointer; box-sizing: border-box; }
+  .variant.selected { border-color: #2e7d32; }
+  .variant-head { font-size: 16px; line-height: 1.6; margin-bottom: 12px; color: #222; }
+  .variant-head b { font-size: 17px; }
+  .variant-head span { display: block; color: #555; font-size: 14px; }
+  .stage { position: relative; height: 230px; }
+  .koz-dot { position: absolute; top: -4px; right: -4px; width: 10px; height: 10px; border-radius: 50%; background: #d32f2f; border: 2px solid #fff; }
+  .koz-callout { position: absolute; left: 150px; top: 46px; width: 250px; z-index: 2; border: 1px solid #b7c7d6; background: #f4f8fb; color: #333; font-size: 13px; line-height: 1.6; padding: 10px 12px 8px; box-shadow: 0 2px 6px rgba(0,0,0,.12); box-sizing: border-box; }
+  .koz-callout::before { content: ""; position: absolute; top: -7px; left: 70px; width: 12px; height: 12px; background: #f4f8fb; border-left: 1px solid #b7c7d6; border-top: 1px solid #b7c7d6; transform: rotate(45deg); }
+  .koz-callout .actions { display: flex; justify-content: space-between; margin-top: 6px; }
+  .koz-callout a { color: #1565c0; text-decoration: underline; }
+  .koz-callout .close { color: #555; }
+  .after { font-size: 13px; color: #555; margin-top: 8px; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<div class="q">
+  <h1>Cの吹き出しを、最初から開いておくか</h1>
+  左に月別データの表がある前提で、年別データの部分だけを切り出しています。モックの崩れも直しました。
+</div>
+
+<div class="row">
+
+<div class="variant" data-choice="c1" onclick="toggleSelect(this)">
+  <div class="variant-head"><b>C1. 赤い点と吹き出しを、最初から出す</b><span>画面を開いた時点で吹き出しが見えている。「閉じる」かボタンを押すまで出たまま。</span></div>
+  <div class="stage">
+    <div style="display: flex; align-items: baseline; gap: 4px;"><h4 class="htBlock-box_subTitle" style="margin-right: 8px;">年別データ</h4><select class="htBlock-selectmenu"><option>2026年度</option></select><button type="button" class="htBlock-buttonPrimary htBlock-buttonM" style="position: relative;"><span>最新データで更新</span><i class="koz-dot"></i></button></div>
+    <h5 class="htBlock-box_caption" style="margin-top: 8px;">年間集計 (2026年度)</h5>
+    <div class="htBlock-normalTable specific-table"><table class="specific-table_800" style="table-layout: fixed; width: 270px;"><thead><tr><th style="text-align: center; width: 130px;"><p>目安年間残業<br>(法定休日を除く)</p></th><th style="text-align: center; width: 150px;"><p>最終更新</p></th></tr></thead><tbody><tr><td style="text-align: center; font-weight: bold; font-size: 14px; background-color: rgb(249, 249, 249);">未取得</td><td style="text-align: center; font-size: 14px;">未取得</td></tr></tbody></table></div>
+    <div class="koz-callout">このボタンで、年度の残業時間を集計できます。年360hに収まりそうかを色で示します。<div class="actions"><a href="#" onclick="return false">詳しく見る</a><a class="close" href="#" onclick="return false">閉じる</a></div></div>
+  </div>
+</div>
+
+<div class="variant" data-choice="c2" onclick="toggleSelect(this)">
+  <div class="variant-head"><b>C2. 赤い点だけを出し、吹き出しはマウスを乗せたときだけ</b><span>表は隠れない。赤い点に気づいた人がボタンにマウスを乗せると、左と同じ吹き出しが開く。</span></div>
+  <div class="stage">
+    <div style="display: flex; align-items: baseline; gap: 4px;"><h4 class="htBlock-box_subTitle" style="margin-right: 8px;">年別データ</h4><select class="htBlock-selectmenu"><option>2026年度</option></select><button type="button" class="htBlock-buttonPrimary htBlock-buttonM" style="position: relative;"><span>最新データで更新</span><i class="koz-dot"></i></button></div>
+    <h5 class="htBlock-box_caption" style="margin-top: 8px;">年間集計 (2026年度)</h5>
+    <div class="htBlock-normalTable specific-table"><table class="specific-table_800" style="table-layout: fixed; width: 270px;"><thead><tr><th style="text-align: center; width: 130px;"><p>目安年間残業<br>(法定休日を除く)</p></th><th style="text-align: center; width: 150px;"><p>最終更新</p></th></tr></thead><tbody><tr><td style="text-align: center; font-weight: bold; font-size: 14px; background-color: rgb(249, 249, 249);">未取得</td><td style="text-align: center; font-size: 14px;">未取得</td></tr></tbody></table></div>
+  </div>
+</div>
+
+</div>
+</body>
+</html>

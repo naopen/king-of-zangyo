@@ -1,8 +1,8 @@
 # 使い方の案内と変更の知らせ
 
-2026-10-29 にNaokiと壁打ちして決めた内容。前回の作業ログ `2026-10-23-annual-pace-bands.md` の「残っていること」（次のバージョンの検討）を引き継いでいる。作業ブランチは `feature/usage-guide-and-notices`。
+2026-10-29 にNaokiと壁打ちして決めた内容。前回の作業ログ `docs/worklogs/2026-10-23-annual-pace-bands.md` の「残っていること」（次のバージョンの検討）を引き継いでいる。作業ブランチは `feature/usage-guide-and-notices`。
 
-壁打ちで見せたモックは `.superpowers/brainstorm/27662-1793257764/content/` にある。どの案を選んだかは、下の各節に書いた。
+壁打ちで見せたモックは `docs/superpowers/mocks/2026-10-29-brainstorm/` にある。どの案を選んだかは、下の各節に書いた。
 
 ## なぜやるか
 
