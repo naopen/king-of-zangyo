@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>小さな入口の見た目（表つき）</title>
+<link type="text/css" rel="stylesheet" href="https://s2.ta.kingoftime.jp/asset/design1/css/base.kot.css">
+<link type="text/css" rel="stylesheet" href="https://s2.ta.kingoftime.jp/asset/design1/css/block.kot.css">
+<link type="text/css" rel="stylesheet" href="https://s2.ta.kingoftime.jp/asset/design1/css/specific.kot.css">
+<style>
+  body { background: #eee; padding: 8px; font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", sans-serif; }
+  .q { max-width: 1240px; font-size: 16px; line-height: 1.7; margin: 0 0 16px; color: #222; }
+  .q h1 { font-size: 20px; font-weight: bold; margin: 0 0 4px; line-height: 1.5; padding: 4px 0; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; max-width: 1280px; }
+  .variant { flex: 0 0 500px; background: #fff; border: 2px solid #ccc; border-radius: 6px; padding: 12px 10px 20px; cursor: pointer; box-sizing: border-box; overflow: hidden; }
+  .variant.selected { border-color: #2e7d32; }
+  .variant-head { font-size: 16px; line-height: 1.6; margin-bottom: 12px; color: #222; min-height: 76px; }
+  .variant-head b { font-size: 17px; }
+  .variant-head span { display: block; color: #555; font-size: 14px; }
+  .head-row { display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+  .head-row h4 { margin-right: 8px; }
+
+  .qc { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; border: 1px solid #999; background: #fff; color: #555; font-weight: bold; font-size: 14px; padding: 0; margin-left: 4px; cursor: pointer; }
+  .qc-sm { width: 18px; height: 18px; font-size: 11px; margin-left: -4px; margin-right: 8px; }
+  .qc-green { border-color: #4a9d4f; color: #4a9d4f; }
+  .qc-fill { border: none; background: #e0e0e0; color: #444; border-radius: 4px; width: 30px; height: 30px; }
+  .qc-label { display: inline-flex; align-items: center; gap: 4px; margin-left: 4px; font-size: 13px; color: #555; cursor: pointer; }
+  .qc-label .qc { margin-left: 0; width: 20px; height: 20px; font-size: 12px; }
+  .pill { display: inline-flex; align-items: center; gap: 5px; height: 28px; padding: 0 10px 0 5px; margin-left: 4px; border: 1px solid #999; border-radius: 14px; background: #fff; color: #555; font-size: 13px; cursor: pointer; }
+  .pill .mk { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; background: #777; color: #fff; font-weight: bold; font-size: 12px; }
+  .pill-green { border-color: #4a9d4f; color: #2e7d32; }
+  .pill-green .mk { background: #4a9d4f; }
+  .ico { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border: 1px solid #999; border-radius: 4px; background: #fff; margin-left: 4px; cursor: pointer; }
+
+  .lg { font-size: 11px; color: #555; margin-top: 3px; line-height: 1.4; width: 290px; }
+  .lg > span { display: inline-flex; align-items: center; margin-left: 8px; }
+  .lg i { display: inline-block; width: 9px; height: 9px; border: 1px solid rgba(0,0,0,.15); margin-right: 2px; }
+  .lg .off { color: #999; }
+  .lg .cur { font-weight: bold; border-bottom: 1.5px solid rgba(0,0,0,.4); }
+  .lg .cur i { box-shadow: rgba(0,0,0,.35) 0 0 0 1.5px; }
+</style>
+</head>
+<body>
+
+<div class="q">
+  <h1>F3（丸い「?」）の方向で、表と凡例まで入れて比べる</h1>
+  年別データの部分を、取得済み（2026年度を10/29に250hで取得）の状態でまるごと描いています。どれもマウスを乗せると「使い方」と出ます。
+</div>
+
+<template id="body">
+  <h5 class="htBlock-box_caption" style="margin-top: 8px;">年間集計 (2026年度)</h5>
+  <div class="htBlock-normalTable specific-table"><table class="specific-table_800" style="table-layout: fixed; width: 270px;"><thead><tr><th style="text-align: center; width: 130px;"><p>目安年間残業<br>(法定休日を除く)</p></th><th style="text-align: center; width: 150px;"><p>最終更新</p></th></tr></thead><tbody><tr><td style="text-align: center; font-weight: bold; font-size: 14px; background-color: rgb(255, 245, 157);">250:12</td><td style="text-align: center; font-size: 14px;">2026/10/29</td></tr></tbody></table></div>
+  <div class="lg"><span class="off"><i style="background:rgb(200,230,201)"></i>～238h</span><span class="cur"><i style="background:rgb(255,245,157)"></i>238～309h</span><span class="off"><i style="background:rgb(239,154,154)"></i>309～360h</span><span class="off"><i style="background:rgb(211,47,47)"></i>360～540h(超過)</span><span class="off"><i style="background:rgb(153,0,153)"></i>540h+(特別条項超過)</span></div>
+</template>
+
+<div class="row">
+
+<div class="variant" data-choice="g1" onclick="toggleSelect(this)">
+  <div class="variant-head"><b>G1. 丸い「?」（さっきのF3）</b><span>灰色の枠と文字。</span></div>
+  <div class="head-row"><h4 class="htBlock-box_subTitle">年別データ</h4><select class="htBlock-selectmenu"><option>2026年度</option></select><button type="button" class="htBlock-buttonPrimary htBlock-buttonM"><span>最新データで更新</span></button><button type="button" class="qc" title="使い方">?</button></div>
+  <div class="slot"></div>
+</div>
+
+<div class="variant" data-choice="g2" onclick="toggleSelect(this)">
+  <div class="variant-head"><b>G2. 見出しのすぐ横の小さな「?」</b><span>見出しの説明として置く。更新ボタンと押し間違えない。</span></div>
+  <div class="head-row"><h4 class="htBlock-box_subTitle">年別データ</h4><button type="button" class="qc qc-sm" title="使い方">?</button><select class="htBlock-selectmenu"><option>2026年度</option></select><button type="button" class="htBlock-buttonPrimary htBlock-buttonM"><span>最新データで更新</span></button></div>
+  <div class="slot"></div>
+</div>
+
+<div class="variant" data-choice="g3" onclick="toggleSelect(this)">
+  <div class="variant-head"><b>G3. 見出しと同じ緑の「?」</b><span>拡張が足した部品だと分かりやすい。</span></div>
+  <div class="head-row"><h4 class="htBlock-box_subTitle">年別データ</h4><select class="htBlock-selectmenu"><option>2026年度</option></select><button type="button" class="htBlock-buttonPrimary htBlock-buttonM"><span>最新データで更新</span></button><button type="button" class="qc qc-green" title="使い方">?</button></div>
+  <div class="slot"></div>
+</div>
+
+<div class="variant" data-choice="g4" onclick="toggleSelect(this)">
+  <div class="variant-head"><b>G4. 「?」と「使い方」の文字</b><span>何のボタンかを小さな文字で補う。</span></div>
+  <div class="head-row"><h4 class="htBlock-box_subTitle">年別データ</h4><select class="htBlock-selectmenu"><option>2026年度</option></select><button type="button" class="htBlock-buttonPrimary htBlock-buttonM"><span>最新データで更新</span></button><span class="qc-label"><span class="qc">?</span>使い方</span></div>
+  <div class="slot"></div>
+</div>
+
+<div class="variant" data-choice="g5" onclick="toggleSelect(this)">
+  <div class="variant-head"><b>G5. 角の丸い灰色の四角に「?」</b><span>「出力」ボタンの灰色に寄せ、更新ボタンと形をそろえる。</span></div>
+  <div class="head-row"><h4 class="htBlock-box_subTitle">年別データ</h4><select class="htBlock-selectmenu"><option>2026年度</option></select><button type="button" class="htBlock-buttonPrimary htBlock-buttonM"><span>最新データで更新</span></button><button type="button" class="qc qc-fill" title="使い方">?</button></div>
+  <div class="slot"></div>
+</div>
+
+<div class="variant" data-choice="g6" onclick="toggleSelect(this)">
+  <div class="variant-head"><b>G6. 本の形の線画アイコン</b><span>「読み物がある」と伝わる。</span></div>
+  <div class="head-row"><h4 class="htBlock-box_subTitle">年別データ</h4><select class="htBlock-selectmenu"><option>2026年度</option></select><button type="button" class="htBlock-buttonPrimary htBlock-buttonM"><span>最新データで更新</span></button><span class="ico" title="使い方"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5c3-1.5 6-1.5 10 1v14c-4-2.5-7-2.5-10-1z"/><path d="M22 5c-3-1.5-6-1.5-10 1v14c4-2.5 7-2.5 10-1z"/></svg></span></div>
+  <div class="slot"></div>
+</div>
+
+<div class="variant" data-choice="g7" onclick="toggleSelect(this)">
+  <div class="variant-head"><b>G7. 「?」と「使い方」を1つの枠でくくる（灰色）</b><span>G4の文字までを丸い枠に入れ、1つのボタンに見せる。</span></div>
+  <div class="head-row"><h4 class="htBlock-box_subTitle">年別データ</h4><select class="htBlock-selectmenu"><option>2026年度</option></select><button type="button" class="htBlock-buttonPrimary htBlock-buttonM"><span>最新データで更新</span></button><button type="button" class="pill"><span class="mk">?</span>使い方</button></div>
+  <div class="slot"></div>
+</div>
+
+<div class="variant" data-choice="g8" onclick="toggleSelect(this)">
+  <div class="variant-head"><b>G8. 「?」と「使い方」を1つの枠でくくる（緑）</b><span>G7を見出しの緑に合わせたもの。</span></div>
+  <div class="head-row"><h4 class="htBlock-box_subTitle">年別データ</h4><select class="htBlock-selectmenu"><option>2026年度</option></select><button type="button" class="htBlock-buttonPrimary htBlock-buttonM"><span>最新データで更新</span></button><button type="button" class="pill pill-green"><span class="mk">?</span>使い方</button></div>
+  <div class="slot"></div>
+</div>
+
+</div>
+
+<script>
+  const tpl = document.getElementById('body');
+  document.querySelectorAll('.slot').forEach(s => s.appendChild(tpl.content.cloneNode(true)));
+</script>
+</body>
+</html>

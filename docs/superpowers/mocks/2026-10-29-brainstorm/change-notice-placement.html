@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>変更点の知らせの置き場所</title>
+<link type="text/css" rel="stylesheet" href="https://s2.ta.kingoftime.jp/asset/design1/css/base.kot.css">
+<link type="text/css" rel="stylesheet" href="https://s2.ta.kingoftime.jp/asset/design1/css/block.kot.css">
+<link type="text/css" rel="stylesheet" href="https://s2.ta.kingoftime.jp/asset/design1/css/specific.kot.css">
+<style>
+  body { background: #eee; padding: 16px; font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", sans-serif; }
+  .q { max-width: 980px; font-size: 16px; line-height: 1.7; margin: 0 0 16px; color: #222; }
+  .q h1 { font-size: 20px; font-weight: bold; margin: 0 0 4px; }
+  .row { display: flex; gap: 16px; flex-wrap: wrap; max-width: 980px; }
+  .variant { flex: 1 1 380px; overflow: hidden; background: #fff; border: 2px solid #ccc; border-radius: 6px; padding: 12px 16px 16px; cursor: pointer; box-sizing: border-box; }
+  .variant.selected { border-color: #2e7d32; }
+  .variant-head { font-size: 16px; line-height: 1.6; margin-bottom: 12px; color: #222; }
+  .variant-head b { font-size: 17px; }
+  .variant-head span { display: block; color: #555; font-size: 14px; }
+  .stage { position: relative; height: 310px; }
+  .koz-callout { position: absolute; width: 290px; z-index: 2; border: 1px solid #b7c7d6; background: #f4f8fb; color: #333; font-size: 13px; line-height: 1.6; padding: 10px 12px 8px; box-shadow: 0 2px 6px rgba(0,0,0,.12); box-sizing: border-box; }
+  .koz-callout::before { content: ""; position: absolute; top: -7px; width: 12px; height: 12px; background: #f4f8fb; border-left: 1px solid #b7c7d6; border-top: 1px solid #b7c7d6; transform: rotate(45deg); }
+  .koz-callout .actions { display: flex; justify-content: space-between; margin-top: 6px; }
+  .koz-callout a { color: #1565c0; text-decoration: underline; }
+  .koz-callout .close { color: #555; }
+  .anchor { position: relative; }
+  /* top を指定せず、直前の要素のすぐ下（本来の位置）に重ねる */
+  .d1, .d2 { margin-top: 8px; }
+  .d1 { margin-top: -26px; }
+  .d1::before { left: 50px; }
+  .d2::before { left: 120px; }
+  .q h1 { line-height: 1.5; padding: 4px 0; }
+  .head-row { display: flex; align-items: baseline; gap: 4px; white-space: nowrap; }
+  .stage { min-width: 300px; }
+</style>
+</head>
+<body>
+
+<div class="q">
+  <h1>変更点の知らせを、どこから指すか</h1>
+  年間残業時間を取得済みの人に一回だけ出す吹き出しです。2026年度を10/29に250hで取得した状態を、テスト用HTMLで描いています。
+</div>
+
+<div class="row">
+
+<div class="variant" data-choice="d1" onclick="toggleSelect(this)">
+  <div class="variant-head"><b>D1. 色の付いたセルを指す</b><span>色が変わった当のものを指す。吹き出しが凡例を覆うので、閉じるまで凡例の数字は見えない。</span></div>
+  <div class="stage">
+    <div class="head-row"><h4 class="htBlock-box_subTitle" style="margin-right: 8px;">年別データ</h4><select class="htBlock-selectmenu"><option>2026年度</option></select><button type="button" class="htBlock-buttonPrimary htBlock-buttonM"><span>最新データで更新</span></button></div>
+    <h5 class="htBlock-box_caption" style="margin-top: 8px;">年間集計 (2026年度)</h5>
+    <div class="htBlock-normalTable specific-table"><table class="specific-table_800" style="table-layout: fixed; width: 270px;"><thead><tr><th style="text-align: center; width: 130px;"><p>目安年間残業<br>(法定休日を除く)</p></th><th style="text-align: center; width: 150px;"><p>最終更新</p></th></tr></thead><tbody><tr><td style="text-align: center; font-weight: bold; font-size: 14px; background-color: rgb(255, 245, 157);">250:12</td><td style="text-align: center; font-size: 14px;">2026/10/29</td></tr></tbody></table></div>
+    <div style="font-size: 11px; color: #555; margin-top: 3px; line-height: 1.4;"><span style="display:inline-flex;align-items:center;margin-left:8px;"><span style="display:inline-block;width:9px;height:9px;background:rgb(200,230,201);border:1px solid rgba(0,0,0,.15);margin-right:2px;"></span><span style="color:#999">～238h</span></span><span style="display:inline-flex;align-items:center;margin-left:8px;font-weight:bold;border-bottom:1.5px solid rgba(0,0,0,.4);"><span style="display:inline-block;width:9px;height:9px;background:rgb(255,245,157);border:1px solid rgba(0,0,0,.15);margin-right:2px;box-shadow:rgba(0,0,0,.35) 0 0 0 1.5px;"></span><span>238～309h</span></span><span style="display:inline-flex;align-items:center;margin-left:8px;"><span style="display:inline-block;width:9px;height:9px;background:rgb(239,154,154);border:1px solid rgba(0,0,0,.15);margin-right:2px;"></span><span style="color:#999">309～360h</span></span><br><span style="display:inline-flex;align-items:center;margin-left:8px;"><span style="display:inline-block;width:9px;height:9px;background:rgb(211,47,47);border:1px solid rgba(0,0,0,.15);margin-right:2px;"></span><span style="color:#999">360～540h(超過)</span></span><span style="display:inline-flex;align-items:center;margin-left:8px;"><span style="display:inline-block;width:9px;height:9px;background:rgb(153,0,153);border:1px solid rgba(0,0,0,.15);margin-right:2px;"></span><span style="color:#999">540h+(特別条項超過)</span></span></div>
+    <div class="koz-callout d1">色の境目が、年度の残りに応じて動くようになりました。境目は「最新データで更新」を押した日を基準に計算します。<div class="actions"><a href="#" onclick="return false">詳しく見る</a><a class="close" href="#" onclick="return false">閉じる</a></div></div>
+  </div>
+</div>
+
+<div class="variant" data-choice="d2" onclick="toggleSelect(this)">
+  <div class="variant-head"><b>D2. 凡例を指す</b><span>境目の数字そのものを指す。凡例は見えたまま、その下に出る。</span></div>
+  <div class="stage">
+    <div class="head-row"><h4 class="htBlock-box_subTitle" style="margin-right: 8px;">年別データ</h4><select class="htBlock-selectmenu"><option>2026年度</option></select><button type="button" class="htBlock-buttonPrimary htBlock-buttonM"><span>最新データで更新</span></button></div>
+    <h5 class="htBlock-box_caption" style="margin-top: 8px;">年間集計 (2026年度)</h5>
+    <div class="htBlock-normalTable specific-table"><table class="specific-table_800" style="table-layout: fixed; width: 270px;"><thead><tr><th style="text-align: center; width: 130px;"><p>目安年間残業<br>(法定休日を除く)</p></th><th style="text-align: center; width: 150px;"><p>最終更新</p></th></tr></thead><tbody><tr><td style="text-align: center; font-weight: bold; font-size: 14px; background-color: rgb(255, 245, 157);">250:12</td><td style="text-align: center; font-size: 14px;">2026/10/29</td></tr></tbody></table></div>
+    <div style="font-size: 11px; color: #555; margin-top: 3px; line-height: 1.4;"><span style="display:inline-flex;align-items:center;margin-left:8px;"><span style="display:inline-block;width:9px;height:9px;background:rgb(200,230,201);border:1px solid rgba(0,0,0,.15);margin-right:2px;"></span><span style="color:#999">～238h</span></span><span style="display:inline-flex;align-items:center;margin-left:8px;font-weight:bold;border-bottom:1.5px solid rgba(0,0,0,.4);"><span style="display:inline-block;width:9px;height:9px;background:rgb(255,245,157);border:1px solid rgba(0,0,0,.15);margin-right:2px;box-shadow:rgba(0,0,0,.35) 0 0 0 1.5px;"></span><span>238～309h</span></span><span style="display:inline-flex;align-items:center;margin-left:8px;"><span style="display:inline-block;width:9px;height:9px;background:rgb(239,154,154);border:1px solid rgba(0,0,0,.15);margin-right:2px;"></span><span style="color:#999">309～360h</span></span><br><span style="display:inline-flex;align-items:center;margin-left:8px;"><span style="display:inline-block;width:9px;height:9px;background:rgb(211,47,47);border:1px solid rgba(0,0,0,.15);margin-right:2px;"></span><span style="color:#999">360～540h(超過)</span></span><span style="display:inline-flex;align-items:center;margin-left:8px;"><span style="display:inline-block;width:9px;height:9px;background:rgb(153,0,153);border:1px solid rgba(0,0,0,.15);margin-right:2px;"></span><span style="color:#999">540h+(特別条項超過)</span></span></div>
+    <div class="koz-callout d2">色の境目が、年度の残りに応じて動くようになりました。境目は「最新データで更新」を押した日を基準に計算します。<div class="actions"><a href="#" onclick="return false">詳しく見る</a><a class="close" href="#" onclick="return false">閉じる</a></div></div>
+  </div>
+</div>
+
+</div>
+</body>
+</html>

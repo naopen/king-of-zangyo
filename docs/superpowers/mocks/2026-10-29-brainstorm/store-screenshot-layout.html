@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>ストアのスクリーンショットの構図</title>
+<link type="text/css" rel="stylesheet" href="https://s2.ta.kingoftime.jp/asset/design1/css/base.kot.css">
+<link type="text/css" rel="stylesheet" href="https://s2.ta.kingoftime.jp/asset/design1/css/block.kot.css">
+<link type="text/css" rel="stylesheet" href="https://s2.ta.kingoftime.jp/asset/design1/css/specific.kot.css">
+<style>
+  body { background: #eee; padding: 16px; font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", sans-serif; }
+  .q { max-width: 1300px; font-size: 16px; line-height: 1.7; margin: 0 0 16px; color: #222; }
+  .q h1 { font-size: 20px; font-weight: bold; margin: 0 0 4px; line-height: 1.5; padding: 4px 0; }
+  .q p { margin: 0; }
+  /* 1280x800 の画像そのもの。角を丸めず、余白を付けない */
+  .shot { width: 1280px; height: 800px; background: #fff; position: relative; overflow: hidden; outline: 1px solid #bbb; }
+  .half { position: absolute; left: 0; width: 1280px; height: 400px; overflow: hidden; }
+  .half.top { top: 0; }
+  .half.bottom { top: 400px; border-top: 1px solid #ccc; }
+  .label { position: absolute; left: 24px; top: 18px; font-size: 26px; font-weight: bold; color: #222; z-index: 2; }
+  .label small { font-size: 18px; font-weight: normal; color: #555; margin-left: 12px; }
+  .crop { position: absolute; left: 24px; top: 70px; transform: scale(1.35); transform-origin: 0 0; width: 1400px; }
+  .lg { font-size: 11px; color: #555; margin-top: 3px; line-height: 1.4; }
+  .lg > span { display: inline-flex; align-items: center; margin-left: 8px; }
+  .lg i { display: inline-block; width: 9px; height: 9px; border: 1px solid rgba(0,0,0,.15); margin-right: 2px; }
+  .lg .off { color: #999; }
+  .lg .cur { font-weight: bold; border-bottom: 1.5px solid rgba(0,0,0,.4); }
+  .head-row { display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+  .head-row h4 { margin-right: 8px; }
+  .pill { display: inline-flex; align-items: center; gap: 5px; height: 28px; padding: 0 10px 0 5px; margin-left: 4px; border: 1px solid #999; border-radius: 14px; background: #fff; color: #555; font-size: 13px; }
+  .pill .mk { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; background: #777; color: #fff; font-weight: bold; font-size: 12px; }
+  .plan { max-width: 1280px; margin-top: 20px; background: #fff; border: 1px solid #ccc; padding: 12px 16px; font-size: 15px; line-height: 1.8; }
+  .plan h2 { font-size: 17px; margin: 0 0 4px; }
+  .plan ol { margin: 0; padding-left: 1.5em; }
+</style>
+</head>
+<body>
+
+<div class="q">
+  <h1>1枚目：上がOFF、下がON（1280×800の実寸）</h1>
+  <p>画面の切り抜きを画像の端まで敷き、説明は各段の左上に1行だけ置いています。カードや帯の飾りは使っていません。表の左の4列（所定時間〜③育介短所定内残業）は拡張と関係が無いので切り落とし、残りを実際の画面の1.35倍で見せています。</p>
+</div>
+
+<div class="shot">
+  <div class="half top">
+    <div class="label">残業時間表示 OFF<small>KING OF TIMEのいつもの画面</small></div>
+    <div class="crop">
+      <h4 class="htBlock-box_subTitle">月別データ</h4>
+      <h5 class="htBlock-box_caption">時間集計</h5>
+      <div class="htBlock-normalTable specific-table"><table class="specific-table_800"><thead><tr><th class="custom1"><p>所定時間</p></th><th class="custom2"><p>①平日時間外＋法定外休勤務</p></th><th class="custom3"><p>②法休勤務</p></th><th class="custom4"><p>③育介短所定内残業</p></th><th class="custom5"><p>時間外①~③合計</p></th><th class="custom6"><p>休憩時間</p></th><th class="custom7"><p>フレックス不足時間</p></th></tr></thead><tbody><tr><td class="custom1">142.30</td><td class="custom2">44.08</td><td class="custom3">&nbsp;</td><td class="custom4">&nbsp;</td><td class="custom5">44.08</td><td class="custom6">18.00</td><td class="custom7">&nbsp;</td></tr></tbody></table></div>
+    </div>
+  </div>
+  <div class="half bottom">
+    <div class="label">残業時間表示 ON<small>月と年度の目安残業を、色つきで足す</small></div>
+    <div class="crop">
+      <div style="display:flex; position:relative; min-width:1200px;">
+        <div>
+          <h4 class="htBlock-box_subTitle">月別データ</h4>
+          <h5 class="htBlock-box_caption">時間集計</h5>
+          <div class="htBlock-normalTable specific-table"><table class="specific-table_800"><thead><tr><th class="custom1"><p>所定時間</p></th><th class="custom2"><p>①平日時間外＋法定外休勤務</p></th><th class="custom3"><p>②法休勤務</p></th><th class="custom4"><p>③育介短所定内残業</p></th><th class="custom5"><p>時間外①~③合計</p></th><th class="custom6"><p>休憩時間</p></th><th class="custom7"><p>フレックス不足時間</p></th><th style="text-align:center;font-weight:bold;font-size:13px;width:120px;min-width:120px;">現時点の目安残業<br>(法定休日を除く)</th></tr></thead><tbody><tr><td class="custom1">142.30</td><td class="custom2">44.08</td><td class="custom3">&nbsp;</td><td class="custom4">&nbsp;</td><td class="custom5">44.08</td><td class="custom6">18.00</td><td class="custom7">&nbsp;</td><td style="text-align:center;font-weight:bold;font-size:14px;background-color:rgb(239,154,154);">44:08</td></tr></tbody></table>
+            <div class="lg" style="text-align:right;width:865px;"><span class="off"><i style="background:rgb(200,230,201)"></i>～30h</span><span class="off"><i style="background:rgb(255,245,157)"></i>30～40h</span><span class="cur"><i style="background:rgb(239,154,154)"></i>40～45h</span><span class="off"><i style="background:rgb(211,47,47)"></i>45～75h(36協定超過)</span><span class="off"><i style="background:rgb(153,0,153)"></i>75h+(36協定特別条項超過)</span></div>
+          </div>
+        </div>
+        <div style="position:absolute; left:895px; top:0;">
+          <div class="head-row"><h4 class="htBlock-box_subTitle">年別データ</h4><select class="htBlock-selectmenu"><option>2026年度</option></select><button type="button" class="htBlock-buttonPrimary htBlock-buttonM"><span>更新</span></button><span class="pill"><span class="mk">?</span>使い方</span></div>
+          <h5 class="htBlock-box_caption" style="margin-top: 8px;">年間集計 (2026年度)</h5>
+          <div class="htBlock-normalTable specific-table"><table class="specific-table_800" style="table-layout: fixed; width: 270px;"><thead><tr><th style="text-align: center; width: 130px;"><p>目安年間残業<br>(法定休日を除く)</p></th><th style="text-align: center; width: 150px;"><p>最終更新</p></th></tr></thead><tbody><tr><td style="text-align: center; font-weight: bold; font-size: 14px; background-color: rgb(255, 245, 157);">250:12</td><td style="text-align: center; font-size: 14px;">2026/10/29</td></tr></tbody></table></div>
+          <div class="lg" style="width:290px;"><span class="off"><i style="background:rgb(200,230,201)"></i>～238h</span><span class="cur"><i style="background:rgb(255,245,157)"></i>238～309h</span><span class="off"><i style="background:rgb(239,154,154)"></i>309～360h</span><span class="off"><i style="background:rgb(211,47,47)"></i>360～540h(超過)</span><span class="off"><i style="background:rgb(153,0,153)"></i>540h+(特別条項超過)</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // 表の「時間外①~③合計」の列が切り抜きの左端に来るよう、各段をずらす
+  document.querySelectorAll('.crop').forEach(c => {
+    const th = c.querySelector('th.custom5');
+    const x = th.getBoundingClientRect().left - c.getBoundingClientRect().left; // 拡大後の距離
+    c.style.left = (24 - x) + 'px';
+  });
+</script>
+
+<div class="plan">
+  <h2>5枚の割り振り（案）</h2>
+  <ol>
+    <li>上のOFF／ON比較</li>
+    <li>月間の色分け5段階（同じ表で、数値だけ変えた5行を並べる）</li>
+    <li>年間の色分けと凡例（年度の残りで境目が動く）</li>
+    <li>初めての人に出る吹き出し（C1）</li>
+    <li>使い方ページとポップアップ</li>
+  </ol>
+</div>
+
+</body>
+</html>

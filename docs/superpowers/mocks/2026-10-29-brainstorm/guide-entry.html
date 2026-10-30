@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>使い方ページの入口</title>
+<link type="text/css" rel="stylesheet" href="https://s2.ta.kingoftime.jp/asset/design1/css/base.kot.css">
+<link type="text/css" rel="stylesheet" href="https://s2.ta.kingoftime.jp/asset/design1/css/block.kot.css">
+<link type="text/css" rel="stylesheet" href="https://s2.ta.kingoftime.jp/asset/design1/css/specific.kot.css">
+<style>
+  body { background: #eee; padding: 16px; font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", sans-serif; }
+  .q { max-width: 980px; font-size: 16px; line-height: 1.7; margin: 0 0 16px; color: #222; }
+  .q h1 { font-size: 20px; font-weight: bold; margin: 0 0 4px; line-height: 1.5; padding: 4px 0; }
+  .row { display: flex; gap: 16px; flex-wrap: wrap; max-width: 980px; align-items: flex-start; }
+  .variant { flex: 1 1 380px; background: #fff; border: 2px solid #ccc; border-radius: 6px; padding: 12px 16px 16px; cursor: pointer; box-sizing: border-box; overflow: hidden; }
+  .variant.selected { border-color: #2e7d32; }
+  .variant-head { font-size: 16px; line-height: 1.6; margin-bottom: 12px; color: #222; }
+  .variant-head b { font-size: 17px; }
+  .variant-head span { display: block; color: #555; font-size: 14px; }
+  .head-row { display: flex; align-items: baseline; gap: 4px; white-space: nowrap; }
+  .guide-link { font-size: 13px; color: #1565c0; text-decoration: underline; margin-left: 8px; }
+
+  /* popup.css の写し */
+  .pp { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 14px; color: #333; width: 300px; background: #f9f9f9; border: 1px solid #ccc; margin: 0 auto; }
+  .pp * { box-sizing: border-box; }
+  .pp .container { padding: 20px; }
+  .pp h2 { font-size: 18px; font-weight: 600; margin: 0 0 20px; color: #2c3e50; text-align: center; }
+  .pp .item { background: #fff; border-radius: 8px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,.1); display: flex; justify-content: space-between; align-items: center; font-weight: 500; color: #2c3e50; }
+  .pp .tg { width: 50px; height: 26px; border-radius: 26px; background: #4caf50; position: relative; }
+  .pp .tg::after { content: ""; position: absolute; width: 20px; height: 20px; border-radius: 50%; background: #fff; right: 3px; top: 3px; }
+  .pp .in { width: 80px; padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; text-align: right; font-weight: normal; }
+  .pp .unit { color: #7f8c8d; font-size: 13px; margin-left: 8px; font-weight: normal; }
+  .pp .guide { display: block; text-align: center; margin: 4px 0 16px; color: #1565c0; text-decoration: underline; font-size: 14px; }
+  .pp .footer { text-align: center; padding-top: 12px; border-top: 1px solid #e0e0e0; color: #7f8c8d; font-size: 12px; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<div class="q">
+  <h1>使い方ページへの入口を、いつでも開ける場所に置く</h1>
+  吹き出しを閉じたあとも使い方ページを開けるように、常設のリンクを置く場所の案です。両方に置くこともできます。選ぶときは複数クリックできます。
+</div>
+
+<div class="row" data-multiselect>
+
+<div class="variant" data-choice="e1" onclick="toggleSelect(this)">
+  <div class="variant-head"><b>E1. 拡張アイコンのポップアップ</b><span>設定の下に「使い方を見る」を置く。設定を触りに来た人が気づく。タイムカード画面には何も増えない。</span></div>
+  <div class="pp"><div class="container">
+    <h2>KING OF ZANGYO</h2>
+    <div class="item">残業時間表示<span class="tg"></span></div>
+    <div class="item">閾値凡例表示<span class="tg"></span></div>
+    <div class="item">所定労働時間<span><span class="in">7.5</span><span class="unit">時間</span></span></div>
+    <div class="item">年度開始月<span class="in">4月</span></div>
+    <a class="guide" href="#" onclick="return false">使い方を見る</a>
+    <div class="footer">thanks to @matsuoshi<br>developed by かんなん</div>
+  </div></div>
+</div>
+
+<div class="variant" data-choice="e2" onclick="toggleSelect(this)">
+  <div class="variant-head"><b>E2. タイムカード画面の「年別データ」の見出しの横</b><span>更新ボタンの右に小さな文字のリンクを置く。残業時間を見ているその場で開ける。</span></div>
+  <div class="head-row"><h4 class="htBlock-box_subTitle" style="margin-right: 8px;">年別データ</h4><select class="htBlock-selectmenu"><option>2026年度</option></select><button type="button" class="htBlock-buttonPrimary htBlock-buttonM"><span>最新データで更新</span></button><a class="guide-link" href="#" onclick="return false">使い方</a></div>
+  <h5 class="htBlock-box_caption" style="margin-top: 8px;">年間集計 (2026年度)</h5>
+  <div class="htBlock-normalTable specific-table"><table class="specific-table_800" style="table-layout: fixed; width: 270px;"><thead><tr><th style="text-align: center; width: 130px;"><p>目安年間残業<br>(法定休日を除く)</p></th><th style="text-align: center; width: 150px;"><p>最終更新</p></th></tr></thead><tbody><tr><td style="text-align: center; font-weight: bold; font-size: 14px; background-color: rgb(255, 245, 157);">250:12</td><td style="text-align: center; font-size: 14px;">2026/10/29</td></tr></tbody></table></div>
+</div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>使い方の入口の見た目</title>
+<link type="text/css" rel="stylesheet" href="https://s2.ta.kingoftime.jp/asset/design1/css/base.kot.css">
+<link type="text/css" rel="stylesheet" href="https://s2.ta.kingoftime.jp/asset/design1/css/block.kot.css">
+<link type="text/css" rel="stylesheet" href="https://s2.ta.kingoftime.jp/asset/design1/css/specific.kot.css">
+<style>
+  body { background: #eee; padding: 16px; font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", sans-serif; }
+  .q { max-width: 980px; font-size: 16px; line-height: 1.7; margin: 0 0 16px; color: #222; }
+  .q h1 { font-size: 20px; font-weight: bold; margin: 0 0 4px; line-height: 1.5; padding: 4px 0; }
+  .row { display: flex; gap: 16px; flex-wrap: wrap; max-width: 1200px; }
+  .variant { flex: 1 1 460px; background: #fff; border: 2px solid #ccc; border-radius: 6px; padding: 12px 16px 16px; cursor: pointer; box-sizing: border-box; overflow: hidden; }
+  .variant.selected { border-color: #2e7d32; }
+  .variant-head { font-size: 16px; line-height: 1.6; margin-bottom: 12px; color: #222; }
+  .variant-head b { font-size: 17px; }
+  .variant-head span { display: block; color: #555; font-size: 14px; }
+  .head-row { display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+  .head-row h4 { margin-right: 8px; }
+  .q-btn { width: 26px; height: 26px; border-radius: 50%; border: 1px solid #999; background: #fff; color: #555; font-weight: bold; font-size: 14px; line-height: 24px; text-align: center; padding: 0; margin-left: 4px; cursor: pointer; }
+  .kag-btn { display: inline-flex; align-items: center; gap: 4px; margin-left: 4px; }
+  .kag-btn img { height: 34px; width: auto; }
+</style>
+</head>
+<body>
+
+<div class="q">
+  <h1>タイムカード画面の「使い方」の見た目</h1>
+  更新ボタンの右に置く入口の見た目の案です。F1〜F3はKING OF TIMEにすでにあるボタンの見た目を借りています。
+</div>
+
+<div class="row">
+
+<div class="variant" data-choice="f1" onclick="toggleSelect(this)">
+  <div class="variant-head"><b>F1. 「今月」と同じ白い枠のボタン</b><span>画面上部の「&lt;&lt; 今月 &gt;&gt;」と同じ見た目。押せることが分かり、緑の更新ボタンより控えめ。</span></div>
+  <div class="head-row"><h4 class="htBlock-box_subTitle">年別データ</h4><select class="htBlock-selectmenu"><option>2026年度</option></select><button type="button" class="htBlock-buttonPrimary htBlock-buttonM"><span>最新データで更新</span></button><button type="button" class="htBlock-button htBlock-buttonNormalOut">使い方</button></div>
+</div>
+
+<div class="variant" data-choice="f2" onclick="toggleSelect(this)">
+  <div class="variant-head"><b>F2. 「出力」と同じ灰色のボタン</b><span>更新ボタンと同じ高さで並ぶ。F1より存在感がある。</span></div>
+  <div class="head-row"><h4 class="htBlock-box_subTitle">年別データ</h4><select class="htBlock-selectmenu"><option>2026年度</option></select><button type="button" class="htBlock-buttonPrimary htBlock-buttonM"><span>最新データで更新</span></button><button type="button" class="htBlock-buttonM htBlock-buttonNormal">使い方</button></div>
+</div>
+
+<div class="variant" data-choice="f3" onclick="toggleSelect(this)">
+  <div class="variant-head"><b>F3. 丸い「?」のボタン</b><span>いちばん場所を取らない。マウスを乗せると「使い方」と出る。文字が無いぶん、何のボタンか一目では分かりにくい。</span></div>
+  <div class="head-row"><h4 class="htBlock-box_subTitle">年別データ</h4><select class="htBlock-selectmenu"><option>2026年度</option></select><button type="button" class="htBlock-buttonPrimary htBlock-buttonM"><span>最新データで更新</span></button><button type="button" class="q-btn" title="使い方">?</button></div>
+</div>
+
+<div class="variant" data-choice="f4" onclick="toggleSelect(this)">
+  <div class="variant-head"><b>F4. 小さなカグカグと「使い方」</b><span>使い方ページと同じカグカグが入口にもいる。画像は手元にある1月のカグカグを仮に使っている。</span></div>
+  <div class="head-row"><h4 class="htBlock-box_subTitle">年別データ</h4><select class="htBlock-selectmenu"><option>2026年度</option></select><button type="button" class="htBlock-buttonPrimary htBlock-buttonM"><span>最新データで更新</span></button><a class="kag-btn" href="#" onclick="return false"><img src="/files/kagukagu-sample.png" alt=""><span style="font-size:13px;color:#1565c0;text-decoration:underline">使い方</span></a></div>
+</div>
+
+</div>
+</body>
+</html>
