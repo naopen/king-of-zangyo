@@ -1373,7 +1373,108 @@ async function renderNotices() {
   if (notice === "usage") {
     renderUsageNotice(updateButton);
   }
-  // "change"（変更のお知らせ）の吹き出しは Task 6 でここに足す
+  if (notice === "change") {
+    renderChangeNotice();
+  }
+}
+
+/**
+ * 変更点の吹き出し（年の凡例の直下、凡例が無いときは年間集計の表の直下）を描く
+ * 凡例が無いのは、閾値凡例表示がオフのときと、表示中の年度が未取得のとき
+ */
+function renderChangeNotice() {
+  const section = document.getElementById(ANNUAL_SECTION_ID);
+  if (!section) {
+    return;
+  }
+
+  // 凡例が実際に見えているときだけ凡例を指す。空や非表示なら表を指す
+  const legend = document.getElementById(ANNUAL_LEGEND_ID);
+  const legendRect = legend ? legend.getBoundingClientRect() : null;
+  const anchor =
+    legendRect && legendRect.width > 0 && legendRect.height > 0
+      ? legend
+      : section.querySelector("table");
+  if (!anchor) {
+    return;
+  }
+
+  const bubble = document.createElement("div");
+  bubble.className = NOTICE_BUBBLE_CLASS;
+  bubble.setAttribute("role", "note");
+
+  const arrow = document.createElement("span");
+  arrow.className = "kot-zangyo-notice-arrow";
+  bubble.appendChild(arrow);
+
+  const text = document.createElement("p");
+  text.className = "kot-zangyo-notice-text";
+  text.textContent =
+    "色の境目が、年度の残りに応じて動くようになりました。境目は「更新」を押した日を基準に計算します。";
+  bubble.appendChild(text);
+
+  const footer = document.createElement("div");
+  footer.className = "kot-zangyo-notice-footer";
+
+  const moreLink = document.createElement("a");
+  moreLink.className = "kot-zangyo-notice-more";
+  moreLink.href = chrome.runtime.getURL("guide/index.html#annual-colors");
+  moreLink.target = "_blank";
+  moreLink.rel = "noopener";
+  moreLink.textContent = "詳しく見る";
+
+  const closeButton = document.createElement("button");
+  closeButton.type = "button";
+  closeButton.className = "kot-zangyo-notice-close";
+  closeButton.textContent = "閉じる";
+  closeButton.addEventListener("click", async () => {
+    try {
+      await markChangeNoticeDismissed();
+    } catch (error) {
+      console.error("King-of-Zangyo: 変更点の吹き出しの既読保存エラー:", error);
+    }
+    bubble.remove();
+  });
+
+  footer.appendChild(moreLink);
+  footer.appendChild(closeButton);
+  bubble.appendChild(footer);
+
+  // 位置の基準になる要素（絶対配置の親）を決め、実寸の差から座標を出す
+  const host = section.offsetParent || document.body;
+  host.appendChild(bubble);
+  const hostPositioned = getComputedStyle(host).position !== "static";
+  const hostRect = hostPositioned
+    ? host.getBoundingClientRect()
+    : { left: -window.scrollX, top: -window.scrollY };
+  const borderLeft = hostPositioned ? host.clientLeft : 0;
+  const borderTop = hostPositioned ? host.clientTop : 0;
+  const scrollLeft = hostPositioned ? host.scrollLeft : 0;
+  const scrollTop = hostPositioned ? host.scrollTop : 0;
+  const anchorRect = anchor.getBoundingClientRect();
+  bubble.style.left = `${anchorRect.left - hostRect.left - borderLeft + scrollLeft}px`;
+  bubble.style.top = `${anchorRect.bottom - hostRect.top - borderTop + scrollTop + 8}px`;
+}
+
+/**
+ * 変更点の吹き出しを「見た」扱いにして保存する
+ * 保存済みの配列をその場で読み直してから足す（古い写しで上書きしない）
+ */
+async function markChangeNoticeDismissed() {
+  const stored = await new Promise((resolve) => {
+    chrome.storage.sync.get([DISMISSED_NOTICES_KEY], resolve);
+  });
+  await new Promise((resolve) => {
+    chrome.storage.sync.set(
+      {
+        [DISMISSED_NOTICES_KEY]: KingOfZangyoNotices.withDismissed(
+          stored[DISMISSED_NOTICES_KEY] || [],
+          KingOfZangyoNotices.CHANGE_NOTICE_ID,
+        ),
+      },
+      resolve,
+    );
+  });
 }
 
 /**
@@ -2140,6 +2241,13 @@ async function completeFetchAnnualOvertime(state, progressDialog) {
 
     // 指定年度のデータとして保存
     await saveAnnualData(annualData, targetFiscalYear);
+
+    // 取得を完了した人には変更点の吹き出しを出さない（失敗しても完了処理は続ける）
+    try {
+      await markChangeNoticeDismissed();
+    } catch (error) {
+      console.error("King-of-Zangyo: 変更点の既読保存エラー:", error);
+    }
 
     // 処理状態をクリア
     await clearProcessingState();
