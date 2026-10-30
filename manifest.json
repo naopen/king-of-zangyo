@@ -24,5 +24,8 @@
       "js": ["annual-pace.js", "notices.js", "content.js"],
       "run_at": "document_idle"
     }
+  ],
+  "web_accessible_resources": [
+    { "resources": ["guide/index.html"], "matches": ["https://s2.ta.kingoftime.jp/*"] }
   ]
 }

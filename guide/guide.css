@@ -1,0 +1,72 @@
+:root {
+  --text: #1a1a1a;
+  --sub: #555;
+  --line: #d9d9d9;
+  --bg: #fff;
+  --soft: #f6f8f7;
+  --link: #1565c0;
+  --green: #1f9946; /* 拡張のアイコンの緑 */
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", sans-serif; font-size: 16px; line-height: 1.8; }
+a { color: var(--link); }
+.page { max-width: 860px; margin: 0 auto; padding: 0 24px 120px; position: relative; }
+
+header { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 40px 0 24px; border-bottom: 1px solid var(--line); }
+header h1 { font-size: 30px; line-height: 1.4; margin: 0; }
+header p { margin: 8px 0 0; color: var(--sub); }
+header img { width: 120px; height: auto; flex-shrink: 0; }
+
+nav { padding: 20px 0 8px; }
+nav ol { margin: 0; padding-left: 1.4em; columns: 2; column-gap: 32px; }
+nav li { break-inside: avoid; }
+
+section { padding: 40px 0 8px; border-top: 1px solid var(--line); position: relative; }
+section:first-of-type { border-top: none; }
+h2 { font-size: 22px; line-height: 1.5; margin: 0 0 12px; }
+h2 .no { color: var(--green); margin-right: 8px; font-variant-numeric: tabular-nums; }
+h3 { font-size: 17px; margin: 24px 0 8px; }
+p { margin: 0 0 12px; }
+
+figure { margin: 16px 0 20px; }
+figure img.shot { display: block; max-width: 100%; height: auto; border: 1px solid var(--line); }
+figcaption { font-size: 14px; color: var(--sub); margin-top: 6px; }
+
+table.bands { border-collapse: collapse; width: 100%; font-size: 15px; margin: 8px 0 16px; }
+.bands th, .bands td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
+.bands th { background: var(--soft); font-weight: 700; }
+.bands td.num { white-space: nowrap; font-variant-numeric: tabular-nums; }
+/* 色の名前の列は折り返さない（「濃赤」が2行に割れるため） */
+.bands td:first-child, .bands th:first-child { white-space: nowrap; }
+.swatch { display: inline-block; width: 14px; height: 14px; border: 1px solid rgba(0,0,0,.2); vertical-align: -2px; margin-right: 6px; }
+
+ol.steps { padding-left: 1.4em; margin: 0 0 12px; }
+ol.steps li { margin-bottom: 6px; }
+
+/* 注意の囲み。1pxの枠と淡い地色だけにする */
+.note { display: flex; gap: 16px; align-items: center; border: 1px solid var(--line); background: var(--soft); padding: 12px 16px; margin: 16px 0; }
+.note img { width: 72px; height: auto; flex-shrink: 0; }
+.note p { margin: 0; }
+
+.side { display: flex; gap: 24px; align-items: flex-start; }
+.side > :first-child { flex: 1; min-width: 0; }
+.side > img { width: 110px; height: auto; flex-shrink: 0; margin-top: 8px; }
+
+.popup-row { display: flex; gap: 28px; align-items: flex-start; }
+.popup-row figure { margin-top: 0; flex-shrink: 0; }
+.popup-row figure img.shot { width: 240px; }
+dl.settings { margin: 0; }
+.settings dt { font-weight: 700; }
+.settings dd { margin: 0 0 12px; }
+
+.flying { position: absolute; right: -8px; top: -36px; width: 96px; height: auto; }
+footer { padding-top: 40px; border-top: 1px solid var(--line); display: flex; align-items: flex-end; justify-content: space-between; color: var(--sub); font-size: 14px; }
+footer img { width: 120px; height: auto; }
+
+@media (max-width: 640px) {
+  nav ol { columns: 1; }
+  header img { width: 84px; }
+  .side, .popup-row { flex-direction: column; }
+  .side > img { display: none; }
+  .flying { display: none; }
+}

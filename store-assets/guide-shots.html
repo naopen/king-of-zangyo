@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<!--
+  使い方ページ（guide/index.html）に載せる切り抜き画像を作るページ。
+  ?part=monthly|annual|annual-unfetched|popup を、左上に原寸で切り抜いて置く。周りはマゼンタ（#ff00ff）で、あとで切り落とす。
+  ボタン名は画面の上で「更新」に差し替えている（ボタン名の変更が入るまでの扱い。screenshot-compose.html の applyPlannedUi と同じ）。
+
+  書き出し方（リポジトリのルートで）
+    1. ルートを配信する。macOSの権限で ~/Documents は python の http.server から読めないので、一時フォルダーに写してから配信する
+       rsync -a --exclude .git ./ "$TMPDIR/koz/" && python3 -m http.server 8731 --bind 127.0.0.1 --directory "$TMPDIR/koz"
+    2. 別の端末で、ヘッドレスの Chrome で4枚を撮る（倍率2、窓は1300x700前後。popup は窓を小さくしてよい）
+       "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --hide-scrollbars \
+         --force-device-scale-factor=2 --user-data-dir="$TMPDIR/koz-chrome" --window-size=1300,700 \
+         --virtual-time-budget=20000 --screenshot="$TMPDIR/raw-monthly.png" \
+         "http://127.0.0.1:8731/store-assets/guide-shots.html?part=monthly"
+       （part を annual / annual-unfetched / popup に変えて繰り返す）
+    3. 右と下のマゼンタを切り落とし、guide/img/shot-<part>.png として保存する
+-->
+<html><head><meta charset="utf-8"><title>crop</title>
+<style>
+  body { margin: 0; background: #ff00ff; }
+  .clip { position: absolute; left: 0; top: 0; overflow: hidden; background: #fff; }
+  .frame { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+  iframe { border: 0; display: block; }
+</style></head><body>
+<script>
+  // ?part=monthly|annual|annual-unfetched|popup を、左上に原寸で切り抜いて置く。周りはマゼンタで、あとで切り落とす
+  const part = new URLSearchParams(location.search).get('part');
+  const S = Number(new URLSearchParams(location.search).get('s') || 1);
+  const fetched = { kingOfZangyoAnnualDataYears: [2026], kingOfZangyoAnnualData_2026: { totalMinutes: 250 * 60 + 12, lastUpdated: '2026/10/29 18:30', fiscalYearStart: 4, fiscalYear: 2026 } };
+  localStorage.setItem('king-of-zangyo-mock-sync', JSON.stringify(part === 'annual-unfetched' ? {} : fetched));
+  localStorage.setItem('king-of-zangyo-mock-local', '{}');
+  const abs = (doc, el) => { const w = doc.defaultView, r = el.getBoundingClientRect(); return { l: r.left + w.scrollX, t: r.top + w.scrollY, r: r.right + w.scrollX, b: r.bottom + w.scrollY }; };
+  const visible = e => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0; };
+  const union = (doc, els) => { const rs = els.flatMap(p => [p, ...p.querySelectorAll('*')]).filter(visible).map(e => abs(doc, e)); return { l: Math.min(...rs.map(r => r.l)), t: Math.min(...rs.map(r => r.t)), r: Math.max(...rs.map(r => r.r)), b: Math.max(...rs.map(r => r.b)) }; };
+  const isPopup = part === 'popup';
+  const f = document.createElement('iframe'); f.src = (isPopup ? '../popup.html' : '../test/extension-test.html') + '?r=' + Math.random(); f.scrolling = 'no';
+  f.style.width = isPopup ? '300px' : '1500px'; f.style.height = '900px';
+  const frame = document.createElement('div'); frame.className = 'frame'; frame.appendChild(f);
+  const clip = document.createElement('div'); clip.className = 'clip'; clip.appendChild(frame); document.body.appendChild(clip);
+  f.onload = () => setTimeout(() => {
+    const d = f.contentDocument; let box;
+    if (isPopup) {
+      const st = d.createElement('style'); st.textContent = '*,*::before{transition:none!important}'; d.head.appendChild(st);
+      d.getElementById('toggle-switch').checked = true; d.getElementById('legend-toggle-switch').checked = true;
+      d.getElementById('standard-hours').value = 7.5; d.getElementById('fiscal-year-start').value = '4';
+      d.querySelector('.footer').style.display = 'none';
+      const c = d.querySelector('.container').getBoundingClientRect(); box = { l: 0, t: 0, r: 300, b: c.height };
+    } else {
+      d.querySelectorAll('body *').forEach(e => { const p = getComputedStyle(e).position; if (p === 'fixed' || p === 'sticky') e.style.display = 'none'; });
+      const sec = d.getElementById('king-of-zangyo-annual-section');
+      const btn = sec.querySelector('button'); btn.querySelector('span').textContent = '更新';
+      if (part === 'monthly') {
+        const tbl = d.querySelector('th.custom4').closest('table');
+        const u = union(d, [tbl, d.getElementById('king-of-zangyo-monthly-legend')]);
+        box = { l: abs(d, d.querySelector('th.custom4')).l, t: abs(d, tbl).t - 6, r: u.r + 12, b: u.b + 12 };
+      } else {
+        const u = union(d, [sec]); box = { l: u.l - 12, t: u.t - 2, r: u.r + 12, b: u.b + 12 };
+      }
+    }
+    const bw = box.r - box.l, bh = box.b - box.t;
+    f.style.width = (isPopup ? 300 : bw) + 'px'; f.style.height = (isPopup ? bh : bh) + 'px';
+    d.defaultView.scrollTo(box.l, box.t);
+    frame.style.transform = `scale(${S})`;
+    Object.assign(clip.style, { width: bw * S + 'px', height: bh * S + 'px' });
+  }, 2500);
+</script></body></html>
