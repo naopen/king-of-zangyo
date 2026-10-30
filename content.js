@@ -1337,7 +1337,7 @@ function renderAnnualDataSection(annualData, fiscalYear) {
 
 const DISMISSED_NOTICES_KEY = "kingOfZangyoDismissedNotices";
 const STALE_DISMISSED_AT_KEY = "kingOfZangyoStaleNoticeDismissedAt"; // 更新を促す吹き出しを閉じた時刻（ミリ秒）
-const NOTICE_BUBBLE_CLASS ="kot-zangyo-notice-bubble";
+const NOTICE_BUBBLE_CLASS = "kot-zangyo-notice-bubble";
 const NOTICE_DOT_CLASS = "kot-zangyo-notice-dot";
 
 /**
@@ -1523,15 +1523,14 @@ function renderStaleNotice(updateButton) {
   renderUpdateButtonNotice(
     updateButton,
     "最終更新から1か月以上経過しています。「更新」を押すと最新の残業時間を集計できます。",
-    async () => {
-      try {
-        await new Promise((resolve) => {
-          chrome.storage.sync.set({ [STALE_DISMISSED_AT_KEY]: Date.now() }, resolve);
-        });
-      } catch (error) {
-        console.error("King-of-Zangyo: 更新を促す吹き出しの閉じた日の保存エラー:", error);
-      }
+    () => {
+      // 保存を待たずに先に消す（押してから消えるまでに間が空かないように）
       clearNoticeElements();
+      chrome.storage.sync.set({ [STALE_DISMISSED_AT_KEY]: Date.now() }, () => {
+        if (chrome.runtime.lastError) {
+          console.error("King-of-Zangyo: 更新を促す吹き出しの閉じた日の保存エラー:", chrome.runtime.lastError);
+        }
+      });
     },
   );
 }
