@@ -9,11 +9,13 @@ document.getElementById('year').textContent = new Date().getFullYear();
   const target = id && document.getElementById(id);
   if (!target) return;
 
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    target.scrollIntoView({ block: 'start' });
-    return;
-  }
+  // どちらも画像の読み込みが終わってから動かす。先に動かすと、上の画像の高さが後から伸びて着地点がずれる
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   window.addEventListener('load', () => {
+    if (reduced) {
+      target.scrollIntoView({ block: 'start' });
+      return;
+    }
     setTimeout(() => target.scrollIntoView({ behavior: 'smooth', block: 'start' }), 600);
   });
 })();
