@@ -889,6 +889,10 @@ function toggleOvertimeDisplay(enabled) {
     if (monthlyLegend) monthlyLegend.style.display = "none";
     if (annualLegend) annualLegend.style.display = "none";
   }
+  // 吹き出しの出し分け（OFFなら消え、ONなら出し直す）
+  renderNotices().catch((error) => {
+    console.error("King-of-Zangyo: 吹き出し表示エラー:", error);
+  });
 }
 
 /**
@@ -904,6 +908,10 @@ function toggleLegendDisplay(enabled) {
 
   if (monthlyLegend) monthlyLegend.style.display = show ? "" : "none";
   if (annualLegend) annualLegend.style.display = show ? "" : "none";
+  // 凡例の有無で吹き出しの位置が変わるので、置き直す
+  renderNotices().catch((error) => {
+    console.error("King-of-Zangyo: 吹き出し表示エラー:", error);
+  });
 }
 
 // メッセージリスナーを設定（ポップアップからのメッセージを受信）
@@ -1440,20 +1448,13 @@ function renderChangeNotice() {
   footer.appendChild(closeButton);
   bubble.appendChild(footer);
 
-  // 位置の基準になる要素（絶対配置の親）を決め、実寸の差から座標を出す
-  const host = section.offsetParent || document.body;
-  host.appendChild(bubble);
-  const hostPositioned = getComputedStyle(host).position !== "static";
-  const hostRect = hostPositioned
-    ? host.getBoundingClientRect()
-    : { left: -window.scrollX, top: -window.scrollY };
-  const borderLeft = hostPositioned ? host.clientLeft : 0;
-  const borderTop = hostPositioned ? host.clientTop : 0;
-  const scrollLeft = hostPositioned ? host.scrollLeft : 0;
-  const scrollTop = hostPositioned ? host.scrollTop : 0;
+  // 年別データセクション自身に付ける（絶対配置なので位置の基準になり、
+  // セクションを隠すと吹き出しも一緒に隠れる）。実寸の差から座標を出す
+  section.appendChild(bubble);
+  const sectionRect = section.getBoundingClientRect();
   const anchorRect = anchor.getBoundingClientRect();
-  bubble.style.left = `${anchorRect.left - hostRect.left - borderLeft + scrollLeft}px`;
-  bubble.style.top = `${anchorRect.bottom - hostRect.top - borderTop + scrollTop + 8}px`;
+  bubble.style.left = `${anchorRect.left - sectionRect.left - section.clientLeft + section.scrollLeft}px`;
+  bubble.style.top = `${anchorRect.bottom - sectionRect.top - section.clientTop + section.scrollTop + 8}px`;
 }
 
 /**

@@ -26,7 +26,7 @@ test("参照するファイルがすべて存在する", () => {
     ...[...html.matchAll(/<script\b[^>]*\bsrc="([^"]+)"/gi)].map((m) => m[1]),
   ];
   assert.ok(refs.length > 0);
-  const hasKagkag = fs.existsSync(path.join(root, "kagkag"));
+  const hasKagkag = fs.existsSync(path.join(root, "kagkag", "new-pose10.png"));
   for (const ref of refs) {
     assert.doesNotMatch(ref, /^https?:/, "外部参照: " + ref);
     if (ref.startsWith("../kagkag/") && !hasKagkag) continue;
