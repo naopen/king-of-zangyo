@@ -12,7 +12,20 @@ const ANNUAL_DATA_YEARS_KEY = "kingOfZangyoAnnualDataYears"; // 保存済み年�
 document.addEventListener("DOMContentLoaded", () => {
   loadSettings();
   setupEventListeners();
+  setupGuideLink();
 });
+
+/**
+ * 「使い方を見る」リンクで使い方ページを新しいタブに開く
+ */
+function setupGuideLink() {
+  const link = document.getElementById("open-guide");
+  if (!link) return;
+  link.addEventListener("click", (event) => {
+    event.preventDefault();
+    chrome.tabs.create({ url: chrome.runtime.getURL("guide/index.html") });
+  });
+}
 
 /**
  * 保存されている設定を読み込んでUIに反映する
