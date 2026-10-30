@@ -2601,6 +2601,7 @@ function injectDialogStyles() {
     .kot-zangyo-guide-link:active,
     .kot-zangyo-guide-link:focus {
       color: #555;
+      text-decoration: none;
     }
     .kot-zangyo-guide-link-mark {
       display: inline-flex;

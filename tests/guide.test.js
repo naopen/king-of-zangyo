@@ -34,6 +34,14 @@ test("参照するファイルがすべて存在する", () => {
   }
 });
 
+// 節の id を変えると guide.js は何も言わずにスクロールしなくなるので、リンク側と突き合わせる
+test("タイムカード画面のリンクが指す節が使い方ページにある", () => {
+  const content = fs.readFileSync(path.join(root, "content.js"), "utf8");
+  const sections = [...content.matchAll(/guide\/index\.html\?section=([a-z-]+)/g)].map((m) => m[1]);
+  assert.ok(sections.length > 0);
+  for (const id of sections) assert.match(html, new RegExp(`id="${id}"`), id);
+});
+
 test("本文に 2.6.0 が無い", () => {
   assert.doesNotMatch(html, /2\.6\.0/);
 });

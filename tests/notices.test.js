@@ -35,6 +35,8 @@ test("最終更新が29日前なら出さない", () =>
   assert.equal(pickNotice({ ...seen, latestLastUpdated: fmt(now - 29 * DAY) }), null));
 test("閉じたのが10日前なら出さない", () =>
   assert.equal(pickNotice({ ...seen, latestLastUpdated: fmt(now - 60 * DAY), staleDismissedAt: now - 10 * DAY }), null));
+test("閉じたのがちょうど30日前ならまた出す", () =>
+  assert.equal(pickNotice({ ...seen, latestLastUpdated: fmt(now - 60 * DAY), staleDismissedAt: now - 30 * DAY }), "stale"));
 test("閉じたのが31日前ならまた出す", () =>
   assert.equal(pickNotice({ ...seen, latestLastUpdated: fmt(now - 60 * DAY), staleDismissedAt: now - 31 * DAY }), "stale"));
 test("一度も取得していなければ最終更新に関係なく使い方", () =>
