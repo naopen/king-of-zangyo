@@ -1,6 +1,6 @@
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
-const { pickNotice, withDismissed, shouldOpenGuideOnInstalled, newestLastUpdated, CHANGE_NOTICE_ID, STALE_DAYS } = require("../notices.js");
+const { pickNotice, shouldShowUpdateDot, withDismissed, shouldOpenGuideOnInstalled, newestLastUpdated, CHANGE_NOTICE_ID, STALE_DAYS } = require("../notices.js");
 const base = { enabled: true, processing: false, savedYears: [], dismissed: [] };
 
 test("一度も取得していなければ使い方", () => assert.equal(pickNotice(base), "usage"));
@@ -53,6 +53,25 @@ test("表示オフなら更新を促さない", () =>
   assert.equal(pickNotice({ ...seen, enabled: false, latestLastUpdated: fmt(now - 90 * DAY) }), null));
 test("取得中なら更新を促さない", () =>
   assert.equal(pickNotice({ ...seen, processing: true, latestLastUpdated: fmt(now - 90 * DAY) }), null));
+
+// 更新ボタンの赤い点は吹き出しと切り離し、最終更新の古さだけで決める（設計書 3b）
+test("最終更新が30日前ちょうどなら赤い点を出す", () =>
+  assert.equal(shouldShowUpdateDot({ ...seen, latestLastUpdated: fmt(now - 30 * DAY) }), true));
+test("最終更新が29日前なら赤い点を出さない", () =>
+  assert.equal(shouldShowUpdateDot({ ...seen, latestLastUpdated: fmt(now - 29 * DAY) }), false));
+test("吹き出しを閉じたあとも赤い点は出す", () =>
+  assert.equal(shouldShowUpdateDot({ ...seen, latestLastUpdated: fmt(now - 60 * DAY), staleDismissedAt: now - 1 * DAY }), true));
+test("変更点が未読でも赤い点は出す", () =>
+  assert.equal(shouldShowUpdateDot({ ...seen, dismissed: [], latestLastUpdated: fmt(now - 60 * DAY) }), true));
+// 一度も取得していない人の点は、使い方の吹き出しと一緒に描く
+test("一度も取得していなければ、この判定では赤い点を出さない", () =>
+  assert.equal(shouldShowUpdateDot({ ...base, now, latestLastUpdated: null }), false));
+test("表示オフなら赤い点を出さない", () =>
+  assert.equal(shouldShowUpdateDot({ ...seen, enabled: false, latestLastUpdated: fmt(now - 60 * DAY) }), false));
+test("取得中なら赤い点を出さない", () =>
+  assert.equal(shouldShowUpdateDot({ ...seen, processing: true, latestLastUpdated: fmt(now - 60 * DAY) }), false));
+test("最終更新が読めなければ赤い点を出さない", () =>
+  assert.equal(shouldShowUpdateDot({ ...seen, latestLastUpdated: "abc" }), false));
 
 test("newestLastUpdated は時刻でいちばん新しいものを返す（文字列の長さや順では決めない）", () =>
   assert.equal(newestLastUpdated(["2025/12/31 23:59", "2026/01/02 00:05", "2026/01/02 00:04", "abc", null]), "2026/01/02 00:05"));

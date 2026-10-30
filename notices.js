@@ -38,12 +38,26 @@ const KingOfZangyoNotices = (() => {
     return isStale(latestLastUpdated, staleDismissedAt, now) ? "stale" : null;
   }
 
+  /**
+   * 更新ボタンに赤い点を出すか。吹き出しとは切り離し、最終更新から30日以上たっているあいだは出し続ける
+   * 一度も取得していない人の点は、使い方の吹き出しと一緒に描くので、ここでは false
+   */
+  function shouldShowUpdateDot({ enabled, processing, savedYears, latestLastUpdated = null, now = null }) {
+    if (!enabled || processing || savedYears.length === 0) return false;
+    return isOutdated(latestLastUpdated, now);
+  }
+
   /** 最終更新から30日以上たち、閉じてからも30日以上たっているか */
   function isStale(latestLastUpdated, staleDismissedAt, now) {
+    if (!isOutdated(latestLastUpdated, now)) return false;
+    return typeof staleDismissedAt !== "number" || now - staleDismissedAt >= STALE_MS;
+  }
+
+  /** 最終更新から30日以上たっているか。最終更新が読めなければ false */
+  function isOutdated(latestLastUpdated, now) {
     const updatedAt = parseLastUpdated(latestLastUpdated);
     if (updatedAt === null || typeof now !== "number") return false;
-    if (now - updatedAt < STALE_MS) return false;
-    return typeof staleDismissedAt !== "number" || now - staleDismissedAt >= STALE_MS;
+    return now - updatedAt >= STALE_MS;
   }
 
   /** "YYYY/MM/DD HH:mm"（手元の時刻）をミリ秒にする。読めなければ null */
@@ -80,6 +94,7 @@ const KingOfZangyoNotices = (() => {
     STALE_DAYS,
     shouldOpenGuideOnInstalled,
     pickNotice,
+    shouldShowUpdateDot,
     withDismissed,
     newestLastUpdated,
   };

@@ -1383,7 +1383,7 @@ async function renderNotices() {
   // 読み込み中に別の描画が走っていても、描く直前に必ず消す
   clearNoticeElements();
 
-  const notice = KingOfZangyoNotices.pickNotice({
+  const input = {
     enabled: stored[STORAGE_KEY] !== undefined ? stored[STORAGE_KEY] : true,
     processing: processingState?.isProcessing === true,
     savedYears: savedYears || [],
@@ -1394,8 +1394,12 @@ async function renderNotices() {
         ? stored[STALE_DISMISSED_AT_KEY]
         : null,
     now: Date.now(),
-  });
+  };
+  const notice = KingOfZangyoNotices.pickNotice(input);
 
+  if (notice === "usage" || KingOfZangyoNotices.shouldShowUpdateDot(input)) {
+    renderUpdateDot(updateButton);
+  }
   if (notice === "usage") {
     renderUsageNotice(updateButton);
   }
@@ -1525,7 +1529,8 @@ function renderStaleNotice(updateButton) {
     "最終更新から1か月以上経過しています。「更新」を押すと最新の残業時間を集計できます。",
     () => {
       // 保存を待たずに先に消す（押してから消えるまでに間が空かないように）
-      clearNoticeElements();
+      // 赤い点は残す。最終更新から30日以上たっているあいだは出し続ける（設計書 3b）
+      document.querySelectorAll(`.${NOTICE_BUBBLE_CLASS}`).forEach((element) => element.remove());
       chrome.storage.sync.set({ [STALE_DISMISSED_AT_KEY]: Date.now() }, () => {
         if (chrome.runtime.lastError) {
           console.error("King-of-Zangyo: 更新を促す吹き出しの閉じた日の保存エラー:", chrome.runtime.lastError);
@@ -1542,10 +1547,6 @@ function renderStaleNotice(updateButton) {
  * @param {() => void} onClose - 「閉じる」を押したときの処理
  */
 function renderUpdateButtonNotice(updateButton, message, onClose) {
-  const dot = document.createElement("span");
-  dot.className = NOTICE_DOT_CLASS;
-  updateButton.appendChild(dot);
-
   const bubble = document.createElement("div");
   bubble.className = NOTICE_BUBBLE_CLASS;
   bubble.setAttribute("role", "note");
@@ -1586,6 +1587,17 @@ function renderUpdateButtonNotice(updateButton, message, onClose) {
   host.appendChild(bubble);
 
   // 更新ボタンを押したら案内は役目を終える
+  updateButton.addEventListener("click", clearNoticeElements, { once: true });
+}
+
+/**
+ * 更新ボタンの右上に赤い点を付ける。押したら点も吹き出しも消す
+ * @param {HTMLElement} updateButton - 更新ボタン
+ */
+function renderUpdateDot(updateButton) {
+  const dot = document.createElement("span");
+  dot.className = NOTICE_DOT_CLASS;
+  updateButton.appendChild(dot);
   updateButton.addEventListener("click", clearNoticeElements, { once: true });
 }
 
