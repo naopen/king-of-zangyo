@@ -7,7 +7,8 @@ check-assets:
 		if [ ! -f "$$f" ]; then echo "kagkag サブモジュールを取得してください（git submodule update --init）"; exit 1; fi; \
 	done
 
-zip: check-assets
+# zip は既存のファイルに追記するので、消したファイルが残らないように作り直す
+zip: check-assets clean
 	zip -r king-of-zangyo.zip manifest.json popup.html popup.js popup.css annual-pace.js content.js notices.js background.js icons/ guide/ $(KAGKAG_PNGS) -x '*.DS_Store'
 
 test:
