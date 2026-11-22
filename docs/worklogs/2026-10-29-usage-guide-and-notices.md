@@ -71,10 +71,12 @@ Claude in Chromeでは `chrome-extension://` のページ、ツールバーの�
 
 ## 残っていること
 
-- `~/Downloads/` に、今回落とした画像の「(1)」付きの重複が3つある（`kagkag-flying-01 (1).svg`、`kagkag-flying-02 (1).svg`、`kagkag-small (1).png`）。2026-11-23に、3つとも「(1)」の無い元のファイルとハッシュが同じだと確かめた。消すかはNaokiが決める
-- 手元にだけブランチ `backup-before-rewrite` がある（先頭 `39c7981`、2026-01-22。main に入っていないコミットが9つ）。2026-11-23に調べると、9つとも同じ件名のコミットが main にあり、先頭 `39c7981` と main の `eea5071` の違いは `manifest.json` のバージョン（1.4.0 と 1.3.0）の1行だけだった。履歴を書き換える前のバックアップで、中身は main に入っている。消すかはNaokiが決める（未マージ扱いなので `git branch -D` が要る）
+v2.6.0 で残っていることは無い。
 
 ## 済んだこと
+
+- 2026-11-23、`~/Downloads/` の「(1)」付きの重複3つ（`kagkag-flying-01 (1).svg`、`kagkag-flying-02 (1).svg`、`kagkag-small (1).png`）を、元のファイルとハッシュが同じことを確かめてから、Naokiの許可を受けて消した
+- 2026-11-23、手元のブランチ `backup-before-rewrite`（先頭 `39c7981`、2026-01-22）を、Naokiの許可を受けて消した。main に入っていない9コミットは、どれも同じ件名のコミットが main にあり、先頭と main の `eea5071` の違いは `manifest.json` のバージョン（1.4.0 と 1.3.0）の1行だけだった。履歴を書き換える前のバックアップだった。戻すなら `git branch backup-before-rewrite 39c7981`（reflog が残っているあいだ）
 
 - 2026-11-23、`README.md` の「MIT License」に合わせて `LICENSE` を足した。著作権者は「Naoki Kannan」、年は最初のコミットの2025年。本文はGitHubの `licenses/mit` と一致
 - 2026-11-23、`make zip` が既存のzipに追記して、消したファイルが残りうる作りだったので、作る前に `clean` で消すようにした
